@@ -1,5 +1,7 @@
 from dataclasses import asdict
 from ghost.step import GhostStep
+from ghost.agents import AgentRegistry
+from ghost.relationships import RelationshipGraph
 
 
 class GhostEngine:
@@ -16,6 +18,10 @@ class GhostEngine:
             context = {}
 
         self._ctx = context
+        
+        # Subsystems
+        self.agents = AgentRegistry(self._ctx)
+        self.relationships = RelationshipGraph(self._ctx)
 
         # Baseline state
         self._ctx.setdefault("cycles", 0)
@@ -82,6 +88,36 @@ class GhostEngine:
 
                 npc["threat_level"] += intensity * mood_multiplier
                 npc["last_intent"] = "threat"
+         
+        # ---- Agent interaction handling ----
+        if step is not None and step.actor and step.target:
+
+            # Ensure agents exist
+            self.agents.ensure(step.actor)
+            self.agents.ensure(step.target)
+
+            intent = step.intent
+
+            if intent == "greet":
+                self.relationships.apply_delta(
+                    step.actor,
+                    step.target,
+                    {"trust": 0.02, "attachment": 0.01},
+                )
+
+            elif intent == "help":
+                self.relationships.apply_delta(
+                    step.actor,
+                    step.target,
+                    {"trust": 0.05, "attachment": 0.02},
+                )
+
+            elif intent == "threat":
+                self.relationships.apply_delta(
+                    step.actor,
+                    step.target,
+                    {"trust": -0.08},
+                )
 
         # ---- Decay if no threat received ----
         if not received_threat:
@@ -103,4 +139,4 @@ class GhostEngine:
     def snapshot(self):
         """Return an immutable snapshot of engine state."""
         import copy
-        return copy.deepcopy(self._ctx)
+        return copy.deepcopy(self._ctx)  
