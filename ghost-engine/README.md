@@ -74,6 +74,54 @@ Verified invariants include:
 
 These guarantees hold under randomized and adversarial input.
 
+ARCHITECTURAL EXPANSION (v0.1.3)
+
+Version 0.1.3 introduces the first structural components required for modeling
+multi-agent interaction systems on top of Ghost's deterministic state core.
+
+This release does not change the fundamental guarantees of the engine.
+Instead, it expands the internal architecture to support scalable interaction graphs.
+
+New components include:
+
+AgentRegistry
+A centralized registry responsible for managing and resolving agents participating in the simulation.  
+This allows Ghost to maintain consistent references to actors across interactions without introducing hidden state.
+
+Neighbor Index
+Relationships between agents are now indexed through a neighbor structure rather than requiring full scans of the relationship table.
+
+Example conceptually:
+
+("Alice","Bob") → relationship
+
+Previously required scanning the entire relationship set to answer:
+
+Who interacts with Alice?
+
+With the neighbor index:
+
+neighbors["Alice"] → {"Bob", "Charlie", "Dave"}
+
+This allows constant-time queries of an agent's interaction network.
+
+Why This Matters
+
+These changes allow Ghost-based systems to scale toward:
+
+- 100k+ agents
+- millions of relationships
+- fast simulation steps
+
+while preserving the deterministic, explicit-state philosophy of the engine.
+
+The interaction architecture introduced in v0.1.3 lays the groundwork for future systems such as:
+
+- social modeling
+- alliances and betrayal
+- trade networks
+- large-scale emergent agent worlds
+
 ---
 
 TESTING PHILOSOPHY
@@ -105,3 +153,17 @@ The core architecture is stable as of v0.1.2, but APIs may evolve as new layers 
 
 This project is intended as a foundation for experimentation, research, and
 future system design rather than a finished product.
+
+RELEASE HISTORY
+
+v0.1.3
+AgentRegistry and neighbor indexing for scalable multi-agent interaction graphs.
+
+v0.1.2
+Formal invariant verification using property-based testing.
+
+v0.1.1
+Core threat accumulation improvements.
+
+v0.1.0
+Initial public architecture release.
