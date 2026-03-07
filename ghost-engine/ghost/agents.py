@@ -23,6 +23,8 @@ class AgentRegistry:
             {
                 "mood": 0.5,
                 "memory": {},
+                "last_intent": None,
+                "tension": 0.0,
             }
         )
 
