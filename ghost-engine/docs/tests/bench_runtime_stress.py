@@ -4,7 +4,7 @@ import random
 import time
 import tracemalloc
 
-from world.ghost_runtime import GhostRuntime
+from ghost.engine import GhostEngine as GhostRuntime
 
 
 # ------------------------------------------------------------
