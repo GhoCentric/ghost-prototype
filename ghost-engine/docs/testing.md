@@ -1,3 +1,69 @@
+## Reproduce in <60 Seconds
+
+# install runtime
+pip install ghocentric-ghost-engine
+
+# clone repo for tests
+git clone https://github.com/GhoCentric/ghost-prototype.git
+cd ghost-prototype/ghost-engine
+
+# run invariant tests (current engine, fully reproducible)
+python -m docs.tests.test_ghost_invariants
+
+Expected:
+
+• ALL INVARIANTS HOLD  
+
+
+---
+
+## About the Stress Benchmark
+
+The stress benchmark (`bench_runtime_stress.py`) was originally written
+against an earlier internal runtime wrapper used during large-scale
+simulation development.
+
+The current public `GhostEngine` exposes a smaller, stricter API focused on:
+
+• deterministic state evolution  
+• invariant safety  
+• serialization guarantees  
+• architectural correctness  
+
+Because of this intentional API tightening, the benchmark does **not**
+run directly against the current engine without adaptation.
+
+---
+
+## Why It Is Still Included
+
+The benchmark remains as:
+
+• a proof-of-concept scalability reference  
+• evidence of prior large-scale runtime validation  
+• documentation of the interaction workload model used during development  
+
+It demonstrates sustained high-load execution under:
+
+• 5,000 agents  
+• 10,000 interactions/tick  
+• 50 ticks  
+
+with observed throughput around:
+
+• ~13k interactions/sec sustained (device dependent)
+
+---
+
+## If You Want to Run It
+
+The script can be adapted easily by replacing internal runtime calls with
+public `GhostEngine.step()` usage. This is intentionally left undone to:
+
+• keep the benchmark historically accurate  
+• avoid mixing internal and public APIs  
+• preserve clarity around the current engine design boundary
+
 # Testing & Validation
 
 This document outlines the testing strategy and validation evidence for the Ghost Engine runtime.
