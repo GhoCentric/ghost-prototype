@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghocentric-ghost-engine"
-version = "1.0.0"
+version = "1.0.1"
 description = "Ghost cognitive engine"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -15,7 +15,6 @@ authors = [
 
 dependencies = []
 
-# OPTIONAL but recommended metadata
 license = { text = "MIT" }
 keywords = ["ai", "engine", "cognition", "simulation"]
 classifiers = [
@@ -32,6 +31,6 @@ package-dir = { "" = "." }
 where = ["."]
 include = ["ghost", "ghost.*"]
 
-# OPTIONAL: CLI entry point (only if npc_demo.py is inside ghost/)
 [project.scripts]
-ghost-demo = "ghost.npc_demo:main"
+ghost-demo = "ghost.examples.relationship_proof_demo:main"
+ghost-npc-demo = "ghost.examples.simple_npc_demo:main"
