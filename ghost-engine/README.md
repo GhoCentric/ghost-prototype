@@ -173,6 +173,57 @@ This behavior cannot be replicated by:
 - additive systems ("trust += delta")
 - low-pass filters (exponential smoothing)
 
+Proof Demo (v1.0.0)
+
+Ghost now includes a deterministic proof demo comparing its emotional inertia model against a standard linear baseline.
+
+Run:
+
+```bash
+python examples/relationship_proof_demo.py
+```
+
+What this demonstrates:
+
+Two systems receive the exact same sequence of inputs:
+
+    help → help → insult → help → help → betrayal → help
+
+Baseline (linear smoothing):
+- Gradually returns toward neutral
+- Does not retain strong emotional history
+
+Ghost:
+- Accumulates emotional weight
+- Resists recovery after damage
+- Maintains directional state over time
+
+Example Output:
+
+```
+Step | Event     | Baseline | Ghost   | State
+------------------------------------------------
+5    | betrayal  | -0.121   | -0.703  | hostile
+6    | help      | -0.036   | -0.628  | hostile
+```
+
+Key Observation:
+
+Even after positive input ("help"), Ghost remains in a hostile state due to accumulated negative history, while the baseline system rapidly normalizes.
+
+This demonstrates:
+
+- persistent emotional memory  
+- resistance to reversal  
+- non-linear recovery behavior  
+
+The demo also exposes:
+
+state transitions (friendly → hostile)  
+trigger events (relationship_broken, forgiveness, etc.)  
+gameplay-relevant consequences of emotional state  
+
+This serves as a minimal, reproducible proof that Ghost behaves fundamentally differently from traditional smoothing or accumulation systems.
 ---
 
 ## New API Additions
