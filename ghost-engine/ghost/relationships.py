@@ -122,6 +122,118 @@ class RelationshipGraph:
 
         return rel
 
+    def _classify_state(self, trust: float):
+        if trust <= -0.55:
+            return "hostile"
+
+        if trust >= 0.08:
+            return "friendly"
+
+        return "neutral"
+
+    def _trigger_for_transition(self, before: str, after: str):
+        if before == after:
+            return None
+
+        if after == "hostile":
+            return {"event": "relationship_broken"}
+
+        if before == "hostile" and after == "neutral":
+            return {"event": "deescalation"}
+
+        if before in ("hostile", "neutral") and after == "friendly":
+            return {"event": "forgiveness"}
+
+        return {"event": "state_shift"}
+
+    def apply_event(self, a: str, b: str, event: str):
+        rel = self.ensure_pair(a, b)
+
+        event = str(event).lower().strip()
+
+        event_map = {
+            "greet": ("pos", 0.04),
+            "help": ("pos", 0.12),
+            "gift": ("pos", 0.16),
+            "apologize": ("pos", 0.10),
+
+            "insult": ("neg", 0.15),
+            "threat": ("neg", 0.22),
+            "attack": ("neg", 0.35),
+            "betrayal": ("neg", 0.70),
+        }
+
+        if event not in event_map:
+            raise ValueError(f"Unknown relationship event: {event}")
+
+        before_trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+        before_state = rel.get("state", self._classify_state(before_trust))
+
+        channel, amount = event_map[event]
+
+        if channel == "pos":
+            resistance = 1.0 / (1.0 + (rel.get("neg", 0.0) * 0.35))
+            saturation = max(
+                0.0,
+                1.0 - (rel.get("pos", 0.0) / self.max_reservoir),
+            )
+
+            gain = amount * rel.get("pos_gain", self.pos_gain)
+            gain *= resistance
+            gain *= saturation
+
+            rel["pos"] = min(
+                self.max_reservoir,
+                rel.get("pos", 0.0) + gain,
+            )
+
+        elif channel == "neg":
+            saturation = max(
+                0.0,
+                1.0 - (rel.get("neg", 0.0) / self.max_reservoir),
+            )
+
+            gain = amount * rel.get("neg_gain", self.neg_gain)
+            gain *= saturation
+
+            rel["neg"] = min(
+                self.max_reservoir,
+                rel.get("neg", 0.0) + gain,
+            )
+
+        trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+        after_state = self._classify_state(trust)
+
+        transition = None
+        if before_state != after_state:
+            transition = (before_state, after_state)
+
+        trigger = self._trigger_for_transition(before_state, after_state)
+
+        rel["trust"] = trust
+        rel["state"] = after_state
+        rel["transition"] = transition
+        rel["trigger"] = trigger
+        rel["last_event"] = event
+
+        return self.get_relationship(a, b)
+
+    def get_relationship(self, a: str, b: str):
+        rel = self.ensure_pair(a, b)
+
+        trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+        state = self._classify_state(trust)
+
+        rel["trust"] = trust
+        rel["state"] = state
+
+        return {
+            "trust": trust,
+            "state": state,
+            "transition": rel.get("transition"),
+            "trigger": rel.get("trigger"),
+        }
+
     # -----------------------------
     # NEW: TIME DECAY (optional)
     # -----------------------------
