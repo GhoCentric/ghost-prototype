@@ -189,6 +189,30 @@ class GhostEngine:
 
         return ctx
 
+    def apply_event(self, a, b, event):
+        """
+        Apply a relationship event between two actors.
+
+        Public wrapper around the relationship runtime.
+        """
+        return self.relationships.apply_event(a, b, event)
+
+    def tick(self):
+        """
+        Advance relationship time decay by one tick.
+
+        Public wrapper around the relationship runtime.
+        """
+        return self.relationships.tick()
+
+    def get_relationship(self, a, b):
+        """
+        Return the public relationship state between two actors.
+
+        Public wrapper around the relationship runtime.
+        """
+        return self.relationships.get_relationship(a, b)
+
     def state(self):
         """
         Return the live engine state (mutable).
