@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghocentric-ghost-engine"
-version = "1.0.1"
-description = "Ghost cognitive engine"
+version = "1.1.0"
+description = "A deterministic emotional inertia runtime for NPC systems and persistent interactive state."
 readme = "README.md"
 requires-python = ">=3.9"
 
@@ -16,8 +16,22 @@ authors = [
 dependencies = []
 
 license = { text = "MIT" }
-keywords = ["ai", "engine", "cognition", "simulation"]
+keywords = [
+  "ai",
+  "engine",
+  "cognition",
+  "simulation",
+  "npc",
+  "game-ai",
+  "emotional-inertia",
+  "state-engine"
+]
+
 classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Games/Entertainment",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "License :: OSI Approved :: MIT License",
