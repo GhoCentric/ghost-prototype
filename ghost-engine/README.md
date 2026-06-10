@@ -481,17 +481,22 @@ They are not representative of Ghost’s final scope.
 
 Ghost Engine remains in early development.
 
-As of v1.1.0:
+As of v1.1.1:
 
 - the deterministic interaction core is stable
 - the emotional inertia runtime is available through public API methods
-- the proof demo is packaged and runnable
-- APIs may still evolve
-- higher-level systems remain intentionally external
 
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.1.1
+
+- Fixed missing public `GhostEngine.apply_event()` wrapper
+- Fixed missing public `GhostEngine.tick()` wrapper
+- Fixed missing public `GhostEngine.get_relationship()` wrapper
+- Added missing relationship graph support for public event application
+- Confirmed public relationship API returns trust, state, transition, and trigger output directly from `GhostEngine`
 
 ## v1.1.0
 
