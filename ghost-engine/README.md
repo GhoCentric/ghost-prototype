@@ -26,6 +26,24 @@ Surface features, integrations, dialogue, reasoning, and decision-making are exp
 pip install ghocentric-ghost-engine
 ```
 
+## Demo Commands
+
+After installation, Ghost includes four runnable demo commands:
+
+```bash
+ghost-demo
+ghost-npc-demo
+ghost-relationship-demo
+ghost-shopkeeper-demo
+```
+
+Each demo proves a different layer of the engine:
+
+- `ghost-demo` compares Ghost emotional inertia against a linear baseline
+- `ghost-npc-demo` shows the basic threat-state NPC loop
+- `ghost-relationship-demo` shows public relationship API usage
+- `ghost-shopkeeper-demo` launches a playable terminal shopkeeper demo
+
 ## Basic Usage
 
 ```python
@@ -280,11 +298,92 @@ This behavior cannot be replicated by:
 
 Ghost introduces **stateful emotional inertia**, not just value smoothing.
 
-## Proof Demo
+## Packaged Demos
 
-Ghost includes a deterministic proof demo comparing its emotional inertia model against a standard linear baseline.
+Ghost includes several small demos that each prove a different layer of the engine.
 
-The proof demo is packaged with the library and can be run after installation.
+### Proof Demo
+
+The proof demo compares Ghost’s emotional inertia model against a standard linear baseline.
+
+Run:
+
+```bash
+ghost-demo
+```
+
+This demonstrates that Ghost retains emotional history after betrayal while a simple baseline rapidly normalizes.
+
+### Basic NPC Demo
+
+The basic NPC demo shows Ghost’s older threat-state loop.
+
+Run:
+
+```bash
+ghost-npc-demo
+```
+
+This demonstrates threat accumulation, passive decay, and simple NPC behavior changes.
+
+### Public Relationship API Demo
+
+The relationship demo uses only the public `GhostEngine` API.
+
+Run:
+
+```bash
+ghost-relationship-demo
+```
+
+It demonstrates:
+
+```python
+ghost.apply_event(a, b, event)
+ghost.tick()
+ghost.get_relationship(a, b)
+```
+
+No internal relationship modules are imported.
+
+This proves that a normal developer can use Ghost relationship state directly from the public API.
+
+### Playable Shopkeeper Mini Game
+
+v1.2.0 adds a playable terminal mini game.
+
+Run:
+
+```bash
+ghost-shopkeeper-demo
+```
+
+The shopkeeper demo uses only the public `GhostEngine` API and shows how trust, emotional pressure, relationship state, prices, quest availability, and dialogue can change based on player actions.
+
+Example status output:
+
+```text
+Trust:      -0.401
+State:      neutral
+Pressure:   damaged, but not broken
+Price:      1.50x
+Quest:      unavailable
+```
+
+Then after further damage:
+
+```text
+Trust:      -0.570
+State:      hostile
+Pressure:   broken
+Price:      2.00x
+Quest:      unavailable
+Trigger:    relationship_broken
+```
+
+The mini game demonstrates that behavior can begin changing before a relationship fully breaks.
+
+Ghost exposes the emotional state. The game logic decides how to respond.
 
 ### Run
 
@@ -468,7 +567,6 @@ This ensures the engine remains correct and predictable as new systems are layer
 ghost/                   core engine modules
 ghost/examples/           packaged demos
 tests/                   invariant and runtime tests
-npc_demo.py               experimental sandbox
 pyproject.toml            build configuration
 README.md                 project documentation
 ```
@@ -481,14 +579,29 @@ They are not representative of Ghost’s final scope.
 
 Ghost Engine remains in early development.
 
-As of v1.1.1:
+As of v1.2.0:
 
 - the deterministic interaction core is stable
 - the emotional inertia runtime is available through public API methods
+- the proof demo is packaged and runnable
+- the public relationship demo is packaged and runnable
+- the playable shopkeeper mini game is packaged and runnable
 
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.2.0
+
+- Added playable terminal shopkeeper mini game
+- Added `ghost-shopkeeper-demo` CLI entry point
+- Added `ghost-relationship-demo` CLI entry point
+- Updated public relationship demo sequence for stronger emotional inertia behavior
+- Demonstrated trust, emotional pressure, relationship state, pricing, quest availability, and dialogue changes through public API usage
+- Added resentful NPC personality setup to the shopkeeper demo
+- Added wait/tick explanation to demonstrate time-based relationship decay
+- Added emotional pressure display such as `damaged, but not broken` and `broken`
+- Improved command input support for typed commands such as `buy bread`, `show status`, and `wait`
 
 ## v1.1.1
 
