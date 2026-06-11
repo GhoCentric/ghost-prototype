@@ -542,17 +542,31 @@ They are not representative of Ghost’s final scope.
 
 Ghost Engine remains in early development.
 
-As of v1.2.0:
+As of v1.2.1:
 
 - the deterministic interaction core is stable
 - the emotional inertia runtime is available through public API methods
 - the proof demo is packaged and runnable
-- the public relationship demo is packaged and runnable
+- the NPC API mapping demo is packaged and runnable
 - the playable shopkeeper mini game is packaged and runnable
 
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.2.1
+
+- Cleaned packaged demo command structure
+- Removed redundant `ghost-relationship-demo` command from the public demo set
+- Restored `ghost-demo` as the relationship proof / baseline comparison demo
+- Updated `ghost-npc-demo` into a deterministic 10-tick Ghost API mapping demo
+- Improved NPC demo terminal formatting for phone-safe output
+- Shortened NPC behavior labels and dialogue to reduce terminal wrapping
+- Removed unused proof demo variable cleanup
+- Clarified the final public demo suite:
+  - `ghost-demo`
+  - `ghost-npc-demo`
+  - `ghost-shopkeeper-demo`
 
 ## v1.2.0
 
