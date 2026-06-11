@@ -572,8 +572,7 @@ This project is intended as a foundation for experimentation, research, and futu
 
 - Added playable terminal shopkeeper mini game
 - Added `ghost-shopkeeper-demo` CLI entry point
-- Added `ghost-relationship-demo` CLI entry point
-- Updated public relationship demo sequence for stronger emotional inertia behavior
+- Added playable terminal demo behavior for shopkeeper interactions
 - Demonstrated trust, emotional pressure, relationship state, pricing, quest availability, and dialogue changes through public API usage
 - Added resentful NPC personality setup to the shopkeeper demo
 - Added wait/tick explanation to demonstrate time-based relationship decay
