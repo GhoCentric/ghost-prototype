@@ -28,20 +28,18 @@ pip install ghocentric-ghost-engine
 
 ## Demo Commands
 
-After installation, Ghost includes four runnable demo commands:
+After installation, Ghost includes three runnable demo commands:
 
 ```bash
 ghost-demo
 ghost-npc-demo
-ghost-relationship-demo
 ghost-shopkeeper-demo
 ```
 
 Each demo proves a different layer of the engine:
 
 - `ghost-demo` compares Ghost emotional inertia against a linear baseline
-- `ghost-npc-demo` shows the basic threat-state NPC loop
-- `ghost-relationship-demo` shows public relationship API usage
+- `ghost-npc-demo` shows Ghost API state being mapped into external NPC behavior
 - `ghost-shopkeeper-demo` launches a playable terminal shopkeeper demo
 
 ## Basic Usage
@@ -298,9 +296,10 @@ This behavior cannot be replicated by:
 
 Ghost introduces **stateful emotional inertia**, not just value smoothing.
 
+ 
 ## Packaged Demos
 
-Ghost includes several small demos that each prove a different layer of the engine.
+Ghost includes three small demos that each prove a different layer of the engine.
 
 ### Proof Demo
 
@@ -312,11 +311,34 @@ Run:
 ghost-demo
 ```
 
+Or as a module:
+
+```bash
+python -m ghost.examples.relationship_proof_demo
+```
+
 This demonstrates that Ghost retains emotional history after betrayal while a simple baseline rapidly normalizes.
 
-### Basic NPC Demo
+Example output:
 
-The basic NPC demo shows Ghost’s older threat-state loop.
+```text
+Step | Event     | Baseline  | Ghost     | State
+----------------------------------------------------------------------
+5    | betrayal  | -0.209    | -0.750    | hostile
+6    | help      | -0.107    | -0.680    | hostile
+```
+
+Key result:
+
+```text
+Ghost retained stronger negative state.
+Baseline normalized more quickly.
+✔ Emotional inertia confirmed.
+```
+
+### NPC API Mapping Demo
+
+The NPC demo shows how a small external behavior layer can consume Ghost state over a deterministic 10-tick sequence.
 
 Run:
 
@@ -324,38 +346,52 @@ Run:
 ghost-npc-demo
 ```
 
-This demonstrates threat accumulation, passive decay, and simple NPC behavior changes.
-
-### Public Relationship API Demo
-
-The relationship demo uses only the public `GhostEngine` API.
-
-Run:
+Or as a module:
 
 ```bash
-ghost-relationship-demo
+python -m ghost.examples.simple_npc_demo
 ```
 
-It demonstrates:
+This demo uses:
 
 ```python
-ghost.apply_event(a, b, event)
-ghost.tick()
-ghost.get_relationship(a, b)
+engine.step(...)
+engine.apply_event(a, b, event)
+engine.tick()
+engine.get_relationship(a, b)
 ```
 
-No internal relationship modules are imported.
+It demonstrates threat state and relationship state working together.
 
-This proves that a normal developer can use Ghost relationship state directly from the public API.
+Example output:
+
+```text
+Tick | Threat | Trust  | Rel      | Trig    | NPC
+---------------------------------------------------
+0    |   0.00 |  0.054 | neutral  | -       | idle
+1    |   0.00 |  0.204 | friendly | forgive | help
+5    |   1.00 | -0.768 | hostile  | broken  | refuse
+9    |   0.93 | -0.510 | neutral  | deesc   | warn
+```
+
+The NPC behavior is not chosen by Ghost directly.
+
+Ghost exposes state. The NPC code decides how to respond.
 
 ### Playable Shopkeeper Mini Game
 
-v1.2.0 adds a playable terminal mini game.
+The shopkeeper demo is a playable terminal mini game.
 
 Run:
 
 ```bash
 ghost-shopkeeper-demo
+```
+
+Or as a module:
+
+```bash
+python -m ghost.examples.shopkeeper_mini_game
 ```
 
 The shopkeeper demo uses only the public `GhostEngine` API and shows how trust, emotional pressure, relationship state, prices, quest availability, and dialogue can change based on player actions.
@@ -384,79 +420,6 @@ Trigger:    relationship_broken
 The mini game demonstrates that behavior can begin changing before a relationship fully breaks.
 
 Ghost exposes the emotional state. The game logic decides how to respond.
-
-### Run
-
-As a CLI tool:
-
-```bash
-ghost-demo
-```
-
-Or as a module:
-
-```bash
-python -m ghost.examples.relationship_proof_demo
-```
-
-### What This Demonstrates
-
-Two systems receive the exact same sequence of inputs:
-
-```text
-help → help → insult → help → help → betrayal → help
-```
-
-### Baseline Linear Smoothing
-
-The baseline:
-
-- gradually returns toward neutral
-- does not retain strong emotional history
-- reacts mostly to recent input
-
-### Ghost Emotional Inertia
-
-Ghost:
-
-- accumulates emotional weight
-- resists recovery after damage
-- maintains directional state over time
-- exposes relationship state and triggers
-
-### Example Output
-
-```text
-Step | Event     | Baseline | Ghost   | State
-------------------------------------------------
-5    | betrayal  | -0.121   | -0.703  | hostile
-6    | help      | -0.036   | -0.628  | hostile
-```
-
-### Key Observation
-
-Even after positive input such as `help`, Ghost remains in a hostile state due to accumulated negative history, while the baseline system rapidly normalizes.
-
-### What This Proves
-
-- persistent emotional memory
-- resistance to reversal
-- non-linear recovery behavior
-- relationship state transitions
-- gameplay-relevant emotional consequences
-
-## Proof Demo Packaging Fix (v1.0.1)
-
-v1.0.1 finalized the proof demo as a fully packaged, runnable experience.
-
-The demo became:
-
-- accessible via CLI with `ghost-demo`
-- import-safe with a proper `main()` entry point
-- packaged inside the library under `ghost.examples`
-- usable without cloning the repository
-
-This ensures that any developer installing Ghost through pip can immediately run and verify the system behavior.
 
 ## Relationship Runtime Summary
 
