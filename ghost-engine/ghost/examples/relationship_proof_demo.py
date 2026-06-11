@@ -1,131 +1,185 @@
-"""
-Ghost Engine v1.0.0
-Emotional Inertia Proof Demo
-
-This demo compares:
-1) A simple linear smoothing baseline (EMA filter)
-2) Ghost emotional inertia runtime
-
-Goal:
-Show how Ghost retains emotional weight after betrayal,
-while the baseline rapidly normalizes.
-
-Run:
-    python examples/relationship_proof_demo.py
-"""
+# ghost/examples/shopkeeper_demo.py
 
 from ghost import GhostAPI
 
 
-# --------------------------------------------------
-# BASELINE: Linear smoothing (no state transitions)
-# --------------------------------------------------
-def baseline_step(prev, value, alpha=0.2):
-    trust = prev * (1 - alpha) + value * alpha
-    return max(min(trust, 1.0), -1.0)
-
-
-# --------------------------------------------------
-# DEMO SEQUENCE
-# --------------------------------------------------
-def run_demo():
+def main():
     ghost = GhostAPI()
 
-    print("\n=== GHOST vs LINEAR BASELINE ===\n")
+    gold = 100
 
-    # Gameplay-like interaction sequence
-    sequence = [
-        ("help", 0.3),
-        ("help", 0.3),
-        ("insult", -0.5),
-        ("help", 0.3),
-        ("help", 0.3),
-        ("betrayal", 1.0),
-        ("help", 0.3),
-    ]
+    # -----------------------------
+    # NPC LIST
+    # -----------------------------
+    npcs = ["shopkeeper", "blacksmith", "guard"]
 
-    baseline = 0.0
+    # -----------------------------
+    # LOCAL AREA / RUMOR SYSTEM
+    # -----------------------------
+    local_heat = 0
+    rumor_stage = "clean"
 
-    print(f"{'Step':<4} | {'Event':<9} | {'Baseline':<9} | {'Ghost':<9} | {'State':<12}")
-    print("-" * 70)
+    print("\n=== MARKET REPUTATION DEMO ===")
+    print("Actions: help, insult, steal, ask, buy, leave")
+    print("Target NPC: shopkeeper (others react via rumors)\n")
 
-    for i, (event, val) in enumerate(sequence):
+    while True:
+        action = input("What do you do? ").strip().lower()
 
-        # ----- Baseline update -----
-        baseline = baseline_step(baseline, val)
+        if action == "leave":
+            print("\nYou leave the market.\n")
+            break
 
-        # ----- Ghost update -----
-        ghost.apply_event("Player", "Villager", {
-            "type": event,
-            "intensity": abs(val)
-        })
+        if action not in ["help", "insult", "steal", "ask", "buy"]:
+            print("Invalid action.\n")
+            continue
 
-        ghost.engine.relationships.tick()
+        # -----------------------------
+        # EVENT MAP
+        # -----------------------------
+        event_map = {
+            "help": ("help", 1.0),
+            "insult": ("insult", 0.45),
+            "steal": ("betrayal", 1.0),
+        }
 
-        rel = ghost.get_relationship("Player", "Villager")
-        g_trust = rel["trust"]
-        state = rel.get("state", "unknown")
-        trigger = rel.get("trigger")
+        # -----------------------------
+        # APPLY EVENT (NOW THROUGH API)
+        # -----------------------------
+        if action in event_map:
+            event_type, intensity = event_map[action]
 
-        print(
-            f"{i:<4} | "
-            f"{event:<9} | "
-            f"{baseline:<9.3f} | "
-            f"{g_trust:<9.3f} | "
-            f"{state:<12}"
-        )
+            ghost.propagate_event(
+                "player",
+                "shopkeeper",
+                {
+                    "type": event_type,
+                    "intensity": intensity,
+                },
+                npcs,
+                heat=local_heat,
+            )
 
-        # ----- Transition Feedback -----
-        if trigger:
-            if trigger.get("event") == "relationship_broken":
-                print("      ⚠ Relationship permanently damaged")
-            elif trigger.get("event") == "forgiveness":
-                print("      ✓ Forgiveness triggered")
-            elif trigger.get("event") == "deescalation":
-                print("      ↓ Emotional tension reduced")
+            # -----------------------------
+            # HEAT SYSTEM
+            # -----------------------------
+            if action == "insult":
+                local_heat += 1
+            elif action == "steal":
+                local_heat += 3
+            elif action == "help" and local_heat > 0:
+                local_heat -= 1
+
+        # -----------------------------
+        # DETERMINE RUMOR STAGE
+        # -----------------------------
+        if local_heat <= 0:
+            rumor_stage = "clean"
+        elif local_heat <= 2:
+            rumor_stage = "noticed"
+        elif local_heat <= 4:
+            rumor_stage = "talked_about"
+        else:
+            rumor_stage = "tainted"
+
+        # advance time
+        ghost.tick()
+
+        # -----------------------------
+        # READ ALL NPC STATES
+        # -----------------------------
+        print("\n--- MARKET STATUS ---")
+        print(f"Gold: {gold}")
+        print(f"Local reputation: {rumor_stage} (heat={local_heat})\n")
+
+        states = {}
+
+        for npc in npcs:
+            rel = ghost.get_relationship("player", npc)
+            states[npc] = rel
+            print(f"{npc.upper()}: {rel['state']} ({rel['trust']:.3f})")
+
+        print("")
+
+        shop_state = states["shopkeeper"]["state"]
+        guard_state = states["guard"]["state"]
+
+        # -----------------------------
+        # SHOP PRICING
+        # -----------------------------
+        base_price = 20
+
+        if shop_state == "loyal":
+            price = int(base_price * 0.5)
+            behavior = "🔥 Special discounts"
+        elif shop_state == "friendly":
+            price = base_price
+            behavior = "🙂 Fair prices"
+        elif shop_state == "neutral":
+            price = int(base_price * 1.25)
+            behavior = "😐 Slightly higher prices"
+        elif shop_state == "unfriendly":
+            price = int(base_price * 1.75)
+            behavior = "😒 Expensive prices"
+        else:
+            price = None
+            behavior = "❌ Refuses service"
+
+        print(f"Shopkeeper: {behavior}")
+        print(f"Relationship is currently {shop_state.upper()}")
+
+        # -----------------------------
+        # BUY
+        # -----------------------------
+        if action == "buy":
+            if shop_state == "hostile":
+                print("Shopkeeper: 'Get out.'")
             else:
-                print(f"      ↔ State change: {trigger.get('from')} → {trigger.get('to')}")
+                print(f"Item price: {price} gold")
 
-    # --------------------------------------------------
-    # Gameplay Simulation
-    # --------------------------------------------------
-    print("\n--- GAMEPLAY SIMULATION ---")
+                if gold >= price:
+                    gold -= price
+                    print("You bought the item.")
+                else:
+                    print("Not enough gold.")
 
-    if state == "hostile":
-        print("Villager: 'I will never trust you again.'")
-        print("→ NPC refuses quests.")
-    elif state == "unfriendly":
-        print("Villager: 'I'm not sure I like you.'")
-    elif state == "friendly":
-        print("Villager: 'You have my support.'")
+        # -----------------------------
+        # ASK SYSTEM
+        # -----------------------------
+        if action == "ask":
+            if shop_state in ("friendly", "loyal"):
+                print("Shopkeeper shares valuable information.")
+            elif shop_state == "neutral":
+                print("Shopkeeper shrugs.")
+            else:
+                print("Shopkeeper refuses to help.")
 
-    # --------------------------------------------------
-    # Final Comparison
-    # --------------------------------------------------
-    print("\n--- INTERPRETATION ---")
-    print("Baseline: Gradually smooths back toward neutral.")
-    print("Ghost: Retains emotional memory after betrayal.")
-    print("Result: Persistent emotional inertia.\n")
+        # -----------------------------
+        # GUARD REACTION
+        # -----------------------------
+        if guard_state == "hostile":
+            print("🛡 Guard: 'You're causing trouble. Leave now.'")
 
-    print("=== FINAL RESULT ===")
+        # -----------------------------
+        # STEAL CONSEQUENCES
+        # -----------------------------
+        if action == "steal":
+            stolen = 15
+            gold += stolen
+            print(f"You stole {stolen} gold.")
+            print("⚠ This may spread...")
 
-    if g_trust < baseline:
-        print("Ghost retained negative state.")
-        print("Baseline normalized.")
-        print("✔ Emotional inertia confirmed.")
-    else:
-        print("No meaningful difference detected.")
+        # -----------------------------
+        # FEEDBACK
+        # -----------------------------
+        if action == "insult":
+            print("You make things tense.")
+        elif action == "help":
+            print("You try to repair the relationship.")
 
+        print("-" * 40)
 
-# --------------------------------------------------
-# RUN
-# --------------------------------------------------
-if __name__ == "__main__":
-    run_demo()
-
-
-def main():
-    run_demo()
+    print("Demo ended.")
 
 
 if __name__ == "__main__":
