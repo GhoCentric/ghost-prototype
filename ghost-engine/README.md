@@ -28,12 +28,13 @@ pip install ghocentric-ghost-engine
 
 ## Demo Commands
 
-After installation, Ghost includes three runnable demo commands:
+After installation, Ghost includes four runnable demo commands:
 
 ```bash
 ghost-demo
 ghost-npc-demo
 ghost-shopkeeper-demo
+ghost-math-demo
 ```
 
 Each demo proves a different layer of the engine:
@@ -41,6 +42,7 @@ Each demo proves a different layer of the engine:
 - `ghost-demo` compares Ghost emotional inertia against a linear baseline
 - `ghost-npc-demo` shows Ghost API state being mapped into external NPC behavior
 - `ghost-shopkeeper-demo` launches a playable terminal shopkeeper demo
+- `ghost-math-demo` explains Ghost relationship math with formulas, worked examples, personality tuning, and gameplay mapping
 
 ## Basic Usage
 
@@ -299,7 +301,7 @@ Ghost introduces **stateful emotional inertia**, not just value smoothing.
  
 ## Packaged Demos
 
-Ghost includes three small demos that each prove a different layer of the engine.
+Ghost includes four small demos that each prove a different layer of the engine.
 
 ### Proof Demo
 
@@ -420,6 +422,60 @@ Trigger:    relationship_broken
 The mini game demonstrates that behavior can begin changing before a relationship fully breaks.
 
 Ghost exposes the emotional state. The game logic decides how to respond.
+
+### Ghost Math Demo
+
+The math demo explains the small mathematical contract behind Ghost.
+
+Run:
+
+```bash
+ghost-math-demo
+```
+
+Or as a module:
+
+```bash
+python -m ghost.examples.ghost_math_helper
+```
+
+This demo walks through Ghost relationship math step by step:
+
+- clamp behavior
+- relationship reservoirs
+- trust calculation
+- tick decay
+- state thresholds
+- game behavior mapping
+- balanced personality math
+- resentful personality math
+
+Example output:
+
+```text
+trust = positive_reservoir - negative_reservoir
+
+positive_next = 0.024 + 0.12 * 0.60
+positive_next = 0.096
+
+negative_next = 0.000 + 0.70 * 1.40
+negative_next = 0.980
+
+trust = 0.096 - 0.980
+trust = -0.884
+state = hostile
+price = 2.00x
+
+base_cost = 10
+final_cost = 10 * 2.00
+final_cost = 20
+```
+
+This demo is intended as a developer-facing reference for understanding how Ghost turns deterministic relationship math into gameplay-readable output.
+
+Ghost still does not choose actions.
+
+Ghost exposes state. The game logic decides what to do with that state.
 
 ## Relationship Runtime Summary
 
@@ -542,17 +598,33 @@ They are not representative of Ghost’s final scope.
 
 Ghost Engine remains in early development.
 
-As of v1.2.1:
+As of v1.3.0:
 
 - the deterministic interaction core is stable
 - the emotional inertia runtime is available through public API methods
 - the proof demo is packaged and runnable
 - the NPC API mapping demo is packaged and runnable
 - the playable shopkeeper mini game is packaged and runnable
+- the Ghost math demo is packaged and runnable
 
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.3.0
+
+- Added `ghost-math-demo` CLI entry point
+- Added `ghost.examples.ghost_math_helper`
+- Added developer-facing math demo for Ghost relationship mechanics
+- Documented clamp behavior, relationship reservoirs, trust calculation, tick decay, and state thresholds
+- Added balanced personality math walkthrough
+- Added resentful personality math walkthrough
+- Demonstrated how relationship state maps into gameplay behavior such as price changes and NPC behavior
+- Updated the public demo suite:
+  - `ghost-demo`
+  - `ghost-npc-demo`
+  - `ghost-shopkeeper-demo`
+  - `ghost-math-demo`
 
 ## v1.2.1
 
