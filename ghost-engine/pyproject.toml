@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghocentric-ghost-engine"
-version = "1.2.1"
+version = "1.3.0"
 description = "A deterministic emotional inertia runtime for NPC systems and persistent interactive state."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -49,3 +49,4 @@ include = ["ghost", "ghost.*"]
 ghost-demo = "ghost.examples.relationship_proof_demo:main"
 ghost-npc-demo = "ghost.examples.simple_npc_demo:main"
 ghost-shopkeeper-demo = "ghost.examples.shopkeeper_mini_game:main"
+ghost-math-demo = "ghost.examples.ghost_math_helper:main"
