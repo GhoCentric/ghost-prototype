@@ -381,6 +381,121 @@ def show_resentful_personality_example():
     print(f"final_cost = 10 * {price:.2f}")
     print(f"final_cost = {int(10 * price)}")
 
+def show_maturity_volatility_example():
+    section("8. MATURITY / VOLATILITY")
+
+    print("maturity = relationship stability over repeated interactions")
+    print("volatility = how strongly a relationship reacts to new events")
+    print()
+    print("maturity_modifier = 1.0 - maturity")
+    print("positive_effective_gain = base_gain * volatility * positive_volatility * maturity_modifier")
+    print("negative_effective_gain = base_gain * volatility * negative_volatility * maturity_modifier")
+    print()
+
+    print("Short relationship:")
+    print("2x help, then betrayal")
+    print()
+
+    short = GhostEngine()
+
+    short.apply_event("player", "npc", "help")
+    short.apply_event("player", "npc", "help")
+
+    before_short = short.get_relationship("player", "npc")
+
+    short.apply_event("player", "npc", "betrayal")
+    after_short = short.get_relationship("player", "npc")
+
+    print("before betrayal:")
+    print(f"trust = {before_short['trust']:.3f}")
+    print(f"state = {before_short['state']}")
+    print(f"maturity = {before_short['maturity']:.2f}")
+    print()
+
+    print("after betrayal:")
+    print(f"trust = {after_short['trust']:.3f}")
+    print(f"state = {after_short['state']}")
+    print(f"maturity = {after_short['maturity']:.2f}")
+    print(f"volatility = {after_short['volatility']:.2f}")
+    print()
+
+    print("Long relationship:")
+    print("20x help, then betrayal")
+    print()
+
+    long = GhostEngine()
+
+    for _ in range(20):
+        long.apply_event("player", "npc", "help")
+
+    before_long = long.get_relationship("player", "npc")
+
+    long.apply_event("player", "npc", "betrayal")
+    after_long = long.get_relationship("player", "npc")
+
+    print("before betrayal:")
+    print(f"trust = {before_long['trust']:.3f}")
+    print(f"state = {before_long['state']}")
+    print(f"maturity = {before_long['maturity']:.2f}")
+    print()
+
+    print("after betrayal:")
+    print(f"trust = {after_long['trust']:.3f}")
+    print(f"state = {after_long['state']}")
+    print(f"maturity = {after_long['maturity']:.2f}")
+    print(f"volatility = {after_long['volatility']:.2f}")
+    print()
+
+    print("Same event. Different history. Different outcome.")
+    print()
+
+    print("Personality comparison:")
+    print("10x help, then betrayal")
+    print()
+
+    personalities = (
+        "balanced",
+        "forgiving",
+        "resentful",
+        "volatile",
+    )
+
+    print("Personality | Before  | After   | State    | Mat | Vol | PosV | NegV")
+    print("--------------------------------------------------------------------")
+
+    for personality in personalities:
+        ghost = GhostEngine()
+        ghost.relationships.set_personality("player", "npc", personality)
+
+        for _ in range(10):
+            ghost.apply_event("player", "npc", "help")
+
+        before = ghost.get_relationship("player", "npc")
+
+        ghost.apply_event("player", "npc", "betrayal")
+        after = ghost.get_relationship("player", "npc")
+
+        print(
+            f"{personality:<11} "
+            f"{before['trust']:>7.3f}  "
+            f"{after['trust']:>7.3f}  "
+            f"{after['state']:<8} "
+            f"{after['maturity']:>4.2f} "
+            f"{after['volatility']:>4.2f} "
+            f"{after['positive_volatility']:>5.2f} "
+            f"{after['negative_volatility']:>5.2f}"
+        )
+
+    print()
+    print("With 10 prior helpful actions, some personalities")
+    print("remain friendly after one betrayal.")
+    print("Resentful and volatile profiles drop harder because")
+    print("negative events carry more weight.")
+    print()
+    print("Maturity does not erase history.")
+    print("Maturity reduces future emotional swing.")
+    print("Volatility changes how strongly events hit.")
+    print("Positive and negative volatility can differ.")
 
 def main():
     print()
@@ -398,6 +513,7 @@ def main():
     show_game_mapping_math()
     show_public_api_check()
     show_resentful_personality_example()
+    show_maturity_volatility_example()
 
     print()
     print("✔ Ghost math demo complete.")
