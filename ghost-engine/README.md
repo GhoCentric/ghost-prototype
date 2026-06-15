@@ -2,7 +2,7 @@
 
 A lightweight, deterministic internal state engine for experimenting with persistent state, temporal dynamics, emotional inertia, and emergent behavior in interactive systems.
 
-Ghost is **NOT** a language model and **NOT** a decision-maker.
+Ghost is NOT a language model and NOT a decision-maker.
 
 It is a minimal, stateful core designed to accumulate interaction signals over time and expose them in a clean, predictable, and serialization-safe way.
 
@@ -42,7 +42,7 @@ Each demo proves a different layer of the engine:
 - `ghost-demo` compares Ghost emotional inertia against a linear baseline
 - `ghost-npc-demo` shows Ghost API state being mapped into external NPC behavior
 - `ghost-shopkeeper-demo` launches a playable terminal shopkeeper demo
-- `ghost-math-demo` explains Ghost relationship math with formulas, worked examples, personality tuning, and gameplay mapping
+- `ghost-math-demo` explains Ghost relationship math with formulas, worked examples, personality tuning, maturity, volatility, and gameplay mapping
 
 ## Basic Usage
 
@@ -97,7 +97,11 @@ Example returned structure:
     "transition": ("neutral", "hostile"),
     "trigger": {
         "event": "relationship_broken"
-    }
+    },
+    "maturity": 0.03,
+    "volatility": 1.0,
+    "positive_volatility": 1.0,
+    "negative_volatility": 1.0,
 }
 ```
 
@@ -137,7 +141,7 @@ This means external systems can now consume Ghost relationship state directly fo
 - forgiveness events
 - long-term NPC memory
 
-Ghost still does **not** decide what an NPC does.
+Ghost still does not decide what an NPC does.
 
 Ghost exposes state.
 
@@ -168,10 +172,10 @@ Relationships are no longer a single value.
 
 Each relationship tracks:
 
-```text
-positive reservoir (pos)
-negative reservoir (neg)
+- positive reservoir (`pos`)
+- negative reservoir (`neg`)
 
+```text
 trust = pos - neg
 ```
 
@@ -233,8 +237,47 @@ Each preset modifies:
 - gain sensitivity
 - decay speed
 - recovery behavior
+- maturity behavior
+- positive volatility
+- negative volatility
 
 Personality presets allow the same event sequence to produce different emotional outcomes depending on the relationship profile.
+
+## Relationship Maturity and Volatility
+
+v1.4.0 adds relationship maturity and volatility to Ghost's relationship runtime.
+
+Maturity represents relationship stability over repeated interactions.
+
+Volatility controls how strongly new events affect a relationship.
+
+Ghost now tracks:
+
+- `maturity`
+- `volatility`
+- `positive_volatility`
+- `negative_volatility`
+- `maturity_gain`
+- `maturity_cap`
+
+Maturity does not erase history.
+
+It reduces future emotional swing.
+
+This means the same betrayal can produce different outcomes depending on relationship history.
+
+A short relationship can still break immediately after betrayal.
+
+A long relationship with repeated positive history may absorb one betrayal without instantly becoming hostile.
+
+Positive and negative volatility can also differ.
+
+This allows personalities to behave differently under the same event sequence:
+
+- balanced relationships respond normally
+- forgiving relationships resist negative swings
+- resentful relationships are hit harder by negative events
+- volatile relationships can bond quickly and drop sharply
 
 ## Relationship State System
 
@@ -246,6 +289,8 @@ rel = ghost.get_relationship("A", "B")
 rel["state"]       # "hostile", "neutral", "friendly"
 rel["transition"]  # ("neutral", "hostile")
 rel["trigger"]     # {"event": "relationship_broken"}
+rel["maturity"]    # relationship stability over repeated interactions
+rel["volatility"]  # general event sensitivity
 ```
 
 Relationship state gives external systems a clean way to respond to emotional history without needing to interpret raw internal values.
@@ -256,10 +301,10 @@ State transitions generate structured events.
 
 Examples include:
 
-- `relationship_broken`
-- `deescalation`
-- `forgiveness`
-- `state_shift`
+- relationship_broken
+- deescalation
+- forgiveness
+- state_shift
 
 These can be used by external systems for:
 
@@ -296,14 +341,13 @@ This behavior cannot be replicated by:
 - additive systems, such as `trust += delta`
 - low-pass filters, such as exponential smoothing
 
-Ghost introduces **stateful emotional inertia**, not just value smoothing.
+Ghost introduces stateful emotional inertia, not just value smoothing.
 
- 
 ## Packaged Demos
 
 Ghost includes four small demos that each prove a different layer of the engine.
 
-### Proof Demo
+## Proof Demo
 
 The proof demo compares Ghost’s emotional inertia model against a standard linear baseline.
 
@@ -338,7 +382,7 @@ Baseline normalized more quickly.
 ✔ Emotional inertia confirmed.
 ```
 
-### NPC API Mapping Demo
+## NPC API Mapping Demo
 
 The NPC demo shows how a small external behavior layer can consume Ghost state over a deterministic 10-tick sequence.
 
@@ -380,7 +424,7 @@ The NPC behavior is not chosen by Ghost directly.
 
 Ghost exposes state. The NPC code decides how to respond.
 
-### Playable Shopkeeper Mini Game
+## Playable Shopkeeper Mini Game
 
 The shopkeeper demo is a playable terminal mini game.
 
@@ -396,7 +440,7 @@ Or as a module:
 python -m ghost.examples.shopkeeper_mini_game
 ```
 
-The shopkeeper demo uses only the public `GhostEngine` API and shows how trust, emotional pressure, relationship state, prices, quest availability, and dialogue can change based on player actions.
+The shopkeeper demo uses only the public GhostEngine API and shows how trust, emotional pressure, relationship state, prices, quest availability, and dialogue can change based on player actions.
 
 Example status output:
 
@@ -423,7 +467,7 @@ The mini game demonstrates that behavior can begin changing before a relationshi
 
 Ghost exposes the emotional state. The game logic decides how to respond.
 
-### Ghost Math Demo
+## Ghost Math Demo
 
 The math demo explains the small mathematical contract behind Ghost.
 
@@ -449,6 +493,11 @@ This demo walks through Ghost relationship math step by step:
 - game behavior mapping
 - balanced personality math
 - resentful personality math
+- maturity behavior
+- volatility behavior
+- positive and negative volatility
+- short-history versus long-history betrayal outcomes
+- personality-specific relationship outcomes
 
 Example output:
 
@@ -471,6 +520,30 @@ final_cost = 10 * 2.00
 final_cost = 20
 ```
 
+v1.4.0 also demonstrates maturity and split volatility:
+
+```text
+maturity_modifier = 1.0 - maturity
+positive_effective_gain = base_gain * volatility * positive_volatility * maturity_modifier
+negative_effective_gain = base_gain * volatility * negative_volatility * maturity_modifier
+
+Short relationship:
+2x help, then betrayal
+
+after betrayal:
+trust = -0.554
+state = hostile
+maturity = 0.03
+
+Long relationship:
+20x help, then betrayal
+
+after betrayal:
+trust = 0.940
+state = friendly
+maturity = 0.21
+```
+
 This demo is intended as a developer-facing reference for understanding how Ghost turns deterministic relationship math into gameplay-readable output.
 
 Ghost still does not choose actions.
@@ -485,6 +558,9 @@ Ghost relationships provide:
 - resistance and saturation modeling
 - time-based decay
 - per-relationship personality tuning
+- relationship maturity
+- general volatility
+- split positive and negative volatility
 - state interpretation
 - transition tracking
 - trigger events
@@ -542,27 +618,27 @@ These guarantees hold under repeated execution, long-run simulation, and adversa
 
 Recent releases introduced a multi-agent interaction model on top of Ghost’s deterministic state core.
 
-### Agent State Mutation
+## Agent State Mutation
 
 Agents maintain evolving internal state, such as mood, tension, and last intent, and react deterministically to interaction signals.
 
-### Relationship Graph
+## Relationship Graph
 
 Pairwise relationships evolve through explicit interaction deltas, supporting long-term system memory without hidden state.
 
-### Bounded Cascade Propagation
+## Bounded Cascade Propagation
 
 Signals propagate deterministically through local interaction networks with strict bounds to prevent runaway behavior.
 
-### Global System Tension
+## Global System Tension
 
 The engine tracks shared system pressure across interactions using deterministic nonlinear modulation.
 
-### Actor Threat Memory
+## Actor Threat Memory
 
 Agents maintain explicit per-actor threat accumulation history for structured introspection.
 
-### Idle-State Decay Dynamics
+## Idle-State Decay Dynamics
 
 Bounded passive decay improves long-run stability and prevents runaway system pressure.
 
@@ -598,10 +674,11 @@ They are not representative of Ghost’s final scope.
 
 Ghost Engine remains in early development.
 
-As of v1.3.0:
+As of v1.4.0:
 
 - the deterministic interaction core is stable
 - the emotional inertia runtime is available through public API methods
+- relationship maturity and volatility are available through public relationship state
 - the proof demo is packaged and runnable
 - the NPC API mapping demo is packaged and runnable
 - the playable shopkeeper mini game is packaged and runnable
@@ -610,6 +687,21 @@ As of v1.3.0:
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.4.0
+
+- Added relationship maturity
+- Added relationship volatility
+- Added split positive and negative volatility
+- Added maturity gain and maturity cap fields
+- Exposed maturity through public relationship output
+- Exposed volatility through public relationship output
+- Exposed positive and negative volatility through public relationship output
+- Updated personality presets with maturity and volatility behavior
+- Expanded `ghost-math-demo` with maturity and volatility examples
+- Demonstrated short-history versus long-history betrayal outcomes
+- Demonstrated personality-specific relationship outcomes
+- Added tests for relationship maturity and volatility behavior
 
 ## v1.3.0
 
@@ -648,8 +740,8 @@ This project is intended as a foundation for experimentation, research, and futu
 - Demonstrated trust, emotional pressure, relationship state, pricing, quest availability, and dialogue changes through public API usage
 - Added resentful NPC personality setup to the shopkeeper demo
 - Added wait/tick explanation to demonstrate time-based relationship decay
-- Added emotional pressure display such as `damaged, but not broken` and `broken`
-- Improved command input support for typed commands such as `buy bread`, `show status`, and `wait`
+- Added emotional pressure display such as damaged, but not broken and broken
+- Improved command input support for typed commands such as buy bread, show status, and wait
 
 ## v1.1.1
 
