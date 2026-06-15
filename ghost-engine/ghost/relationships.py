@@ -18,36 +18,63 @@ class RelationshipGraph:
         self.neg_decay = ctx.get("neg_decay", 0.975)
 
         self.max_reservoir = ctx.get("max_reservoir", 5.0)
+
+        self.volatility = ctx.get("volatility", 1.0)
+        self.positive_volatility = ctx.get("positive_volatility", 1.0)
+        self.negative_volatility = ctx.get("negative_volatility", 1.0)
+
+        self.maturity_gain = ctx.get("maturity_gain", 0.01)
+        self.maturity_cap = ctx.get("maturity_cap", 0.75)
         
     # -----------------------------
     # PERSONALITY PRESETS
     # -----------------------------
     PERSONALITY_PRESETS = {
-            "balanced": {
-                "pos_gain": 0.85,
-                "neg_gain": 1.1,
-                "pos_decay": 0.97,
-                "neg_decay": 0.975,
-            },
-            "forgiving": {
-                "pos_gain": 1.2,
-                "neg_gain": 0.8,
-                "pos_decay": 0.96,
-                "neg_decay": 0.94,
-            },
-            "resentful": {
-                "pos_gain": 0.6,
-                "neg_gain": 1.4,
-                "pos_decay": 0.98,
-                "neg_decay": 0.995,
-            },
-            "volatile": {
-                "pos_gain": 1.5,
-                "neg_gain": 1.5,
-                "pos_decay": 0.9,
-                "neg_decay": 0.9,
-            },
-        }
+        "balanced": {
+            "pos_gain": 0.85,
+            "neg_gain": 1.1,
+            "pos_decay": 0.97,
+            "neg_decay": 0.975,
+            "volatility": 1.0,
+            "positive_volatility": 1.0,
+            "negative_volatility": 1.0,
+            "maturity_gain": 0.01,
+            "maturity_cap": 0.75,
+        },
+        "forgiving": {
+            "pos_gain": 1.2,
+            "neg_gain": 0.8,
+            "pos_decay": 0.96,
+            "neg_decay": 0.94,
+            "volatility": 0.9,
+            "positive_volatility": 1.0,
+            "negative_volatility": 0.8,
+            "maturity_gain": 0.04,
+            "maturity_cap": 0.80,
+        },
+        "resentful": {
+            "pos_gain": 0.6,
+            "neg_gain": 1.4,
+            "pos_decay": 0.98,
+            "neg_decay": 0.995,
+            "volatility": 1.1,
+            "positive_volatility": 0.9,
+            "negative_volatility": 1.3,
+            "maturity_gain": 0.02,
+            "maturity_cap": 0.65,
+        },
+        "volatile": {
+            "pos_gain": 1.5,
+            "neg_gain": 1.5,
+            "pos_decay": 0.9,
+            "neg_decay": 0.9,
+            "volatility": 1.2,
+            "positive_volatility": 1.1,
+            "negative_volatility": 1.8,
+            "maturity_gain": 0.01,
+            "maturity_cap": 0.40,
+        },
+    }
 
     def set_personality(self, a: str, b: str, personality: str):
         if personality not in self.PERSONALITY_PRESETS:
@@ -78,6 +105,13 @@ class RelationshipGraph:
                 "neg_gain": self.neg_gain,
                 "pos_decay": self.pos_decay,
                 "neg_decay": self.neg_decay,
+
+                "maturity": 0.0,
+                "volatility": self.volatility,
+                "positive_volatility": self.positive_volatility,
+                "negative_volatility": self.negative_volatility,
+                "maturity_gain": self.maturity_gain,
+                "maturity_cap": self.maturity_cap,
             },
         )
 
@@ -171,6 +205,18 @@ class RelationshipGraph:
 
         channel, amount = event_map[event]
 
+        maturity = rel.get("maturity", 0.0)
+        volatility = rel.get("volatility", self.volatility)
+        positive_volatility = rel.get(
+            "positive_volatility",
+            self.positive_volatility,
+        )
+        negative_volatility = rel.get(
+            "negative_volatility",
+            self.negative_volatility,
+        )
+        maturity_modifier = max(0.0, 1.0 - maturity)
+
         if channel == "pos":
             resistance = 1.0 / (1.0 + (rel.get("neg", 0.0) * 0.35))
             saturation = max(
@@ -179,6 +225,9 @@ class RelationshipGraph:
             )
 
             gain = amount * rel.get("pos_gain", self.pos_gain)
+            gain *= volatility
+            gain *= positive_volatility
+            gain *= maturity_modifier
             gain *= resistance
             gain *= saturation
 
@@ -194,6 +243,9 @@ class RelationshipGraph:
             )
 
             gain = amount * rel.get("neg_gain", self.neg_gain)
+            gain *= volatility
+            gain *= negative_volatility
+            gain *= maturity_modifier
             gain *= saturation
 
             rel["neg"] = min(
@@ -209,6 +261,14 @@ class RelationshipGraph:
             transition = (before_state, after_state)
 
         trigger = self._trigger_for_transition(before_state, after_state)
+
+        maturity_gain = rel.get("maturity_gain", self.maturity_gain)
+        maturity_cap = rel.get("maturity_cap", self.maturity_cap)
+
+        rel["maturity"] = min(
+            maturity_cap,
+            rel.get("maturity", 0.0) + maturity_gain,
+        )
 
         rel["trust"] = trust
         rel["state"] = after_state
@@ -232,6 +292,16 @@ class RelationshipGraph:
             "state": state,
             "transition": rel.get("transition"),
             "trigger": rel.get("trigger"),
+            "maturity": rel.get("maturity", 0.0),
+            "volatility": rel.get("volatility", self.volatility),
+            "positive_volatility": rel.get(
+                "positive_volatility",
+                self.positive_volatility,
+            ),
+            "negative_volatility": rel.get(
+                "negative_volatility",
+                self.negative_volatility,
+            ),
         }
 
     # -----------------------------
@@ -239,8 +309,26 @@ class RelationshipGraph:
     # -----------------------------
     def tick(self):
         for rel in self._rels.values():
+            before_trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+            before_state = rel.get("state", self._classify_state(before_trust))
+
             rel["pos"] *= rel["pos_decay"]
             rel["neg"] *= rel["neg_decay"]
+
+            trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+            after_state = self._classify_state(trust)
+
+            transition = None
+            if before_state != after_state:
+                transition = (before_state, after_state)
+
+            trigger = self._trigger_for_transition(before_state, after_state)
+
+            rel["trust"] = trust
+            rel["state"] = after_state
+            rel["transition"] = transition
+            rel["trigger"] = trigger
+            rel["last_event"] = "tick"
 
     def get(self, a: str, b: str):
         rel = self._rels.get(self._key(a, b))
