@@ -28,13 +28,14 @@ pip install ghocentric-ghost-engine
 
 ## Demo Commands
 
-After installation, Ghost includes four runnable demo commands:
+After installation, Ghost includes five runnable demo commands:
 
 ```bash
 ghost-demo
 ghost-npc-demo
 ghost-shopkeeper-demo
 ghost-math-demo
+ghost-diagnostics-demo
 ```
 
 Each demo proves a different layer of the engine:
@@ -43,6 +44,7 @@ Each demo proves a different layer of the engine:
 - `ghost-npc-demo` shows Ghost API state being mapped into external NPC behavior
 - `ghost-shopkeeper-demo` launches a playable terminal shopkeeper demo
 - `ghost-math-demo` explains Ghost relationship math with formulas, worked examples, personality tuning, maturity, volatility, and gameplay mapping
+- `ghost-diagnostics-demo` explains relationship transitions with measurable diagnostics such as trust delta, severity, pressure, maturity, and volatility
 
 ## Basic Usage
 
@@ -97,6 +99,19 @@ Example returned structure:
     "transition": ("neutral", "hostile"),
     "trigger": {
         "event": "relationship_broken"
+    },
+    "diagnostics": {
+        "event": "betrayal",
+        "channel": "neg",
+        "from_state": "neutral",
+        "to_state": "hostile",
+        "trust_before": 0.047,
+        "trust_after": -0.703,
+        "delta": -0.750,
+        "abs_delta": 0.750,
+        "direction": "negative",
+        "severity": 0.750,
+        "pressure": "relationship_broken",
     },
     "maturity": 0.03,
     "volatility": 1.0,
@@ -279,6 +294,84 @@ This allows personalities to behave differently under the same event sequence:
 - resentful relationships are hit harder by negative events
 - volatile relationships can bond quickly and drop sharply
 
+## Relationship Diagnostics
+
+v1.5.0 adds relationship diagnostics to Ghost's public relationship output.
+
+Diagnostics explain what changed, how strongly it changed, and why the state shifted.
+
+Ghost now exposes a `diagnostics` packet after relationship events and ticks.
+
+Diagnostics include:
+
+- `event`
+- `channel`
+- `base_amount`
+- `effective_gain`
+- `from_state`
+- `to_state`
+- `trust_before`
+- `trust_after`
+- `delta`
+- `abs_delta`
+- `direction`
+- `severity`
+- `maturity`
+- `maturity_modifier`
+- `volatility`
+- `positive_volatility`
+- `negative_volatility`
+- `transition`
+- `trigger`
+- `pressure`
+
+This makes relationship changes inspectable.
+
+A game, simulation, tool, or adapter can now see not only the final relationship state, but also the measurable cause of the change.
+
+Example diagnostic packet:
+
+```python
+{
+    "event": "betrayal",
+    "channel": "neg",
+    "base_amount": 0.7,
+    "effective_gain": 0.7546,
+    "from_state": "friendly",
+    "to_state": "hostile",
+    "trust_before": 0.2009,
+    "trust_after": -0.5537,
+    "delta": -0.7546,
+    "abs_delta": 0.7546,
+    "direction": "negative",
+    "severity": 0.7546,
+    "maturity": 0.02,
+    "maturity_modifier": 0.98,
+    "volatility": 1.0,
+    "positive_volatility": 1.0,
+    "negative_volatility": 1.0,
+    "transition": ("friendly", "hostile"),
+    "trigger": {
+        "event": "relationship_broken"
+    },
+    "pressure": "relationship_broken",
+}
+```
+
+Diagnostics are designed to support future systems such as:
+
+- NPC-to-NPC social propagation
+- faction reputation changes
+- guard suspicion
+- town pressure
+- expression metadata
+- external debug tools
+- gameplay consequence systems
+
+Ghost still does not decide what happens next.
+
+Ghost exposes the measurable state change so another system can decide how to respond.
+
 ## Relationship State System
 
 Ghost exposes human-readable relationship states.
@@ -286,14 +379,17 @@ Ghost exposes human-readable relationship states.
 ```python
 rel = ghost.get_relationship("A", "B")
 
-rel["state"]       # "hostile", "neutral", "friendly"
-rel["transition"]  # ("neutral", "hostile")
-rel["trigger"]     # {"event": "relationship_broken"}
-rel["maturity"]    # relationship stability over repeated interactions
-rel["volatility"]  # general event sensitivity
+rel["state"]        # "hostile", "neutral", "friendly"
+rel["transition"]   # ("neutral", "hostile")
+rel["trigger"]      # {"event": "relationship_broken"}
+rel["diagnostics"]  # measurable explanation of the latest change
+rel["maturity"]     # relationship stability over repeated interactions
+rel["volatility"]   # general event sensitivity
 ```
 
 Relationship state gives external systems a clean way to respond to emotional history without needing to interpret raw internal values.
+
+Relationship diagnostics give external systems a clean way to understand how strongly the relationship changed and why.
 
 ## Event Triggers
 
@@ -318,7 +414,7 @@ These can be used by external systems for:
 
 Ghost does not perform those actions directly.
 
-It exposes the emotional state and trigger information so another system can decide what to do.
+It exposes the emotional state, trigger information, and diagnostics so another system can decide what to do.
 
 ## Oscillation Behavior
 
@@ -345,7 +441,7 @@ Ghost introduces stateful emotional inertia, not just value smoothing.
 
 ## Packaged Demos
 
-Ghost includes four small demos that each prove a different layer of the engine.
+Ghost includes five small demos that each prove a different layer of the engine.
 
 ## Proof Demo
 
@@ -550,6 +646,71 @@ Ghost still does not choose actions.
 
 Ghost exposes state. The game logic decides what to do with that state.
 
+## Ghost Diagnostics Demo
+
+The diagnostics demo explains the measurable diagnostic packet behind relationship changes.
+
+Run:
+
+```bash
+ghost-diagnostics-demo
+```
+
+Or as a module:
+
+```bash
+python -m ghost.examples.relationship_diagnostics_demo
+```
+
+This demo shows how Ghost exposes what changed, how hard it changed, and why.
+
+It demonstrates:
+
+- short relationship break diagnostics
+- long relationship betrayal resistance
+- volatile personality diagnostics
+- trust before and after
+- trust delta
+- severity
+- direction
+- pressure
+- effective gain
+- maturity
+- volatility
+- split positive and negative volatility
+
+Example output:
+
+```text
+Diagnostics:
+event:                betrayal
+channel:              neg
+from_state:           friendly
+to_state:             hostile
+trust_before:         0.201
+trust_after:          -0.554
+delta:                -0.755
+abs_delta:            0.755
+direction:            negative
+severity:             0.755
+pressure:             relationship_broken
+base_amount:          0.700
+effective_gain:       0.755
+maturity:             0.020
+maturity_modifier:    0.980
+volatility:           1.00
+positive_volatility:  1.00
+negative_volatility:  1.00
+```
+
+The diagnostics demo is intended as a developer-facing inspection tool.
+
+It shows how Ghost turns relationship changes into measurable data that external systems can use.
+
+Ghost still does not choose actions.
+
+Ghost exposes diagnostics. The game logic decides what to do with them.
+
 ## Relationship Runtime Summary
 
 Ghost relationships provide:
@@ -564,6 +725,9 @@ Ghost relationships provide:
 - state interpretation
 - transition tracking
 - trigger events
+- relationship diagnostics
+- trust delta tracking
+- severity tracking
 - public relationship inspection
 - direct event application
 
@@ -653,6 +817,7 @@ Core validation includes:
 - serialization safety validation
 - public state safety checks
 - long-run stability checks
+- relationship diagnostics checks
 
 This ensures the engine remains correct and predictable as new systems are layered on top.
 
@@ -674,19 +839,40 @@ They are not representative of Ghost’s final scope.
 
 Ghost Engine remains in early development.
 
-As of v1.4.0:
+As of v1.5.0:
 
 - the deterministic interaction core is stable
 - the emotional inertia runtime is available through public API methods
 - relationship maturity and volatility are available through public relationship state
+- relationship diagnostics are available through public relationship state
 - the proof demo is packaged and runnable
 - the NPC API mapping demo is packaged and runnable
 - the playable shopkeeper mini game is packaged and runnable
 - the Ghost math demo is packaged and runnable
+- the Ghost diagnostics demo is packaged and runnable
 
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.5.0
+
+- Added relationship diagnostics output
+- Added diagnostic packets to public relationship state
+- Added trust before and trust after tracking
+- Added trust delta and absolute delta tracking
+- Added direction labels for positive, negative, and stable changes
+- Added severity calculation for relationship changes
+- Added pressure labels for relationship transitions and major shifts
+- Added effective gain reporting after maturity and volatility modifiers
+- Added maturity and volatility values to diagnostics
+- Added diagnostics for relationship tick decay
+- Added JSON-safe diagnostics validation
+- Added `ghost-diagnostics-demo` CLI entry point
+- Added `ghost.examples.relationship_diagnostics_demo`
+- Added tests for relationship diagnostics behavior
+- Added tests for diagnostics through `get_relationship()`
+- Added tests for diagnostics JSON safety
 
 ## v1.4.0
 
