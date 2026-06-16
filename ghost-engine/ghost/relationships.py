@@ -180,6 +180,92 @@ class RelationshipGraph:
 
         return {"event": "state_shift"}
 
+    def _pressure_label(self, trigger, delta: float):
+        if trigger:
+            event = trigger.get("event")
+
+            if event == "relationship_broken":
+                return "relationship_broken"
+
+            if event == "deescalation":
+                return "deescalating"
+
+            if event == "forgiveness":
+                return "forgiveness"
+
+            if event == "state_shift":
+                return "state_shift"
+
+        if delta <= -0.50:
+            return "major_negative_shift"
+
+        if delta <= -0.20:
+            return "negative_shift"
+
+        if delta >= 0.20:
+            return "positive_shift"
+
+        if delta > 0.0:
+            return "minor_positive_shift"
+
+        if delta < 0.0:
+            return "minor_negative_shift"
+
+        return "stable"
+
+    def _direction_label(self, delta: float):
+        if delta > 0.0:
+            return "positive"
+
+        if delta < 0.0:
+            return "negative"
+
+        return "stable"
+
+    def _build_diagnostics(
+        self,
+        *,
+        event: str,
+        channel: str,
+        base_amount: float,
+        effective_gain: float,
+        before_state: str,
+        after_state: str,
+        before_trust: float,
+        after_trust: float,
+        maturity: float,
+        maturity_modifier: float,
+        volatility: float,
+        positive_volatility: float,
+        negative_volatility: float,
+        transition,
+        trigger,
+    ):
+        delta = after_trust - before_trust
+
+        return {
+            "event": event,
+            "channel": channel,
+            "base_amount": base_amount,
+            "effective_gain": effective_gain,
+            "from_state": before_state,
+            "to_state": after_state,
+            "trust_before": before_trust,
+            "trust_after": after_trust,
+            "delta": delta,
+            "abs_delta": abs(delta),
+            "direction": self._direction_label(delta),
+            "severity": min(1.0, abs(delta)),
+            "maturity": maturity,
+            "maturity_modifier": maturity_modifier,
+            "volatility": volatility,
+            "positive_volatility": positive_volatility,
+            "negative_volatility": negative_volatility,
+            "transition": transition,
+            "trigger": trigger,
+            "pressure": self._pressure_label(trigger, delta),
+        }
+
     def apply_event(self, a: str, b: str, event: str):
         rel = self.ensure_pair(a, b)
 
@@ -204,6 +290,7 @@ class RelationshipGraph:
         before_state = rel.get("state", self._classify_state(before_trust))
 
         channel, amount = event_map[event]
+        effective_gain = 0.0
 
         maturity = rel.get("maturity", 0.0)
         volatility = rel.get("volatility", self.volatility)
@@ -231,6 +318,8 @@ class RelationshipGraph:
             gain *= resistance
             gain *= saturation
 
+            effective_gain = gain
+
             rel["pos"] = min(
                 self.max_reservoir,
                 rel.get("pos", 0.0) + gain,
@@ -248,6 +337,8 @@ class RelationshipGraph:
             gain *= maturity_modifier
             gain *= saturation
 
+            effective_gain = gain
+
             rel["neg"] = min(
                 self.max_reservoir,
                 rel.get("neg", 0.0) + gain,
@@ -262,6 +353,24 @@ class RelationshipGraph:
 
         trigger = self._trigger_for_transition(before_state, after_state)
 
+        diagnostics = self._build_diagnostics(
+            event=event,
+            channel=channel,
+            base_amount=amount,
+            effective_gain=effective_gain,
+            before_state=before_state,
+            after_state=after_state,
+            before_trust=before_trust,
+            after_trust=trust,
+            maturity=maturity,
+            maturity_modifier=maturity_modifier,
+            volatility=volatility,
+            positive_volatility=positive_volatility,
+            negative_volatility=negative_volatility,
+            transition=transition,
+            trigger=trigger,
+        )
+
         maturity_gain = rel.get("maturity_gain", self.maturity_gain)
         maturity_cap = rel.get("maturity_cap", self.maturity_cap)
 
@@ -275,6 +384,7 @@ class RelationshipGraph:
         rel["transition"] = transition
         rel["trigger"] = trigger
         rel["last_event"] = event
+        rel["diagnostics"] = diagnostics
 
         return self.get_relationship(a, b)
 
@@ -292,6 +402,7 @@ class RelationshipGraph:
             "state": state,
             "transition": rel.get("transition"),
             "trigger": rel.get("trigger"),
+            "diagnostics": rel.get("diagnostics"),
             "maturity": rel.get("maturity", 0.0),
             "volatility": rel.get("volatility", self.volatility),
             "positive_volatility": rel.get(
@@ -324,11 +435,42 @@ class RelationshipGraph:
 
             trigger = self._trigger_for_transition(before_state, after_state)
 
+            maturity = rel.get("maturity", 0.0)
+            volatility = rel.get("volatility", self.volatility)
+            positive_volatility = rel.get(
+                "positive_volatility",
+                self.positive_volatility,
+            )
+            negative_volatility = rel.get(
+                "negative_volatility",
+                self.negative_volatility,
+            )
+            maturity_modifier = max(0.0, 1.0 - maturity)
+
+            diagnostics = self._build_diagnostics(
+                event="tick",
+                channel="decay",
+                base_amount=0.0,
+                effective_gain=trust - before_trust,
+                before_state=before_state,
+                after_state=after_state,
+                before_trust=before_trust,
+                after_trust=trust,
+                maturity=maturity,
+                maturity_modifier=maturity_modifier,
+                volatility=volatility,
+                positive_volatility=positive_volatility,
+                negative_volatility=negative_volatility,
+                transition=transition,
+                trigger=trigger,
+            )
+
             rel["trust"] = trust
             rel["state"] = after_state
             rel["transition"] = transition
             rel["trigger"] = trigger
             rel["last_event"] = "tick"
+            rel["diagnostics"] = diagnostics
 
     def get(self, a: str, b: str):
         rel = self._rels.get(self._key(a, b))
