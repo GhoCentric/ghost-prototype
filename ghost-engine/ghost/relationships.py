@@ -7,6 +7,7 @@ class RelationshipGraph:
         self._ctx = ctx
         self._rels = ctx.setdefault("relationships", {})
         self._neighbors = ctx.setdefault("neighbors", {})
+        self._propagation_log = ctx.setdefault("social_propagation", [])
 
         # -----------------------------
         # GLOBAL PARAMETERS
@@ -180,7 +181,34 @@ class RelationshipGraph:
 
         return {"event": "state_shift"}
 
-    def _pressure_label(self, trigger, delta: float):
+    def _near_break(
+        self,
+        *,
+        after_state: str,
+        after_trust: float,
+        delta: float,
+    ) -> bool:
+        return bool(
+            after_state == "neutral"
+            and -0.55 < after_trust <= -0.45
+            and delta < 0.0
+        )
+
+    def _pressure_label(
+        self,
+        *,
+        trigger,
+        delta: float,
+        after_state: str,
+        after_trust: float,
+    ):
+        if self._near_break(
+            after_state=after_state,
+            after_trust=after_trust,
+            delta=delta,
+        ):
+            return "near_break"
+
         if trigger:
             event = trigger.get("event")
 
@@ -243,6 +271,13 @@ class RelationshipGraph:
     ):
         delta = after_trust - before_trust
 
+        pressure = self._pressure_label(
+            trigger=trigger,
+            delta=delta,
+            after_state=after_state,
+            after_trust=after_trust,
+        )
+
         return {
             "event": event,
             "channel": channel,
@@ -263,7 +298,8 @@ class RelationshipGraph:
             "negative_volatility": negative_volatility,
             "transition": transition,
             "trigger": trigger,
-            "pressure": self._pressure_label(trigger, delta),
+            "pressure": pressure,
+            "near_break": pressure == "near_break",
         }
 
     def apply_event(self, a: str, b: str, event: str):
@@ -388,6 +424,191 @@ class RelationshipGraph:
 
         return self.get_relationship(a, b)
 
+    def _social_heat_from_diagnostics(self, diagnostics: dict):
+        severity = float(diagnostics.get("severity", 0.0))
+        pressure = diagnostics.get("pressure")
+        direction = diagnostics.get("direction")
+
+        heat = severity
+
+        if pressure == "relationship_broken":
+            heat += 0.30
+
+        elif pressure == "near_break":
+            heat += 0.20
+
+        elif pressure == "major_negative_shift":
+            heat += 0.15
+
+        elif pressure == "state_shift":
+            heat += 0.10
+
+        if direction == "positive":
+            heat *= 0.40
+
+        return max(0.0, min(1.0, heat))
+
+    def _apply_social_delta(
+        self,
+        *,
+        source: str,
+        affected: str,
+        trust_delta: float,
+        source_event: str,
+        source_pressure: str,
+        heat: float,
+    ):
+        rel = self.ensure_pair(source, affected)
+
+        before_trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+        before_state = rel.get("state", self._classify_state(before_trust))
+
+        if trust_delta > 0:
+            rel["pos"] = min(
+                self.max_reservoir,
+                rel.get("pos", 0.0) + trust_delta,
+            )
+
+        elif trust_delta < 0:
+            rel["neg"] = min(
+                self.max_reservoir,
+                rel.get("neg", 0.0) + abs(trust_delta),
+            )
+
+        trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
+        after_state = self._classify_state(trust)
+
+        transition = None
+        if before_state != after_state:
+            transition = (before_state, after_state)
+
+        trigger = self._trigger_for_transition(before_state, after_state)
+
+        diagnostics = self._build_diagnostics(
+            event="social_propagation",
+            channel="social",
+            base_amount=abs(trust_delta),
+            effective_gain=abs(trust_delta),
+            before_state=before_state,
+            after_state=after_state,
+            before_trust=before_trust,
+            after_trust=trust,
+            maturity=rel.get("maturity", 0.0),
+            maturity_modifier=max(0.0, 1.0 - rel.get("maturity", 0.0)),
+            volatility=rel.get("volatility", self.volatility),
+            positive_volatility=rel.get(
+                "positive_volatility",
+                self.positive_volatility,
+            ),
+            negative_volatility=rel.get(
+                "negative_volatility",
+                self.negative_volatility,
+            ),
+            transition=transition,
+            trigger=trigger,
+        )
+
+        rel["trust"] = trust
+        rel["state"] = after_state
+        rel["transition"] = transition
+        rel["trigger"] = trigger
+        rel["last_event"] = "social_propagation"
+        rel["diagnostics"] = diagnostics
+
+        return {
+            "affected": affected,
+            "source_event": source_event,
+            "source_pressure": source_pressure,
+            "heat": heat,
+            "trust_delta": trust_delta,
+            "relationship": self.get_relationship(source, affected),
+        }
+
+    def propagate_social_event(
+        self,
+        source: str,
+        target: str,
+        event: str,
+        observers: list[str] | tuple[str, ...] | None = None,
+        weights: dict[str, float] | None = None,
+    ):
+        """
+        Apply a direct relationship event, then propagate bounded
+        secondary relationship effects to observers.
+
+        This is deterministic.
+        No random spread.
+        No hidden world mutation.
+        """
+        observers = list(observers or [])
+        weights = weights or {}
+
+        direct = self.apply_event(source, target, event)
+        diagnostics = direct.get("diagnostics", {}) or {}
+
+        heat = self._social_heat_from_diagnostics(diagnostics)
+        direction = diagnostics.get("direction")
+        pressure = diagnostics.get("pressure")
+        severity = diagnostics.get("severity", 0.0)
+
+        propagated = []
+
+        for observer in observers:
+            if observer in (source, target):
+                continue
+
+            weight = max(0.0, min(1.0, float(weights.get(observer, 1.0))))
+
+            if direction == "negative":
+                trust_delta = -0.20 * heat * weight
+
+            elif direction == "positive":
+                trust_delta = 0.05 * heat * weight
+
+            else:
+                trust_delta = 0.0
+
+            if trust_delta == 0.0:
+                continue
+
+            propagated.append(
+                self._apply_social_delta(
+                    source=source,
+                    affected=observer,
+                    trust_delta=trust_delta,
+                    source_event=event,
+                    source_pressure=pressure,
+                    heat=heat,
+                )
+            )
+
+        world_effects = {
+            "pressure_delta": 0.20 * heat,
+            "fear_delta": 0.08 * heat,
+            "resentment_delta": 0.08 * heat,
+            "order_delta": -0.04 * heat,
+            "guard_suspicion_delta": 0.35 * heat,
+        }
+
+        packet = {
+            "source": source,
+            "target": target,
+            "event": event,
+            "heat": heat,
+            "severity": severity,
+            "pressure": pressure,
+            "direct": direct,
+            "propagated": propagated,
+            "world_effects": world_effects,
+        }
+
+        self._propagation_log.append(packet)
+
+        if len(self._propagation_log) > 25:
+            self._propagation_log.pop(0)
+
+        return packet
+
     def get_relationship(self, a: str, b: str):
         rel = self.ensure_pair(a, b)
 
@@ -419,7 +640,9 @@ class RelationshipGraph:
     # NEW: TIME DECAY (optional)
     # -----------------------------
     def tick(self):
-        for rel in self._rels.values():
+        updated = []
+
+        for key, rel in self._rels.items():
             before_trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
             before_state = rel.get("state", self._classify_state(before_trust))
 
@@ -472,6 +695,29 @@ class RelationshipGraph:
             rel["last_event"] = "tick"
             rel["diagnostics"] = diagnostics
 
+            a, b = key.split("|", 1)
+
+            updated.append(
+                {
+                    "a": a,
+                    "b": b,
+                    "trust": trust,
+                    "state": after_state,
+                    "transition": transition,
+                    "trigger": trigger,
+                    "diagnostics": diagnostics,
+                    "maturity": maturity,
+                    "volatility": volatility,
+                    "positive_volatility": positive_volatility,
+                    "negative_volatility": negative_volatility,
+                }
+            )
+
+        return {
+            "event": "tick",
+            "relationships": updated,
+        }
+
     def get(self, a: str, b: str):
         rel = self._rels.get(self._key(a, b))
 
@@ -491,3 +737,6 @@ class RelationshipGraph:
 
     def neighbors(self, agent_id: str):
         return self._neighbors.get(agent_id, [])
+
+    def propagation_log(self):
+        return list(self._propagation_log)
