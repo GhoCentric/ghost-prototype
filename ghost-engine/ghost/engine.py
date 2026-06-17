@@ -39,8 +39,8 @@ class GhostEngine:
         self._ctx = context
 
         # Subsystems
-        self.agents = AgentRegistry(self._ctx)
-        self.relationships = RelationshipGraph(self._ctx)
+        self.agents: AgentRegistry = AgentRegistry(self._ctx)
+        self.relationships: RelationshipGraph = RelationshipGraph(self._ctx)
 
         # Baseline state
         self._ctx.setdefault("cycles", 0)
@@ -196,6 +196,31 @@ class GhostEngine:
         Public wrapper around the relationship runtime.
         """
         return self.relationships.apply_event(a, b, event)
+
+    def propagate_social_event(
+        self,
+        source,
+        target,
+        event,
+        observers=None,
+        weights=None,
+    ):
+        """
+        Apply a direct relationship event and propagate bounded
+        secondary effects to observers.
+        """
+        propagate = getattr(
+            self.relationships,
+            "propagate_social_event",
+        )
+
+        return propagate(
+            source=source,
+            target=target,
+            event=event,
+            observers=observers,
+            weights=weights,
+        )
 
     def tick(self):
         """
