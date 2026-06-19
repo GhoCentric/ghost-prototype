@@ -9,3 +9,6 @@ build/
 .env
 .venv/
 README.md.directory.backup/
+
+# Local/private demo with API key risk
+ghost-engine/ghost/examples/shopkeeper_demo.py

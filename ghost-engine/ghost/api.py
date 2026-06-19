@@ -1,21 +1,39 @@
 """
 Public API layer for ghocentric-ghost-engine.
 
-This wraps internal systems into a clean, stable interface
-for external developers.
+GhostAPI is the high-level integration surface for external developers,
+demos, adapters, and gameplay prototypes.
 
-v1.1.0 adds Governance Core:
-- ClaimAssessment
-- IntentAssessment
-- EffectAssessment
-- StancePacket
-- Policy runtime access
-- World / society runtime access
-- Optional LLM adapter helpers
+GhostEngine remains the lower-level deterministic state runtime.
+
+v1.7.1 public API cleanup focus:
+- GhostAPI wraps GhostEngine as the normal external entry point.
+- GhostEngine remains available for lower-level engine access and tests.
+- Raw strings and typed public constants both remain supported.
+- apply_event() returns structured public relationship packets.
+- tick() returns a public packet for relationship and world time.
+- state() returns live mutable engine state for debugging only.
+- snapshot() returns a JSON-safe copied public snapshot with metadata.
+- Temperament interpretation is stateless and read-only.
+- Optional policy, governance, world, and LLM adapter helpers remain
+  subordinate to deterministic state.
+
+Ghost does not choose actions.
+Ghost does not generate dialogue.
+Ghost does not invent world state.
+
+Ghost exposes deterministic social, emotional, diagnostic, and
+interpretive state.
 """
 
-from .engine import GhostEngine
+
+from .engine import (
+    GHOST_SNAPSHOT_SCHEMA_VERSION,
+    GHOST_VERSION,
+    GhostEngine,
+)
 from .events import normalize_event
+from .ids import normalize_pair_ids
 from .validation import (
     validate_non_negative_finite,
     validate_unit_interval,
@@ -62,6 +80,14 @@ DEFAULT_EVENT_MAP = {
 
 
 class GhostAPI:
+    """
+    High-level public integration surface for Ghost.
+
+    Use GhostAPI for normal external integrations, demos, gameplay
+    prototypes, adapters, and JSON-friendly event packets.
+
+    Use GhostEngine directly only when lower-level engine access is needed.
+    """
 
     # -----------------------------
     # RELATIONSHIP STATE THRESHOLDS
@@ -83,7 +109,7 @@ class GhostAPI:
         self._transitions = {}
         self.event_map = event_map or DEFAULT_EVENT_MAP
 
-        # v1.1.0 policy/runtime modules
+        # Policy/runtime modules
         self.commerce = CommercePolicy()
         self.pricing = PricingPolicy()
         self.law = LawPolicy()
@@ -94,6 +120,8 @@ class GhostAPI:
     # CORE METHOD
     # -----------------------------
     def apply_event(self, source: str, target: str, event: dict):
+        source, target = normalize_pair_ids(source, target)
+
         if not isinstance(event, dict):
             raise ValueError("Event must be a dict")
 
@@ -157,6 +185,8 @@ class GhostAPI:
         Apply an event to a target and propagate scaled effects
         across a network of agents.
         """
+        source, target = normalize_pair_ids(source, target)
+
         if not isinstance(event, dict):
             raise ValueError("Event must be a dict")
 
@@ -229,12 +259,15 @@ class GhostAPI:
 
     def state(self):
         """
-        Return the live engine state.
+        Return the live mutable engine state.
+
+        This is useful for debugging and controlled inspection, but it is
+        not a safe persistence or adapter boundary. External integrations
+        should use snapshot() when they need JSON-safe copied state.
         """
         return self.engine.state()
-
     # -----------------------------
-    # TEMPERAMENT INTERPRETATION v1.7.0
+    # STATELESS TEMPERAMENT INTERPRETATION
     # -----------------------------
     def interpret_relationship_packet(
         self,
@@ -677,7 +710,19 @@ class GhostAPI:
         return self.engine.get_relationship(a, b)
 
     def snapshot(self):
+        """
+        Return a JSON-safe copied public snapshot.
+
+        GhostAPI.snapshot() is the safe external boundary for persistence,
+        adapter contracts, save/load flows, and engine-facing integrations.
+
+        The wrapped GhostEngine snapshot remains available under "engine".
+        Top-level metadata is also exposed so adapter layers can version the
+        public GhostAPI packet without digging into engine internals.
+        """
         return {
+            "ghost_version": GHOST_VERSION,
+            "schema_version": GHOST_SNAPSHOT_SCHEMA_VERSION,
             "engine": self.engine.snapshot(),
             "world": self.world.to_dict(),
         }

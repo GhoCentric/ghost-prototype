@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61,<77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghocentric-ghost-engine"
-version = "1.7.0"
+version = "1.7.1"
 description = "A deterministic state engine for NPC systems and persistent interactive state."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -15,7 +15,7 @@ authors = [
 
 dependencies = []
 
-license = "MIT"
+license = { text = "MIT" }
 
 keywords = [
   "ai",
