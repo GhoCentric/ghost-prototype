@@ -1,7 +1,28 @@
+from .ids import normalize_id, normalize_pair_ids
+from .events import normalize_event
+from .validation import (
+    validate_finite_number,
+    validate_non_negative_finite,
+    validate_positive_finite,
+    validate_unit_interval,
+)
+
+
 class RelationshipGraph:
     """
     Stores pairwise relationships between agents.
     """
+
+    RELATIONSHIP_EVENT_MAP = {
+        "greet": ("pos", 0.04),
+        "help": ("pos", 0.12),
+        "gift": ("pos", 0.16),
+        "apologize": ("pos", 0.10),
+        "insult": ("neg", 0.15),
+        "threat": ("neg", 0.22),
+        "attack": ("neg", 0.35),
+        "betrayal": ("neg", 0.70),
+    }
 
     def __init__(self, ctx: dict):
         self._ctx = ctx
@@ -12,20 +33,50 @@ class RelationshipGraph:
         # -----------------------------
         # GLOBAL PARAMETERS
         # -----------------------------
-        self.pos_gain = ctx.get("pos_gain", 0.85)
-        self.neg_gain = ctx.get("neg_gain", 1.1)
+        self.pos_gain = validate_non_negative_finite(
+            ctx.get("pos_gain", 0.85),
+            "pos_gain",
+        )
+        self.neg_gain = validate_non_negative_finite(
+            ctx.get("neg_gain", 1.1),
+            "neg_gain",
+        )
 
-        self.pos_decay = ctx.get("pos_decay", 0.97)
-        self.neg_decay = ctx.get("neg_decay", 0.975)
+        self.pos_decay = validate_unit_interval(
+            ctx.get("pos_decay", 0.97),
+            "pos_decay",
+        )
+        self.neg_decay = validate_unit_interval(
+            ctx.get("neg_decay", 0.975),
+            "neg_decay",
+        )
 
-        self.max_reservoir = ctx.get("max_reservoir", 5.0)
+        self.max_reservoir = validate_positive_finite(
+            ctx.get("max_reservoir", 5.0),
+            "max_reservoir",
+        )
 
-        self.volatility = ctx.get("volatility", 1.0)
-        self.positive_volatility = ctx.get("positive_volatility", 1.0)
-        self.negative_volatility = ctx.get("negative_volatility", 1.0)
+        self.volatility = validate_non_negative_finite(
+            ctx.get("volatility", 1.0),
+            "volatility",
+        )
+        self.positive_volatility = validate_non_negative_finite(
+            ctx.get("positive_volatility", 1.0),
+            "positive_volatility",
+        )
+        self.negative_volatility = validate_non_negative_finite(
+            ctx.get("negative_volatility", 1.0),
+            "negative_volatility",
+        )
 
-        self.maturity_gain = ctx.get("maturity_gain", 0.01)
-        self.maturity_cap = ctx.get("maturity_cap", 0.75)
+        self.maturity_gain = validate_unit_interval(
+            ctx.get("maturity_gain", 0.01),
+            "maturity_gain",
+        )
+        self.maturity_cap = validate_unit_interval(
+            ctx.get("maturity_cap", 0.75),
+            "maturity_cap",
+        )
         
     # -----------------------------
     # PERSONALITY PRESETS
@@ -85,11 +136,32 @@ class RelationshipGraph:
 
         self.set_params(a, b, **params)
 
+    def _validate_param(self, key: str, value):
+        if key in ("pos_decay", "neg_decay", "maturity_gain", "maturity_cap"):
+            return validate_unit_interval(
+                value,
+                f"relationship parameter {key}",
+            )
+
+        if key == "max_reservoir":
+            return validate_positive_finite(
+                value,
+                f"relationship parameter {key}",
+            )
+
+        return validate_non_negative_finite(
+            value,
+            f"relationship parameter {key}",
+        )
+
+
     def _key(self, a: str, b: str):
+        a, b = normalize_pair_ids(a, b)
         a, b = sorted((a, b))
         return f"{a}|{b}"
 
     def ensure_pair(self, a: str, b: str):
+        a, b = normalize_pair_ids(a, b)
         key = self._key(a, b)
 
         rel = self._rels.setdefault(
@@ -131,13 +203,19 @@ class RelationshipGraph:
         rel = self.ensure_pair(a, b)
 
         for k, v in params.items():
-            if k in rel:
-                rel[k] = v
+            if k not in rel:
+                raise ValueError(f"Unknown relationship parameter: {k}")
+
+            rel[k] = self._validate_param(k, v)
     
     def apply_delta(self, a: str, b: str, deltas: dict):
+        if not isinstance(deltas, dict):
+            raise ValueError("Relationship deltas must be a dict")
+
         rel = self.ensure_pair(a, b)
 
         for k, v in deltas.items():
+            v = validate_finite_number(v, f"relationship delta {k}")
 
             if k == "trust":
                 # -----------------------------
@@ -302,22 +380,22 @@ class RelationshipGraph:
             "near_break": pressure == "near_break",
         }
 
-    def apply_event(self, a: str, b: str, event: str):
+    def apply_event(
+        self,
+        a: str,
+        b: str,
+        event: str,
+        intensity: float = 1.0,
+    ):
         rel = self.ensure_pair(a, b)
 
-        event = str(event).lower().strip()
+        event = normalize_event(event)
+        intensity = validate_unit_interval(
+            intensity,
+            "relationship event intensity",
+        )
 
-        event_map = {
-            "greet": ("pos", 0.04),
-            "help": ("pos", 0.12),
-            "gift": ("pos", 0.16),
-            "apologize": ("pos", 0.10),
-
-            "insult": ("neg", 0.15),
-            "threat": ("neg", 0.22),
-            "attack": ("neg", 0.35),
-            "betrayal": ("neg", 0.70),
-        }
+        event_map = self.RELATIONSHIP_EVENT_MAP
 
         if event not in event_map:
             raise ValueError(f"Unknown relationship event: {event}")
@@ -325,7 +403,8 @@ class RelationshipGraph:
         before_trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
         before_state = rel.get("state", self._classify_state(before_trust))
 
-        channel, amount = event_map[event]
+        channel, base_amount = event_map[event]
+        amount = base_amount * intensity
         effective_gain = 0.0
 
         maturity = rel.get("maturity", 0.0)
@@ -392,7 +471,7 @@ class RelationshipGraph:
         diagnostics = self._build_diagnostics(
             event=event,
             channel=channel,
-            base_amount=amount,
+            base_amount=base_amount,
             effective_gain=effective_gain,
             before_state=before_state,
             after_state=after_state,
@@ -425,7 +504,10 @@ class RelationshipGraph:
         return self.get_relationship(a, b)
 
     def _social_heat_from_diagnostics(self, diagnostics: dict):
-        severity = float(diagnostics.get("severity", 0.0))
+        severity = validate_unit_interval(
+            diagnostics.get("severity", 0.0),
+            "diagnostic severity",
+        )
         pressure = diagnostics.get("pressure")
         direction = diagnostics.get("direction")
 
@@ -458,6 +540,15 @@ class RelationshipGraph:
         source_pressure: str,
         heat: float,
     ):
+        trust_delta = validate_finite_number(
+            trust_delta,
+            "social trust delta",
+        )
+        heat = validate_unit_interval(
+            heat,
+            "social heat",
+        )
+
         rel = self.ensure_pair(source, affected)
 
         before_trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
@@ -557,7 +648,10 @@ class RelationshipGraph:
             if observer in (source, target):
                 continue
 
-            weight = max(0.0, min(1.0, float(weights.get(observer, 1.0))))
+            weight = validate_unit_interval(
+                weights.get(observer, 1.0),
+                f"social propagation weight for {observer}",
+            )
 
             if direction == "negative":
                 trust_delta = -0.20 * heat * weight
@@ -733,10 +827,14 @@ class RelationshipGraph:
         return out
 
     def all(self):
-        return self._rels
+        import copy
+
+        return copy.deepcopy(self._rels)
 
     def neighbors(self, agent_id: str):
-        return self._neighbors.get(agent_id, [])
+        agent_id = normalize_id(agent_id, "agent id")
+
+        return list(self._neighbors.get(agent_id, []))
 
     def propagation_log(self):
         return list(self._propagation_log)

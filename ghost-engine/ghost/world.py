@@ -9,9 +9,18 @@ Callers choose when to record events or apply world effects.
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from .validation import validate_finite_number, validate_unit_interval
+
 
 def clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
+
+
+def _effect_value(effects: dict[str, Any], key: str) -> float:
+    return validate_finite_number(
+        effects.get(key, 0.0),
+        f"world effect {key}",
+    )
 
 
 @dataclass
@@ -22,26 +31,29 @@ class TownMood:
     resentment: float = 0.0
 
     def apply(self, effects: dict[str, Any]):
+        if not isinstance(effects, dict):
+            raise ValueError("world effects must be a dict")
+
         self.fear = clamp(
-            self.fear + float(effects.get("fear_delta", 0.0)),
+            self.fear + _effect_value(effects, "fear_delta"),
             0.0,
             1.0,
         )
 
         self.order = clamp(
-            self.order + float(effects.get("order_delta", 0.0)),
+            self.order + _effect_value(effects, "order_delta"),
             0.0,
             1.0,
         )
 
         self.commerce = clamp(
-            self.commerce + float(effects.get("commerce_delta", 0.0)),
+            self.commerce + _effect_value(effects, "commerce_delta"),
             0.0,
             1.0,
         )
 
         self.resentment = clamp(
-            self.resentment + float(effects.get("resentment_delta", 0.0)),
+            self.resentment + _effect_value(effects, "resentment_delta"),
             0.0,
             1.0,
         )
@@ -75,9 +87,9 @@ class WorldRuntime:
         details: dict[str, Any] | None = None,
     ) -> dict:
         event = {
-            "type": event_type,
-            "actor": actor,
-            "target": target,
+            "type": str(event_type),
+            "actor": str(actor),
+            "target": str(target),
             "details": details or {},
         }
 
@@ -89,8 +101,11 @@ class WorldRuntime:
         return event
 
     def apply_effects(self, effects: dict[str, Any]):
+        if not isinstance(effects, dict):
+            raise ValueError("world effects must be a dict")
+
         self.global_pressure = clamp(
-            self.global_pressure + float(effects.get("pressure_delta", 0.0)),
+            self.global_pressure + _effect_value(effects, "pressure_delta"),
             0.0,
             5.0,
         )
@@ -125,7 +140,10 @@ class WorldRuntime:
         source_event: str,
         faction_heat: float = 0.0,
     ) -> dict:
-        heat = clamp(float(faction_heat), 0.0, 1.0)
+        heat = validate_unit_interval(
+            faction_heat,
+            "faction heat",
+        )
 
         effects = {
             "pressure_delta": 0.10 * heat,
@@ -139,7 +157,7 @@ class WorldRuntime:
         self.record_event(
             "social_propagation",
             details={
-                "source_event": source_event,
+                "source_event": str(source_event),
                 "heat": heat,
                 "effects": effects,
             },

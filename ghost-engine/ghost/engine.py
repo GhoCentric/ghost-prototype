@@ -1,7 +1,18 @@
+import copy
+import math
 from dataclasses import asdict
 from ghost.step import GhostStep
 from ghost.agents import AgentRegistry
 from ghost.relationships import RelationshipGraph
+from ghost.events import normalize_event
+from ghost.validation import (
+    validate_non_negative_finite,
+    validate_unit_interval,
+)
+from ghost.ids import normalize_id
+
+GHOST_VERSION = "1.7.0"
+GHOST_SNAPSHOT_SCHEMA_VERSION = "1.7.0"
 
 def _json_safe(x):
 
@@ -15,7 +26,13 @@ def _json_safe(x):
         return [_json_safe(v) for v in x]
 
     if isinstance(x, set):
-        return sorted(_json_safe(v) for v in x)
+        return sorted(
+            (_json_safe(v) for v in x),
+            key=lambda value: repr(value),
+        )
+
+    if isinstance(x, float) and not math.isfinite(x):
+        raise ValueError("Snapshot contains non-finite float")
 
     return x
 
@@ -36,7 +53,7 @@ class GhostEngine:
         if context is None:
             context = {}
 
-        self._ctx = context
+        self._ctx = copy.deepcopy(context)
 
         # Subsystems
         self.agents: AgentRegistry = AgentRegistry(self._ctx)
@@ -63,12 +80,11 @@ class GhostEngine:
         """
 
         ctx = self._ctx
-        ctx["cycles"] += 1
-
         npc = ctx["npc"]
         
         # passive decay (only if no threat this step)
         if step_data is None:
+            ctx["cycles"] += 1
             npc["threat_level"] = clamp(npc["threat_level"] - 0.02, 0.0, 999999.0)
 
         step: GhostStep | None = None
@@ -89,9 +105,30 @@ class GhostEngine:
             else:
                 raise TypeError("step_data must be dict or GhostStep")
 
+            validated_intensity = validate_non_negative_finite(
+                step.intensity,
+                "step intensity",
+            )
+
+            safe_actor = normalize_id(step.actor, "agent id")
+            safe_target = None
+
+            if step.target:
+                safe_target = normalize_id(step.target, "agent id")
+
+            safe_step = dict(public_input)
+            safe_step["actor"] = safe_actor
+            safe_step["target"] = safe_target
+            safe_step["intensity"] = validated_intensity
+
+            ctx["cycles"] += 1
+
             # Public-facing state (DICT ONLY)
-            ctx["input"] = public_input
-            ctx["last_step"] = public_input
+            ctx["input"] = safe_step
+            ctx["last_step"] = safe_step
+
+            step.actor = safe_actor
+            step.target = safe_target
 
         # If no step, just return current state
         if step is None:
@@ -109,7 +146,11 @@ class GhostEngine:
             target_state = self.agents.ensure(step.target)
             target_state["last_intent"] = step.intent
 
-        intensity = clamp(float(step.intensity), 0.0, 1.0)
+        intensity = clamp(
+            validated_intensity,
+            0.0,
+            1.0,
+        )
 
         # ---- Intent handling ----
         if step.intent == "greet":
@@ -189,13 +230,21 @@ class GhostEngine:
 
         return ctx
 
-    def apply_event(self, a, b, event):
+    def apply_event(self, a, b, event, intensity: float = 1.0):
         """
         Apply a relationship event between two actors.
 
         Public wrapper around the relationship runtime.
         """
-        return self.relationships.apply_event(a, b, event)
+        return self.relationships.apply_event(
+            a,
+            b,
+            normalize_event(event),
+            intensity=validate_unit_interval(
+                intensity,
+                "relationship event intensity",
+            ),
+        )
 
     def propagate_social_event(
         self,
@@ -247,6 +296,16 @@ class GhostEngine:
         return self._ctx
 
     def snapshot(self):
-        """Return an immutable snapshot of engine state."""
-        import copy
-        return _json_safe(copy.deepcopy(self._ctx))
+        """
+        Return an immutable JSON-safe snapshot of engine state.
+
+        Snapshot metadata is included for save/load and adapter contracts.
+        Existing engine state keys remain at the top level for backward
+        compatibility.
+        """
+        snapshot = _json_safe(copy.deepcopy(self._ctx))
+
+        snapshot.setdefault("ghost_version", GHOST_VERSION)
+        snapshot.setdefault("schema_version", GHOST_SNAPSHOT_SCHEMA_VERSION)
+
+        return snapshot

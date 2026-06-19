@@ -1,3 +1,8 @@
+import copy
+
+from .ids import normalize_id
+
+
 class AgentRegistry:
     """
     Tracks agents inside the Ghost engine.
@@ -6,6 +11,11 @@ class AgentRegistry:
     - emotional state
     - memory
     - agent metadata
+
+    ensure() returns the live internal agent dict because callers use it
+    for controlled mutation through the engine runtime.
+
+    get() and all() return safe copies for public reads.
     """
 
     def __init__(self, ctx: dict):
@@ -15,8 +25,9 @@ class AgentRegistry:
     def ensure(self, agent_id: str):
         """
         Ensure an agent exists.
-        Returns the agent state dict.
+        Returns the live agent state dict for internal mutation.
         """
+        agent_id = normalize_id(agent_id, "agent id")
 
         return self._agents.setdefault(
             agent_id,
@@ -25,11 +36,18 @@ class AgentRegistry:
                 "memory": {},
                 "last_intent": None,
                 "tension": 0.0,
-            }
+            },
         )
 
     def get(self, agent_id: str):
-        return self._agents.get(agent_id)
+        agent_id = normalize_id(agent_id, "agent id")
+
+        agent = self._agents.get(agent_id)
+
+        if agent is None:
+            return None
+
+        return copy.deepcopy(agent)
 
     def all(self):
-        return self._agents
+        return copy.deepcopy(self._agents)

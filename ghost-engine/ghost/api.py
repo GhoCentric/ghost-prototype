@@ -15,6 +15,11 @@ v1.1.0 adds Governance Core:
 """
 
 from .engine import GhostEngine
+from .events import normalize_event
+from .validation import (
+    validate_non_negative_finite,
+    validate_unit_interval,
+)
 from .governance import (
     assess_effects,
     assess_intent,
@@ -23,6 +28,10 @@ from .governance import (
     evaluate_governance,
 )
 from .llm_adapter import build_voice_contract_prompt, fallback_from_stance
+from .temperament import (
+    interpret_relationship as _interpret_relationship_packet,
+    interpret_social_packet as _interpret_social_packet,
+)
 from .policies import (
     CommercePolicy,
     LawPolicy,
@@ -88,22 +97,36 @@ class GhostAPI:
         if not isinstance(event, dict):
             raise ValueError("Event must be a dict")
 
-        event_type = event.get("type")
-        intensity = event.get("intensity", 1.0)
-
-        if not isinstance(intensity, (int, float)):
-            raise ValueError("Event intensity must be numeric")
+        event_type = normalize_event(event.get("type"))
+        intensity = validate_unit_interval(
+            event.get("intensity", 1.0),
+            "event intensity",
+        )
 
         if event_type not in self.event_map:
             raise ValueError(f"Unknown event type: {event_type}")
 
         base_deltas = self.event_map[event_type]
-
         scaled_deltas = {
             k: v * intensity for k, v in base_deltas.items()
         }
 
-        self.engine.relationships.apply_delta(source, target, scaled_deltas)
+        if event_type in self.engine.relationships.RELATIONSHIP_EVENT_MAP:
+            relationship = self.engine.apply_event(
+                source,
+                target,
+                event_type,
+                intensity=intensity,
+            )
+            mode = "canonical_relationship_event"
+        else:
+            self.engine.relationships.apply_delta(
+                source,
+                target,
+                scaled_deltas,
+            )
+            relationship = self.engine.get_relationship(source, target)
+            mode = "legacy_delta_event"
 
         return {
             "source": source,
@@ -113,6 +136,13 @@ class GhostAPI:
                 "intensity": intensity,
             },
             "deltas": scaled_deltas,
+            "mode": mode,
+            "relationship": relationship,
+            "trust": relationship.get("trust"),
+            "state": relationship.get("state"),
+            "transition": relationship.get("transition"),
+            "trigger": relationship.get("trigger"),
+            "diagnostics": relationship.get("diagnostics"),
         }
 
     def propagate_event(
@@ -130,8 +160,12 @@ class GhostAPI:
         if not isinstance(event, dict):
             raise ValueError("Event must be a dict")
 
-        event_type = event.get("type")
-        intensity = event.get("intensity", 1.0)
+        event_type = normalize_event(event.get("type"))
+        intensity = validate_unit_interval(
+            event.get("intensity", 1.0),
+            "event intensity",
+        )
+        heat = validate_non_negative_finite(heat, "heat")
 
         if event_type not in self.event_map:
             raise ValueError(f"Unknown event type: {event_type}")
@@ -172,9 +206,19 @@ class GhostAPI:
     def tick(self):
         """
         Advance time for relationships and world state.
+
+        Returns a public packet so GhostAPI matches the readable
+        tick behavior exposed by GhostEngine.
         """
-        self.engine.relationships.tick()
+        relationships = self.engine.tick()
+
         self.world.tick()
+
+        return {
+            "event": "tick",
+            "relationships": relationships.get("relationships", []),
+            "world": self.world.to_dict(),
+        }
 
     def step(self, step_data: dict | None = None):
         """
@@ -188,6 +232,64 @@ class GhostAPI:
         Return the live engine state.
         """
         return self.engine.state()
+
+    # -----------------------------
+    # TEMPERAMENT INTERPRETATION v1.7.0
+    # -----------------------------
+    def interpret_relationship_packet(
+        self,
+        npc: str,
+        relationship: dict,
+        temperament="calm",
+    ) -> dict:
+        """
+        Interpret an existing relationship packet through an NPC temperament.
+
+        This is read-only.
+        It does not mutate Ghost relationship state.
+        """
+        return _interpret_relationship_packet(
+            npc=npc,
+            relationship=relationship,
+            temperament=temperament,
+        )
+
+    def interpret_npc_relationship(
+        self,
+        npc: str,
+        source: str,
+        target: str,
+        temperament="calm",
+    ) -> dict:
+        """
+        Read a relationship from the engine and interpret it
+        through an NPC temperament.
+        """
+        relationship = self.engine.get_relationship(
+            source,
+            target,
+        )
+
+        return self.interpret_relationship_packet(
+            npc=npc,
+            relationship=relationship,
+            temperament=temperament,
+        )
+
+    def interpret_social_packet(
+        self,
+        npc: str,
+        packet: dict,
+        temperament="calm",
+    ) -> dict:
+        """
+        Interpret a v1.6.0 social propagation packet for one observer.
+        """
+        return _interpret_social_packet(
+            npc=npc,
+            packet=packet,
+            temperament=temperament,
+        )
 
     # -----------------------------
     # GOVERNANCE CORE v1.1.0
@@ -567,47 +669,13 @@ class GhostAPI:
         }
 
     def get_relationship(self, a: str, b: str) -> dict:
-        rel = self.engine.relationships.get(a, b)
+        """
+        Return the canonical engine relationship packet.
 
-        if rel is None:
-            state = "neutral"
+        GhostAPI uses GhostEngine as the single source of truth.
+        """
+        return self.engine.get_relationship(a, b)
 
-            transition = self._detect_transition(a, b, state)
-            trigger = self._handle_transition(a, b, transition)
-
-            return {
-                "trust": 0.0,
-                "attachment": 0.0,
-                "stability": 0.0,
-                "state": state,
-                "transition": transition,
-                "trigger": trigger,
-            }
-
-        trust = rel.get("trust", 0.0)
-        attachment = rel.get("attachment", 0.0)
-
-        trust = self._clamp(trust)
-        attachment = self._clamp(attachment)
-
-        stability = abs(trust)
-        state = self._get_state(trust)
-
-        transition = self._detect_transition(a, b, state)
-        trigger = self._handle_transition(a, b, transition)
-
-        return {
-            "trust": trust,
-            "attachment": attachment,
-            "stability": stability,
-            "state": state,
-            "transition": transition,
-            "trigger": trigger,
-        }
-
-    # -----------------------------
-    # SNAPSHOT
-    # -----------------------------
     def snapshot(self):
         return {
             "engine": self.engine.snapshot(),

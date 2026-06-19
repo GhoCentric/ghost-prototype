@@ -27,6 +27,10 @@ def show_diagnostics(d):
     print(f"direction:            {d['direction']}")
     print(f"severity:             {d['severity']:.3f}")
     print(f"pressure:             {d['pressure']}")
+
+    if "near_break" in d:
+        print(f"near_break:           {d['near_break']}")
+
     print(f"base_amount:          {d['base_amount']:.3f}")
     print(f"effective_gain:       {d['effective_gain']:.3f}")
     print(f"maturity:             {d['maturity']:.3f}")
@@ -44,6 +48,12 @@ def explain(d):
         print("The event caused a major negative shift.")
         print("The relationship crossed into hostile state.")
         print("Ghost generated a relationship_broken trigger.")
+
+    elif d["pressure"] == "near_break":
+        print("The relationship did not fully break.")
+        print("But the neutral state is not calm.")
+        print("This is strained neutral.")
+        print("The NPC is barely restrained and close to hostile.")
 
     elif d["direction"] == "positive":
         print("The event improved the relationship.")
@@ -139,6 +149,49 @@ def main():
     print("Ghost exposes those values in diagnostics,")
     print("so external systems can understand why")
     print("the trust swing was so large.")
+    print()
+
+    line()
+    print("SCENARIO 4: strained neutral / near-break")
+    line()
+    print("mixed history keeps the relationship from fully breaking")
+    print("but the final neutral state is dangerous")
+    print()
+
+    g = GhostEngine()
+
+    sequence = [
+        "greet",
+        "help",
+        "help",
+        "insult",
+        "apologize",
+        "gift",
+        "threat",
+        "help",
+    ]
+
+    for event in sequence:
+        before = g.apply_event("player", "npc", event)
+
+    after = g.apply_event("player", "npc", "betrayal")
+
+    show_relationship("Before betrayal:", before)
+    show_relationship("After betrayal:", after)
+
+    diagnostics = after["diagnostics"]
+    show_diagnostics(diagnostics)
+    explain(diagnostics)
+
+    print("Neutral-state detail:")
+    print("neutral does not always mean calm.")
+    print("neutral can mean recovered, undecided, or restrained.")
+    print("near_break means the relationship is neutral on the surface,")
+    print("but close enough to hostile that social systems should react.")
+    print()
+
+    print("Example interpretation:")
+    print('"I am walking away because if I stay here, I may snap."')
     print()
 
     print("✔ Ghost relationship diagnostics demo complete.")

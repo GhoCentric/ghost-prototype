@@ -1,4 +1,14 @@
 from hypothesis import given, strategies as st
+
+VALID_AGENT_IDS = st.text(
+    alphabet=st.characters(
+        blacklist_characters="|",
+        blacklist_categories=("Cs",),
+    ),
+    min_size=1,
+    max_size=5,
+).filter(lambda value: value.strip() != "")
+
 from ghost.engine import GhostEngine
 from ghost.step import GhostStep
 
@@ -13,7 +23,7 @@ def contains_ghoststep(obj):
 
 @given(
     intensity=st.floats(min_value=0, max_value=10),
-    actor=st.text(min_size=1, max_size=10)
+    actor=VALID_AGENT_IDS
 )
 def test_no_internal_types_leak(intensity, actor):
     engine = GhostEngine()

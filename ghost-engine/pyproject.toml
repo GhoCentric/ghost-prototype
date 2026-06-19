@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghocentric-ghost-engine"
-version = "1.6.0"
-description = "A deterministic emotional inertia runtime for NPC systems and persistent interactive state."
+version = "1.7.0"
+description = "A deterministic state engine for NPC systems and persistent interactive state."
 readme = "README.md"
 requires-python = ">=3.9"
 
@@ -15,7 +15,8 @@ authors = [
 
 dependencies = []
 
-license = { text = "MIT" }
+license = "MIT"
+
 keywords = [
   "ai",
   "engine",
@@ -24,7 +25,10 @@ keywords = [
   "npc",
   "game-ai",
   "emotional-inertia",
-  "state-engine"
+  "state-engine",
+  "relationships",
+  "social-propagation",
+  "temperament"
 ]
 
 classifiers = [
@@ -34,7 +38,6 @@ classifiers = [
   "Topic :: Games/Entertainment",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 
@@ -52,3 +55,4 @@ ghost-shopkeeper-demo = "ghost.examples.shopkeeper_mini_game:main"
 ghost-math-demo = "ghost.examples.ghost_math_helper:main"
 ghost-diagnostics-demo = "ghost.examples.relationship_diagnostics_demo:main"
 ghost-social-demo = "ghost.examples.social_propagation_demo:main"
+ghost-temperament-demo = "ghost.examples.temperament_demo:main"
