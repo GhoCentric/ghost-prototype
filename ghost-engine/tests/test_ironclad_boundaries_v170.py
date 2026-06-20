@@ -157,8 +157,8 @@ def test_snapshot_is_strict_json_safe_after_many_events():
 
     snapshot = engine.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.1"
-    assert snapshot["schema_version"] == "1.7.1"
+    assert snapshot["ghost_version"] == "1.7.2"
+    assert snapshot["schema_version"] == "1.7.2"
 
     assert_strict_json_safe(snapshot)
 
@@ -241,9 +241,9 @@ def test_relationships_all_returns_safe_copy():
 
 
 def test_version_constants_are_synced():
-    assert ghost.__version__ == "1.7.1"
-    assert GHOST_VERSION == "1.7.1"
-    assert GHOST_SNAPSHOT_SCHEMA_VERSION == "1.7.1"
+    assert ghost.__version__ == "1.7.2"
+    assert GHOST_VERSION == "1.7.2"
+    assert GHOST_SNAPSHOT_SCHEMA_VERSION == "1.7.2"
 
 
 def test_engine_apply_event_accepts_intensity_without_breaking_schema():

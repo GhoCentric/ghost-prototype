@@ -261,6 +261,9 @@ def _dominant_read(
     if state == "hostile":
         return "hostile"
 
+    if trust <= -0.20:
+        return "wary"
+
     if state == "friendly":
         return "warm"
 
@@ -288,6 +291,9 @@ def _stance(
 
     if emotional_read == "anxious" and confidence <= 0.40:
         return "avoidant"
+
+    if emotional_read == "wary":
+        return "reserved"
 
     if suspicion >= 0.55:
         return "guarded"
@@ -348,6 +354,9 @@ def interpret_relationship(
 
     if direction != "negative":
         negative_signal *= 0.40
+
+    distrust_signal = max(-trust, 0.0)
+    negative_signal += distrust_signal * 0.60
 
     if state == "hostile":
         negative_signal += 0.25

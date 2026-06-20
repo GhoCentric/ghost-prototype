@@ -269,7 +269,6 @@ class RelationshipGraph:
         return bool(
             after_state == "neutral"
             and -0.55 < after_trust <= -0.45
-            and delta < 0.0
         )
 
     def _pressure_label(
@@ -311,10 +310,13 @@ class RelationshipGraph:
         if delta >= 0.20:
             return "positive_shift"
 
-        if delta > 0.0:
+        # Tiny decay drift should not be presented as a meaningful shift.
+        # Positive and negative reservoirs can decay at slightly different rates.
+        # Preserve the math, but expose a stable diagnostic below this threshold.
+        if delta >= 0.005:
             return "minor_positive_shift"
 
-        if delta < 0.0:
+        if delta <= -0.005:
             return "minor_negative_shift"
 
         return "stable"
