@@ -625,9 +625,9 @@ Ghost exposes deterministic interpretation metadata.
 
 ## Validation
 
-Current v1.7.0 validation:
+Current v1.7.2 validation:
 
-    248 tests passing
+    261 tests passing
 
 The test suite includes:
 
@@ -690,7 +690,7 @@ These responsibilities belong to external systems that consume Ghost state.
 
 Ghost Engine remains in early development.
 
-As of v1.7.0:
+As of v1.7.2:
 
 - the deterministic interaction core is stable
 - the public relationship API is available
@@ -704,11 +704,32 @@ As of v1.7.0:
 - tick() returns a public readable packet
 - temperament interpretation metadata is available
 - seven CLI demos are packaged and runnable
-- the full test suite passes with 248 tests
+- persistent distrust is reflected during recovery
+- microscopic decay drift reports as stable diagnostics
+- the full test suite passes with 261 tests
 
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.7.2
+
+- Added persistent distrust to temperament interpretation.
+- Added `wary` emotional reads for materially negative neutral relationships.
+- Added `reserved` stance for wary observers.
+- Preserved `near_break` during recovery while trust remains structurally near hostile.
+- Added stable diagnostic behavior for microscopic decay drift.
+- Added regression tests for persistent distrust, near-break recovery, and tiny decay diagnostics.
+- Confirmed the full regression suite passes with 261 tests.
+
+## v1.7.1
+
+- Established `GhostAPI` as the recommended public integration boundary.
+- Added documented public support for `apply_event`, `get_relationship`, `tick`, `snapshot`, and `interpret_npc_relationship`.
+- Added public version and snapshot schema metadata.
+- Added state-versus-snapshot boundary coverage.
+- Added clean installed-package public API verification.
+- Confirmed public packets remain JSON-safe.
 
 ## v1.7.0
 
