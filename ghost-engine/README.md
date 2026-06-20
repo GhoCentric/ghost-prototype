@@ -625,9 +625,9 @@ Ghost exposes deterministic interpretation metadata.
 
 ## Validation
 
-Current v1.7.2 validation:
+Current v1.7.3 validation:
 
-    261 tests passing
+    269 tests passing
 
 The test suite includes:
 
@@ -690,7 +690,7 @@ These responsibilities belong to external systems that consume Ghost state.
 
 Ghost Engine remains in early development.
 
-As of v1.7.2:
+As of v1.7.3:
 
 - the deterministic interaction core is stable
 - the public relationship API is available
@@ -711,6 +711,18 @@ As of v1.7.2:
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.7.3
+
+- Added a bounded positive goodwill reservoir cap.
+- Added mature relationship stability-breach behavior for betrayal.
+- Added high-severity negative-event shock handling.
+- Added a maturity-resistance floor for severe negative events.
+- Added relative shock detection based on recent event magnitude.
+- Added recent-event magnitude tracking per relationship.
+- Added public shock and stability-breach diagnostics.
+- Added regression coverage for mature betrayal shock, relative attack shock, and preserved low-history near-break behavior.
+- Confirmed the full regression suite passes with 269 tests.
 
 ## v1.7.2
 
