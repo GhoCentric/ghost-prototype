@@ -56,6 +56,79 @@ class RelationshipGraph:
             "max_reservoir",
         )
 
+        # Goodwill has its own ceiling below the absolute
+        # reservoir maximum so repeated small positives cannot
+        # create unlimited stored protection.
+        self.positive_reservoir_cap = min(
+            validate_positive_finite(
+                ctx.get("positive_reservoir_cap", 3.25),
+                "positive_reservoir_cap",
+            ),
+            self.max_reservoir,
+        )
+
+        # A mature relationship can absorb normal conflict, but
+        # betrayal can breach accumulated stability once goodwill
+        # and history are both substantial.
+        self.betrayal_shock_maturity_threshold = validate_unit_interval(
+            ctx.get("betrayal_shock_maturity_threshold", 0.50),
+            "betrayal_shock_maturity_threshold",
+        )
+
+        self.betrayal_shock_positive_threshold = validate_positive_finite(
+            ctx.get("betrayal_shock_positive_threshold", 1.0),
+            "betrayal_shock_positive_threshold",
+        )
+
+        self.betrayal_stability_breach_fraction = validate_unit_interval(
+            ctx.get("betrayal_stability_breach_fraction", 0.90),
+            "betrayal_stability_breach_fraction",
+        )
+
+        # Shock mechanics activate only after a relationship has
+        # substantial history and stored positive stability.
+        self.stability_shock_maturity_threshold = validate_unit_interval(
+            ctx.get("stability_shock_maturity_threshold", 0.50),
+            "stability_shock_maturity_threshold",
+        )
+
+        self.stability_shock_positive_threshold = validate_positive_finite(
+            ctx.get("stability_shock_positive_threshold", 1.0),
+            "stability_shock_positive_threshold",
+        )
+
+        self.high_severity_threshold = validate_unit_interval(
+            ctx.get("high_severity_threshold", 0.50),
+            "high_severity_threshold",
+        )
+
+        self.high_severity_shock_bonus = validate_non_negative_finite(
+            ctx.get("high_severity_shock_bonus", 0.25),
+            "high_severity_shock_bonus",
+        )
+
+        # Mature history can soften ordinary conflict, but severe
+        # negative events cannot be reduced below this multiplier.
+        self.severe_negative_maturity_floor = validate_unit_interval(
+            ctx.get("severe_negative_maturity_floor", 0.45),
+            "severe_negative_maturity_floor",
+        )
+
+        self.relative_shock_ratio = validate_positive_finite(
+            ctx.get("relative_shock_ratio", 2.50),
+            "relative_shock_ratio",
+        )
+
+        self.relative_shock_bonus = validate_non_negative_finite(
+            ctx.get("relative_shock_bonus", 0.20),
+            "relative_shock_bonus",
+        )
+
+        self.recent_event_decay = validate_unit_interval(
+            ctx.get("recent_event_decay", 0.80),
+            "recent_event_decay",
+        )
+
         self.volatility = validate_non_negative_finite(
             ctx.get("volatility", 1.0),
             "volatility",
@@ -137,13 +210,30 @@ class RelationshipGraph:
         self.set_params(a, b, **params)
 
     def _validate_param(self, key: str, value):
-        if key in ("pos_decay", "neg_decay", "maturity_gain", "maturity_cap"):
+        if key in (
+            "pos_decay",
+            "neg_decay",
+            "maturity_gain",
+            "maturity_cap",
+            "betrayal_shock_maturity_threshold",
+            "betrayal_stability_breach_fraction",
+            "stability_shock_maturity_threshold",
+            "high_severity_threshold",
+            "severe_negative_maturity_floor",
+            "recent_event_decay",
+        ):
             return validate_unit_interval(
                 value,
                 f"relationship parameter {key}",
             )
 
-        if key == "max_reservoir":
+        if key in (
+            "max_reservoir",
+            "positive_reservoir_cap",
+            "betrayal_shock_positive_threshold",
+            "stability_shock_positive_threshold",
+            "relative_shock_ratio",
+        ):
             return validate_positive_finite(
                 value,
                 f"relationship parameter {key}",
@@ -185,6 +275,35 @@ class RelationshipGraph:
                 "negative_volatility": self.negative_volatility,
                 "maturity_gain": self.maturity_gain,
                 "maturity_cap": self.maturity_cap,
+                "positive_reservoir_cap": self.positive_reservoir_cap,
+
+                "betrayal_shock_maturity_threshold": (
+                    self.betrayal_shock_maturity_threshold
+                ),
+                "betrayal_shock_positive_threshold": (
+                    self.betrayal_shock_positive_threshold
+                ),
+                "betrayal_stability_breach_fraction": (
+                    self.betrayal_stability_breach_fraction
+                ),
+
+                "stability_shock_maturity_threshold": (
+                    self.stability_shock_maturity_threshold
+                ),
+                "stability_shock_positive_threshold": (
+                    self.stability_shock_positive_threshold
+                ),
+                "high_severity_threshold": self.high_severity_threshold,
+                "high_severity_shock_bonus": (
+                    self.high_severity_shock_bonus
+                ),
+                "severe_negative_maturity_floor": (
+                    self.severe_negative_maturity_floor
+                ),
+                "relative_shock_ratio": self.relative_shock_ratio,
+                "relative_shock_bonus": self.relative_shock_bonus,
+                "recent_event_decay": self.recent_event_decay,
+                "recent_event_magnitude": 0.0,
             },
         )
 
@@ -348,6 +467,13 @@ class RelationshipGraph:
         negative_volatility: float,
         transition,
         trigger,
+        shock_applied: bool = False,
+        stability_breach: float = 0.0,
+        high_severity_shock: bool = False,
+        relative_shock: bool = False,
+        shock_multiplier: float = 1.0,
+        event_maturity_modifier: float = 1.0,
+        recent_event_magnitude: float = 0.0,
     ):
         delta = after_trust - before_trust
 
@@ -376,6 +502,13 @@ class RelationshipGraph:
             "volatility": volatility,
             "positive_volatility": positive_volatility,
             "negative_volatility": negative_volatility,
+            "shock_applied": shock_applied,
+            "stability_breach": stability_breach,
+            "high_severity_shock": high_severity_shock,
+            "relative_shock": relative_shock,
+            "shock_multiplier": shock_multiplier,
+            "event_maturity_modifier": event_maturity_modifier,
+            "recent_event_magnitude": recent_event_magnitude,
             "transition": transition,
             "trigger": trigger,
             "pressure": pressure,
@@ -408,6 +541,11 @@ class RelationshipGraph:
         channel, base_amount = event_map[event]
         amount = base_amount * intensity
         effective_gain = 0.0
+        shock_applied = False
+        stability_breach = 0.0
+        high_severity_shock = False
+        relative_shock = False
+        shock_multiplier = 1.0
 
         maturity = rel.get("maturity", 0.0)
         volatility = rel.get("volatility", self.volatility)
@@ -420,12 +558,25 @@ class RelationshipGraph:
             self.negative_volatility,
         )
         maturity_modifier = max(0.0, 1.0 - maturity)
+        event_maturity_modifier = maturity_modifier
+        recent_event_magnitude = rel.get(
+            "recent_event_magnitude",
+            0.0,
+        )
 
         if channel == "pos":
+            positive_cap = min(
+                rel.get(
+                    "positive_reservoir_cap",
+                    self.positive_reservoir_cap,
+                ),
+                self.max_reservoir,
+            )
+
             resistance = 1.0 / (1.0 + (rel.get("neg", 0.0) * 0.35))
             saturation = max(
                 0.0,
-                1.0 - (rel.get("pos", 0.0) / self.max_reservoir),
+                1.0 - (rel.get("pos", 0.0) / positive_cap),
             )
 
             gain = amount * rel.get("pos_gain", self.pos_gain)
@@ -438,7 +589,7 @@ class RelationshipGraph:
             effective_gain = gain
 
             rel["pos"] = min(
-                self.max_reservoir,
+                positive_cap,
                 rel.get("pos", 0.0) + gain,
             )
 
@@ -448,17 +599,81 @@ class RelationshipGraph:
                 1.0 - (rel.get("neg", 0.0) / self.max_reservoir),
             )
 
+            shock_eligible = (
+                maturity >= rel.get(
+                    "stability_shock_maturity_threshold",
+                    self.stability_shock_maturity_threshold,
+                )
+                and rel.get("pos", 0.0) >= rel.get(
+                    "stability_shock_positive_threshold",
+                    self.stability_shock_positive_threshold,
+                )
+            )
+
+            if shock_eligible:
+                if amount >= rel.get(
+                    "high_severity_threshold",
+                    self.high_severity_threshold,
+                ):
+                    high_severity_shock = True
+                    shock_multiplier += rel.get(
+                        "high_severity_shock_bonus",
+                        self.high_severity_shock_bonus,
+                    )
+
+                    event_maturity_modifier = max(
+                        maturity_modifier,
+                        rel.get(
+                            "severe_negative_maturity_floor",
+                            self.severe_negative_maturity_floor,
+                        ),
+                    )
+
+                if (
+                    recent_event_magnitude > 0.0
+                    and amount >= recent_event_magnitude * rel.get(
+                        "relative_shock_ratio",
+                        self.relative_shock_ratio,
+                    )
+                ):
+                    relative_shock = True
+                    shock_multiplier += rel.get(
+                        "relative_shock_bonus",
+                        self.relative_shock_bonus,
+                    )
+
             gain = amount * rel.get("neg_gain", self.neg_gain)
             gain *= volatility
             gain *= negative_volatility
-            gain *= maturity_modifier
+            gain *= event_maturity_modifier
             gain *= saturation
+            gain *= shock_multiplier
 
-            effective_gain = gain
+            if (
+                event == "betrayal"
+                and maturity >= rel.get(
+                    "betrayal_shock_maturity_threshold",
+                    self.betrayal_shock_maturity_threshold,
+                )
+                and rel.get("pos", 0.0) >= rel.get(
+                    "betrayal_shock_positive_threshold",
+                    self.betrayal_shock_positive_threshold,
+                )
+            ):
+                stability_breach = (
+                    rel.get("pos", 0.0)
+                    * rel.get(
+                        "betrayal_stability_breach_fraction",
+                        self.betrayal_stability_breach_fraction,
+                    )
+                )
+                shock_applied = True
+
+            effective_gain = gain + stability_breach
 
             rel["neg"] = min(
                 self.max_reservoir,
-                rel.get("neg", 0.0) + gain,
+                rel.get("neg", 0.0) + gain + stability_breach,
             )
 
         trust = rel.get("pos", 0.0) - rel.get("neg", 0.0)
@@ -486,6 +701,23 @@ class RelationshipGraph:
             negative_volatility=negative_volatility,
             transition=transition,
             trigger=trigger,
+            shock_applied=shock_applied,
+            stability_breach=stability_breach,
+            high_severity_shock=high_severity_shock,
+            relative_shock=relative_shock,
+            shock_multiplier=shock_multiplier,
+            event_maturity_modifier=event_maturity_modifier,
+            recent_event_magnitude=recent_event_magnitude,
+        )
+
+        recent_decay = rel.get(
+            "recent_event_decay",
+            self.recent_event_decay,
+        )
+
+        rel["recent_event_magnitude"] = (
+            recent_event_magnitude * recent_decay
+            + amount * (1.0 - recent_decay)
         )
 
         maturity_gain = rel.get("maturity_gain", self.maturity_gain)

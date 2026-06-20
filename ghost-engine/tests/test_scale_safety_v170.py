@@ -41,8 +41,8 @@ def test_many_relationships_do_not_break_snapshot():
 
     snapshot = ghost.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.2"
-    assert snapshot["schema_version"] == "1.7.2"
+    assert snapshot["ghost_version"] == "1.7.3"
+    assert snapshot["schema_version"] == "1.7.3"
 
     assert len(snapshot["relationships"]) == 100
 
@@ -243,8 +243,8 @@ def test_scale_snapshot_after_social_propagation_and_tick_is_json_safe():
 
     snapshot = ghost.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.2"
-    assert snapshot["schema_version"] == "1.7.2"
+    assert snapshot["ghost_version"] == "1.7.3"
+    assert snapshot["schema_version"] == "1.7.3"
 
     assert len(snapshot["relationships"]) == 51
 

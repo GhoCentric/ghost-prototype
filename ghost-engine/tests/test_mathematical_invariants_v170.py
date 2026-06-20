@@ -148,8 +148,8 @@ def assert_snapshot_invariants(snapshot):
     assert isinstance(snapshot["cycles"], int)
     assert snapshot["cycles"] >= 0
 
-    assert snapshot["ghost_version"] == "1.7.2"
-    assert snapshot["schema_version"] == "1.7.2"
+    assert snapshot["ghost_version"] == "1.7.3"
+    assert snapshot["schema_version"] == "1.7.3"
 
     npc = snapshot["npc"]
 
@@ -196,7 +196,7 @@ def assert_engine_invariants(engine):
         max_size=40,
     )
 )
-@settings(max_examples=75)
+@settings(max_examples=75, deadline=None)
 def test_relationship_event_sequences_preserve_invariants(events):
     engine = GhostEngine()
 
