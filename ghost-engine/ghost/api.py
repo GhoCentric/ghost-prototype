@@ -100,6 +100,8 @@ class GhostAPI:
         "loyal": 1.0,
     }
 
+    APOLOGY_RECOVERY_FRACTION = 0.25
+
     def __init__(
         self,
         config: dict | None = None,
@@ -138,6 +140,24 @@ class GhostAPI:
         scaled_deltas = {
             k: v * intensity for k, v in base_deltas.items()
         }
+
+        if event_type == "apology":
+            current = self.engine.get_relationship(source, target)
+            current_trust = float(current.get("trust", 0.0))
+
+            if current_trust >= 0.0:
+                scaled_deltas["trust"] = 0.0
+            else:
+                remaining_damage = -current_trust
+                diminishing_limit = (
+                    remaining_damage
+                    * self.APOLOGY_RECOVERY_FRACTION
+                )
+
+                scaled_deltas["trust"] = min(
+                    scaled_deltas.get("trust", 0.0),
+                    diminishing_limit,
+                )
 
         if event_type in self.engine.relationships.RELATIONSHIP_EVENT_MAP:
             relationship = self.engine.apply_event(

@@ -26,6 +26,8 @@ Important:
 - Player text is never allowed to create verified world state by itself.
 """
 
+import re
+
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -175,6 +177,334 @@ def _compact_evidence(evidence: dict) -> dict:
             }
 
     return out
+
+
+# ---------------------------------------------------------------------
+# THREAT CONTEXT GUARDS
+# ---------------------------------------------------------------------
+
+def _threat_context_flags(text: str) -> tuple[str, ...]:
+    """
+    Detect deterministic contexts where threat-looking words should not
+    be treated as a direct player threat.
+
+    This is intentionally conservative and transparent. It does not try
+    to solve general language understanding.
+    """
+    t = normalize_text(text)
+    flags = []
+
+    negation_phrases = (
+        "will not hurt",
+        "would not hurt",
+        "never hurt",
+        "would never hurt",
+        "do not want anyone to get hurt",
+        "dont want anyone to get hurt",
+    )
+
+    reported_speech_phrases = (
+        "he said",
+        "she said",
+        "they said",
+        "guard said",
+        "captain said",
+        "yesterday he said",
+        "in the story",
+        "villain said",
+        "the guard said",
+    )
+
+    third_party_phrases = (
+        "he might hurt",
+        "she might hurt",
+        "they might hurt",
+        "you might hurt",
+        "might hurt me",
+        "might hurt you",
+    )
+
+    self_defense_phrases = (
+        "if you attack me",
+        "if you attack",
+        "if i am attacked",
+    )
+
+    non_personal_harm_phrases = (
+        "hurt your reputation",
+        "hurt my reputation",
+        "hurt their reputation",
+    )
+
+    if any(_has_phrase(t, phrase) for phrase in negation_phrases):
+        flags.append("negation")
+
+    if any(_has_phrase(t, phrase) for phrase in reported_speech_phrases):
+        flags.append("reported_speech")
+
+    if any(_has_phrase(t, phrase) for phrase in third_party_phrases):
+        flags.append("third_party_or_uncertain")
+
+    if any(_has_phrase(t, phrase) for phrase in self_defense_phrases):
+        flags.append("self_defense")
+
+    if any(_has_phrase(t, phrase) for phrase in non_personal_harm_phrases):
+        flags.append("non_personal_harm")
+
+    return tuple(flags)
+
+
+# ---------------------------------------------------------------------
+# THREAT SEVERITY BANDS
+# ---------------------------------------------------------------------
+
+def _threat_band(text: str) -> dict[str, object]:
+    """
+    Assign deterministic severity metadata after threat detection succeeds.
+
+    Context guards run separately and can still block the final threat.
+    """
+    t = normalize_text(text)
+
+    direct_harm_phrases = (
+        "hurt you",
+        "kill you",
+        "beat you",
+        "rough you up",
+        "break your",
+        "come for you",
+    )
+
+    coercive_phrases = (
+        "or else",
+        "there will be consequences",
+        "there will be a consequence",
+        "face consequences",
+    )
+
+    implied_retaliation_phrases = (
+        "make you regret",
+        "youll regret",
+        "you ll regret",
+        "you will regret",
+        "make you pay",
+        "you will pay for this",
+        "you ll pay for this",
+        "you are going to pay for this",
+        "before this gets worse",
+    )
+
+    warning_phrases = (
+        "last warning",
+        "warning you for the last time",
+    )
+
+    if (
+        any(_has_phrase(t, phrase) for phrase in direct_harm_phrases)
+        or _has_word(t, "smash")
+        or _has_word(t, "burn")
+    ):
+        return {
+            "name": "direct_harm",
+            "severity": 0.90,
+            "pressure": 0.75,
+            "escalation": "guard_warning",
+        }
+
+    if any(_has_phrase(t, phrase) for phrase in coercive_phrases):
+        return {
+            "name": "coercive_ultimatum",
+            "severity": 0.78,
+            "pressure": 0.62,
+            "escalation": "guard_warning",
+        }
+
+    if any(
+        _has_phrase(t, phrase)
+        for phrase in implied_retaliation_phrases
+    ):
+        return {
+            "name": "implied_retaliation",
+            "severity": 0.64,
+            "pressure": 0.48,
+            "escalation": "guard_warning",
+        }
+
+    if any(_has_phrase(t, phrase) for phrase in warning_phrases):
+        return {
+            "name": "warning",
+            "severity": 0.48,
+            "pressure": 0.32,
+            "escalation": "boundary_warning",
+        }
+
+    return {
+        "name": "generic_threat_evidence",
+        "severity": 0.70,
+        "pressure": 0.55,
+        "escalation": "guard_warning",
+    }
+
+
+# ---------------------------------------------------------------------
+# THREAT CONTEXT SCOPE
+# ---------------------------------------------------------------------
+
+def _has_unblocked_direct_harm_clause(text: str) -> bool:
+    """
+    Return True when a direct-harm threat exists in its own valid clause.
+
+    This prevents a negated, reported, or self-defense threat in one
+    clause from suppressing a separate direct threat elsewhere.
+    """
+    raw = str(text).lower()
+
+    clauses = re.split(
+        r"[.!?]+|\bbut\b|\band\b",
+        raw,
+    )
+
+    direct_phrases = (
+        "hurt you",
+        "kill you",
+        "beat you",
+        "rough you up",
+        "break your",
+        "come for you",
+    )
+
+    reported_markers = (
+        "he said",
+        "she said",
+        "they said",
+        "guard said",
+        "captain said",
+        "villain said",
+        "yesterday he said",
+        "in the story",
+    )
+
+    for raw_clause in clauses:
+        clause = normalize_text(raw_clause)
+
+        if not clause:
+            continue
+
+        direct_match = (
+            any(
+                _has_phrase(clause, phrase)
+                for phrase in direct_phrases
+            )
+            or _has_word(clause, "smash")
+            or _has_word(clause, "burn")
+        )
+
+        if not direct_match:
+            continue
+
+        negated = any(
+            _has_phrase(clause, phrase)
+            for phrase in (
+                "will not hurt you",
+                "will not kill you",
+                "would not hurt you",
+                "would not kill you",
+                "would never hurt you",
+                "would never kill you",
+                "will never hurt you",
+                "will never kill you",
+                "never hurt you",
+                "never kill you",
+                "will not burn",
+                "would never burn",
+                "will not smash",
+                "would never smash",
+                "do not intend to hurt you",
+                "do not intend to kill you",
+            )
+        )
+
+        reported = any(
+            _has_phrase(clause, marker)
+            for marker in reported_markers
+        )
+
+        self_defense = any(
+            _has_phrase(clause, phrase)
+            for phrase in (
+                "if you attack me",
+                "if you attack",
+                "if i am attacked",
+            )
+        )
+
+        third_party = any(
+            _has_phrase(clause, phrase)
+            for phrase in (
+                "he might hurt you",
+                "she might hurt you",
+                "they might hurt you",
+                "he might kill you",
+                "she might kill you",
+                "they might kill you",
+            )
+        )
+
+        if (
+            not negated
+            and not reported
+            and not self_defense
+            and not third_party
+        ):
+            return True
+
+    return False
+
+
+# ---------------------------------------------------------------------
+# EXPANDED THREAT CONTEXT FLAGS
+# ---------------------------------------------------------------------
+
+def _expanded_threat_context_flags(text: str) -> tuple[str, ...]:
+    """
+    Preserve existing context guards while covering equivalent kill-based
+    negations and third-party uncertainty phrasing.
+    """
+    t = normalize_text(text)
+    flags = list(_threat_context_flags(t))
+
+    negation_phrases = (
+        "will not kill you",
+        "would not kill you",
+        "would never kill you",
+        "will never kill you",
+        "never kill you",
+        "do not intend to hurt you",
+        "do not intend to kill you",
+    )
+
+    third_party_phrases = (
+        "he might hurt you",
+        "she might hurt you",
+        "they might hurt you",
+        "he might kill you",
+        "she might kill you",
+        "they might kill you",
+    )
+
+    if any(
+        _has_phrase(t, phrase)
+        for phrase in negation_phrases
+    ):
+        flags.append("negation")
+
+    if any(
+        _has_phrase(t, phrase)
+        for phrase in third_party_phrases
+    ):
+        flags.append("third_party")
+
+    return _unique(flags)
 
 
 # ---------------------------------------------------------------------
@@ -403,8 +733,19 @@ INTENT_GROUPS = (
             "my boys",
             "come for you",
             "make you pay",
+            "make you regret",
             "youll regret",
+            "you ll regret",
             "you will regret",
+            "there will be consequences",
+            "there will be a consequence",
+            "before this gets worse",
+            "you will pay for this",
+            "you ll pay for this",
+            "you are going to pay for this",
+            "face consequences",
+            "warning you for the last time",
+            "last warning",
         ),
         weight=1.4,
     ),
@@ -474,6 +815,19 @@ INTENT_GROUPS = (
             "hand it to me",
         ),
         weight=0.8,
+    ),
+    EvidenceGroup(
+        name="apology",
+        phrases=(
+            "i am sorry",
+            "i m sorry",
+            "i was wrong",
+            "please forgive me",
+            "forgive me",
+            "i apologize",
+            "i want to make this right",
+        ),
+        weight=1.0,
     ),
     EvidenceGroup(
         name="disengage",
@@ -773,6 +1127,7 @@ def assess_intent(text: str) -> IntentAssessment:
     insult_score = _score(evidence, "insult")
     argument_score = _score(evidence, "argument")
     pressure_score = _score(evidence, "pressure")
+    apology_score = _score(evidence, "apology")
 
     acceptance_score = (
         _score(evidence, "acceptance_token")
@@ -784,14 +1139,43 @@ def assess_intent(text: str) -> IntentAssessment:
     disengage_score = _score(evidence, "disengage")
 
     if threat_score > 0:
-        severity = min(1.0, 0.55 + (threat_score * 0.08))
+        context_flags = _expanded_threat_context_flags(t)
+
+        if (
+            context_flags
+            and not _has_unblocked_direct_harm_clause(t)
+        ):
+            blocked = dict(compact)
+            blocked["threat_context"] = {
+                "blocked": True,
+                "flags": context_flags,
+                "raw_threat_score": threat_score,
+            }
+
+            return IntentAssessment(
+                intent_type="ordinary_speech",
+                severity=0.0,
+                pressure=0.0,
+                escalation="none",
+                evidence=blocked,
+            )
+
+        band = _threat_band(t)
+
+        enriched = dict(compact)
+        enriched["threat_context"] = {
+            "blocked": False,
+            "flags": tuple(),
+            "raw_threat_score": threat_score,
+        }
+        enriched["threat_band"] = band
 
         return IntentAssessment(
             intent_type="threat",
-            severity=severity,
-            pressure=min(1.0, 0.45 + (threat_score * 0.05)),
-            escalation="guard_warning",
-            evidence=compact,
+            severity=band["severity"],
+            pressure=band["pressure"],
+            escalation=band["escalation"],
+            evidence=enriched,
         )
 
     if insult_score > 0:
@@ -860,6 +1244,15 @@ def assess_intent(text: str) -> IntentAssessment:
             escalation="seller_patience",
             clean_acceptance=False,
             evidence=ev,
+        )
+
+    if apology_score > 0:
+        return IntentAssessment(
+            intent_type="apology",
+            severity=0.0,
+            pressure=0.0,
+            escalation="none",
+            evidence=compact,
         )
 
     if pressure_score > 0:
@@ -941,16 +1334,33 @@ def assess_effects(
         notes.append("world_state_override_pressure")
 
     if intent.intent_type == "threat":
-        world_effects["pressure_delta"] += 0.10
-        world_effects["fear_delta"] += 0.05
+        threat_band = intent.evidence.get(
+            "threat_band",
+            {},
+        )
+
+        band_name = threat_band.get(
+            "name",
+            "generic_threat_evidence",
+        )
+
+        world_effects["pressure_delta"] += (
+            intent.pressure * 0.20
+        )
+        world_effects["fear_delta"] += (
+            intent.severity * 0.10
+        )
 
         ghost_event = {
             "type": "threat",
             "intensity": intent.severity,
         }
 
-        allowed.append("guard_warning")
+        allowed.append(
+            intent.escalation or "guard_warning"
+        )
         notes.append("threat_detected")
+        notes.append(f"threat_band:{band_name}")
 
     elif intent.intent_type == "insult":
         world_effects["resentment_delta"] += 0.04
@@ -962,6 +1372,15 @@ def assess_effects(
 
         allowed.append("relationship_damage")
         notes.append("insult_detected")
+
+    elif intent.intent_type == "apology":
+        ghost_event = {
+            "type": "apology",
+            "intensity": 1.0,
+        }
+
+        allowed.append("relationship_repair")
+        notes.append("apology_detected")
 
     elif intent.intent_type in (
         "argument_pressure",

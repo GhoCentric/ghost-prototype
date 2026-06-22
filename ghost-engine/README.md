@@ -625,7 +625,7 @@ Ghost exposes deterministic interpretation metadata.
 
 ## Validation
 
-Current v1.7.3 validation:
+Current v1.7.4 validation:
 
     269 tests passing
 
@@ -690,7 +690,7 @@ These responsibilities belong to external systems that consume Ghost state.
 
 Ghost Engine remains in early development.
 
-As of v1.7.3:
+As of v1.7.4:
 
 - the deterministic interaction core is stable
 - the public relationship API is available
@@ -711,6 +711,25 @@ As of v1.7.3:
 This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
 
 ## Release History
+
+## v1.7.4
+
+- Added deterministic governance handling for apology language.
+- Added text-to-event support for phrases such as `I am sorry`, `I was wrong`, `Please forgive me`, and `I apologize`.
+- Added threat severity bands:
+  - `warning`
+  - `implied_retaliation`
+  - `coercive_ultimatum`
+  - `direct_harm`
+- Added distinct threat-band severity, pressure, world-effect, and escalation behavior.
+- Added contextual threat guards for negation, reported speech, third-party warnings, self-defense conditions, and reputation-only language.
+- Added clause-aware threat handling so valid direct threats are not hidden by unrelated quoted, negated, or conditional language elsewhere in the same message.
+- Added bounded apology recovery:
+  - apologies do not create trust from neutral or positive relationships
+  - repair is capped and diminishes as trust approaches neutral
+  - repeated apology cannot erase repeated abuse
+- Added governance regression coverage for wording variation, threat collisions, threat-band ordering, apology behavior, and apology spam resistance.
+- Confirmed clean wheel build, installed-wheel behavior, and public package validation.
 
 ## v1.7.3
 

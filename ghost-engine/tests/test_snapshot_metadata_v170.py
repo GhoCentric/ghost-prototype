@@ -9,8 +9,8 @@ def test_snapshot_contains_version_metadata():
 
     snapshot = ghost.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.3"
-    assert snapshot["schema_version"] == "1.7.3"
+    assert snapshot["ghost_version"] == "1.7.4"
+    assert snapshot["schema_version"] == "1.7.4"
 
     json.dumps(snapshot)
 
@@ -44,8 +44,8 @@ def test_snapshot_metadata_survives_after_relationship_event():
 
     snapshot = ghost.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.3"
-    assert snapshot["schema_version"] == "1.7.3"
+    assert snapshot["ghost_version"] == "1.7.4"
+    assert snapshot["schema_version"] == "1.7.4"
 
     assert "player|shopkeeper" in snapshot["relationships"]
 
@@ -89,7 +89,7 @@ def test_snapshot_after_tick_is_json_safe_and_versioned():
 
     snapshot = ghost.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.3"
-    assert snapshot["schema_version"] == "1.7.3"
+    assert snapshot["ghost_version"] == "1.7.4"
+    assert snapshot["schema_version"] == "1.7.4"
 
     json.dumps(snapshot)

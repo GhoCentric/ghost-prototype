@@ -20,8 +20,8 @@ def test_snapshot_json_safe_strict_mode():
 
     snapshot = engine.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.3"
-    assert snapshot["schema_version"] == "1.7.3"
+    assert snapshot["ghost_version"] == "1.7.4"
+    assert snapshot["schema_version"] == "1.7.4"
 
     json.dumps(snapshot, allow_nan=False)
 
