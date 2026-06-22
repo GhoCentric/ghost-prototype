@@ -11,8 +11,8 @@ from ghost.validation import (
 )
 from ghost.ids import normalize_id
 
-GHOST_VERSION = "1.7.4"
-GHOST_SNAPSHOT_SCHEMA_VERSION = "1.7.4"
+GHOST_VERSION = "1.7.5"
+GHOST_SNAPSHOT_SCHEMA_VERSION = "1.7.5"
 
 def _json_safe(x):
 

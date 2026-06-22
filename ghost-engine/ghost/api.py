@@ -611,6 +611,29 @@ class GhostAPI:
 
         return self.world.to_dict()
 
+    def propagate_social_event(
+        self,
+        source: str,
+        target: str,
+        event: str,
+        observers: list[str] | tuple[str, ...] | None = None,
+        weights: dict[str, float] | None = None,
+    ) -> dict:
+        """
+        Apply a direct relationship event and propagate bounded
+        secondary effects to observers.
+
+        Returns the v1.6 social propagation packet consumed by
+        interpret_social_packet().
+        """
+        return self.engine.propagate_social_event(
+            source=source,
+            target=target,
+            event=event,
+            observers=observers,
+            weights=weights,
+        )
+
     def propagate_social_effect(
         self,
         source_event: str,
