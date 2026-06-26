@@ -50,6 +50,9 @@ from .temperament import (
     interpret_relationship as _interpret_relationship_packet,
     interpret_social_packet as _interpret_social_packet,
 )
+from .threat_response import (
+    evaluate_threat_response as _evaluate_threat_response,
+)
 from .policies import (
     CommercePolicy,
     LawPolicy,
@@ -342,6 +345,50 @@ class GhostAPI:
             npc=npc,
             packet=packet,
             temperament=temperament,
+        )
+
+    def evaluate_threat_response(
+        self,
+        npc: str,
+        relationship: dict,
+        temperament="calm",
+        context: dict | None = None,
+    ) -> dict:
+        """
+        Read-only deterministic threat-response recommendation.
+
+        Ghost does not execute the response. A game or simulation layer
+        decides how to animate, schedule, or apply it.
+        """
+        return _evaluate_threat_response(
+            npc=npc,
+            relationship=relationship,
+            temperament=temperament,
+            context=context,
+        )
+
+    def evaluate_npc_threat_response(
+        self,
+        npc: str,
+        source: str,
+        target: str,
+        temperament="calm",
+        context: dict | None = None,
+    ) -> dict:
+        """
+        Read a live Ghost relationship, then evaluate a deterministic
+        threat-response recommendation for one NPC.
+        """
+        relationship = self.engine.get_relationship(
+            source,
+            target,
+        )
+
+        return self.evaluate_threat_response(
+            npc=npc,
+            relationship=relationship,
+            temperament=temperament,
+            context=context,
         )
 
     # -----------------------------

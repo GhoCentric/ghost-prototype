@@ -324,7 +324,20 @@ def interpret_relationship(
     """
     profile = get_temperament_profile(temperament)
 
-    diagnostics = relationship.get("diagnostics", {}) or {}
+    if not isinstance(relationship, dict):
+        raise ValueError(
+            "relationship must be a dictionary packet"
+        )
+
+    diagnostics = relationship.get("diagnostics", {})
+
+    if diagnostics is None:
+        diagnostics = {}
+
+    if not isinstance(diagnostics, dict):
+        raise ValueError(
+            "relationship diagnostics must be a dictionary packet"
+        )
 
     trust = validate_finite_number(
         relationship.get("trust", 0.0),

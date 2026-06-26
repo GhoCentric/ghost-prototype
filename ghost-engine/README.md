@@ -42,16 +42,18 @@ After installation, Ghost includes seven runnable demo commands:
     ghost-diagnostics-demo
     ghost-social-demo
     ghost-temperament-demo
+    ghost-threat-response-demo
 
 Each demo proves a different layer of the engine:
 
-- ghost-demo compares Ghost emotional inertia against a simple linear baseline
+- ghost-demo compares Ghost state evolution against a simple linear baseline
 - ghost-npc-demo shows Ghost state mapped into external NPC behavior
 - ghost-shopkeeper-demo runs a playable terminal shopkeeper mini game
 - ghost-math-demo explains Ghost relationship math and gameplay mapping
 - ghost-diagnostics-demo shows measurable relationship diagnostics
 - ghost-social-demo demonstrates observer effects, social heat, and world-effect packets
 - ghost-temperament-demo shows how different NPC temperaments interpret the same state differently
+- ghost-threat-response-demo shows deterministic NPC response recommendations from persistent Ghost state and game context
 
 ## Basic Usage
 
@@ -606,6 +608,75 @@ This demo shows:
 - world-effect packets
 - JSON-safe propagation output
 - deterministic social consequence state
+
+## Threat-Response Policy (v1.8.0)
+
+Ghost is a state engine. It does not animate an NPC, attack, flee,
+or call guards by itself.
+
+The threat-response policy reads persistent Ghost relationship state,
+temperament, and explicit caller-owned game context, then returns a
+deterministic JSON-safe recommendation.
+
+Supported response labels:
+
+    fight
+    call_guards
+    confront
+    surrender
+    flee
+    freeze
+    warn
+    ignore
+
+Public API:
+
+    packet = ghost.evaluate_threat_response(
+        npc="merchant",
+        relationship=relationship_packet,
+        temperament="anxious",
+        context={
+            "player_armed": True,
+            "player_aiming": True,
+            "escape_route": True,
+        },
+    )
+
+For a live Ghost relationship:
+
+    packet = ghost.evaluate_npc_threat_response(
+        npc="merchant",
+        source="player",
+        target="merchant",
+        temperament="anxious",
+        context={
+            "player_armed": True,
+            "player_aiming": True,
+            "escape_route": True,
+        },
+    )
+
+The returned packet includes the selected response, reason, score map,
+normalized context, Ghost-derived signals, and relationship interpretation.
+Evaluation is read-only and does not mutate the relationship packet.
+
+## ghost-threat-response-demo
+
+Run:
+
+    ghost-threat-response-demo
+
+Or:
+
+    python -m ghost.examples.threat_response_demo
+
+This demo proves that the same player threat can produce different
+recommendations:
+
+- anxious civilian with an escape route -> flee
+- same civilian trapped -> surrender
+- armed resentful rival under attack -> fight
+- suspicious guard near authority -> call_guards
 
 ## ghost-temperament-demo
 
