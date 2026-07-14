@@ -1,241 +1,291 @@
-# Ghost Engine — High-Level Architecture
+# Ghost Engine Architecture
 
-Ghost is an internal-state reasoning engine designed around explicit symbolic state, deterministic control, and constrained output shaping. Ghost does not attempt to model cognition or intelligence; it enforces consistency and constraint over downstream systems.
+Ghost is a deterministic state engine.
 
-This document describes the intended architecture and how the implemented components relate to that design. Some layers are conceptual abstractions that are partially implemented or distributed across modules rather than existing as single subsystems.
+It receives explicit events or structured inputs, updates owned
+state through bounded rules, and returns inspectable packets to the
+calling application.
 
----
+It is not a language model and does not require one.
 
-## High-Level Flow (Conceptual)
-┌──────────────────────────────────────────────┐
-│               EXTERNAL INPUT                 │
-│        (User, World Events, Systems)          │
-└───────────────────────────┬──────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────┐
-│              INPUT NORMALIZATION              │
-│  - Signal parsing                             │
-│  - Sanitization                               │
-│  - Recall triggers                            │
-└───────────────────────────┬──────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────┐
-│          PERSISTENT MEMORY LAYER              │
-│  - Symbolic memory                            │
-│  - Recall weighting & decay                   │
-│  - Historical snapshots                      │
-└───────────────────────────┬──────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────┐
-│      INTERNAL STATE KERNEL (DETERMINISTIC)    │
-│                                              │
-│  • Emotional vectors                          │
-│  • Belief tension                             │
-│  • Contradiction tracking                     │
-│  • Stability & pressure metrics               │
-│  • Awareness / depth bounds                   │
-│                                              │
-│  ↺ Meta-regulatory control loop               │
-│    (prevents drift & collapse)                │
-└───────────────────────────┬──────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────┐
-│        STATE ENFORCEMENT & ROUTING             │
-│  - Deterministic rule application              │
-│  - Strategy selection                          │
-│  - Output gating / suppression                 │
-│  - Hallucination prevention                   │
-└───────────────────────────┬──────────────────┘
-                            │
-                            ▼
-┌──────────────────────────────────────────────┐
-│      CONTEXT CONSTRAINT SNAPSHOT (CCS)        │
-│  - Immutable state snapshot                   │
-│  - Bias weights                               │
-│  - Allowed / forbidden modes                  │
-└───────────────────────────┬──────────────────┘
-              ┌─────────────┴─────────────┐
-              │                           │
-              ▼                           ▼
-┌──────────────────────────────┐   ┌──────────────────────────────┐
-│ DETERMINISTIC OUTPUT PATH     │   │ OPTIONAL LANGUAGE RENDERER   │
-│ (No LLM required)             │   │ (LLM as surface only)        │
-│                                │   │                              │
-│ - Symbolic templates           │   │ - Prompt constrained by CCS  │
-│ - Rule-based output            │   │ - No state authority         │
-│ - Guaranteed consistency      │   │ - No memory or agency        │
-└───────────────┬──────────────┘   └───────────────┬──────────────┘
-                │                                  │
-                ▼                                  ▼
-┌──────────────────────────────────────────────┐
-│            OUTPUT VALIDATION LAYER            │
-│  - State consistency check                   │
-│  - Constraint compliance                    │
-│  - Hallucination rejection                  │
-└───────────────────────────┬──────────────────┘
-                            │
-                ┌───────────┴───────────┐
-                ▼                       ▼
-        ┌──────────────┐       ┌──────────────┐
-        │ ACCEPTED     │       │ DISCARDED     │
-        │ OUTPUT       │       │ OUTPUT        │
-        └──────────────┘       └──────────────┘
+## High-Level Flow
 
----
+```text
+external event or structured input
+                |
+                v
+      public API validation
+                |
+                v
+   deterministic state subsystem
+                |
+                v
+    diagnostics / result packet
+                |
+                v
+   external application behavior
+```
 
-## Design Notes
+Optional language-model integration occurs after, or around, this
+deterministic boundary. A model may propose or describe something,
+but it does not become authoritative merely because it generated
+text.
 
-- Ghost is not an autonomous agent.
-- Ghost does not select actions, goals, or plans.
-- All behavior emerges from persistent symbolic state.
-- Language models are optional and strictly subordinated.
-- No output can directly mutate internal state.
+## Public Runtime Surfaces
 
----
+### GhostEngine
 
-## Core Design Principle
+`ghost.engine.GhostEngine` is the focused relationship runtime.
 
-**Language is not the cognitive core.**
+Its core public operations include:
 
-All reasoning occurs outside the language model. The LLM, when enabled, functions only as a controlled rendering surface after state evaluation and constraint enforcement.
+```text
+apply_event(a, b, event)
+tick()
+get_relationship(a, b)
+propagate_social_event(...)
+```
 
----
+This surface is useful for NPC relationships, faction standing,
+shopkeeper logic, guard reactions, reputation, and other persistent
+pairwise state.
 
-## Internal State Variables
+### GhostAPI
 
-Ghost maintains explicit, bounded, and observable internal variables, including:
+`ghost.api.GhostAPI` is the wider facade.
 
-- Emotional vectors
-- Belief tension metrics
-- Contradiction counts
-- Stability thresholds
-- Memory persistence factors
+It coordinates public capabilities that include:
 
-These variables are mechanically enforced and persist across interactions.
+- relationship events and ticks
+- social propagation
+- world effects and world state
+- epistemic facts, observations, reports, evidence, and beliefs
+- temperament interpretation
+- threat-response evaluation
+- governance evaluation
+- commerce and pricing evaluation
+- law and reintegration evaluation
+- snapshot creation and restoration
+- optional voice-prompt and deterministic fallback helpers
 
----
+The facade does not erase subsystem boundaries. It provides a
+single integration point over them.
 
-## Hallucination Resistance (Architectural)
+## Relationship Runtime
 
-Ghost does not rely on temperature tuning, prompt complexity, or sampling tricks to reduce hallucination.
+Relationship state is persistent and directional.
 
-Instead, hallucination resistance is achieved through:
+Ghost maintains separate positive and negative history rather than
+reducing every interaction to one temporary score.
 
-- Deterministic routing
-- State-grounded output constraints
-- Prohibition of undefined variables
-- Separation of reasoning state from language generation
+A relationship packet may expose:
 
-If information is not present in state, it cannot be asserted.
+```text
+trust
+state
+transition
+trigger
+diagnostics
+maturity
+volatility
+positive_volatility
+negative_volatility
+```
 
----
+The application can use that packet to change prices, access,
+dialogue availability, guard suspicion, faction behavior, quests,
+or other game systems.
 
-## Non-Agentic Constraint
+Ghost supplies the state. The application supplies the presentation
+and external side effects.
 
-Ghost is intentionally non-agentic.
+## Social Propagation
 
-It does not:
+A direct event can create bounded secondary effects for observers.
 
-- Initiate actions
-- Pursue goals
-- Generate plans
-- Simulate identity or selfhood
+Social propagation may produce:
 
-These constraints are foundational, not optional.
+- direct relationship results
+- weighted observer changes
+- social heat
+- pressure labels
+- world-effect deltas
+- JSON-safe result packets
 
----
+Observer effects are not required to equal the direct event.
+Weights and social heat allow downstream consequences to remain
+explicit and inspectable.
 
-## Proof-of-Architecture Status
+## Epistemic Runtime
 
-Ghost is an exploratory system demonstrating how symbolic state, deterministic control, and constrained probabilistic language can interact to produce stable, coherent behavior.
+The epistemic layer separates several concepts that language-driven
+systems often collapse together:
 
-It is not a finished product.
-It is an architectural thesis implemented in working code.
+```text
+objective fact
+observation
+report
+evidence
+belief
+provenance
+confidence
+revision
+propagation
+```
 
-## Phase A — Deterministic Core Validation (Ablation Proof)
+A report is not automatically treated as objective truth.
 
-Phase A validates that Ghost’s behavior is not an artifact of language model output, stylistic variance, or token sampling.
+A speaker may be mistaken, deceptive, uncertain, or repeating
+secondhand information. Ghost can store the report, record available
+evidence, evaluate candidate beliefs, and later revise a belief
+without rewriting the underlying objective record.
 
-To test this, the system was explicitly split into two layers:
+The public epistemic operations include:
 
-- Deterministic Core
-  - Internal symbolic state
-  - Strategy selection
-  - Pressure and stability modulation
-  - Memory influence
-  - Trace logging and invariants
+```text
+record_fact(...)
+observe(...)
+report(...)
+add_evidence(...)
+evaluate_beliefs(...)
+get_belief(...)
+propagate_belief(...)
+```
 
-- Optional Language Surface
-  - Purely expressive
-  - No authority over state
-  - No memory mutation
-  - Fully removable
+This is a state-management and evidence-accounting layer. It is not
+a universal truth detector and does not infer reliable provenance
+from arbitrary prose by itself.
 
-### LLM Ablation Test
+## Interpretation Layers
 
-The optional language renderer was fully disabled.
+Temperament and threat-response evaluation consume authoritative
+state and produce structured interpretation packets.
 
-The system was then run under the following conditions:
+Temperament can make the same relationship state appear different
+to different NPC profiles without changing the underlying
+relationship history.
 
-- Cold start
-- No memory carryover
-- Identical initial state
-- Identical code path
-- Identical strategy logic
-- No token sampling
-- No probabilistic text generation
+Threat-response evaluation can combine:
 
-### Observed Results (With LLM Disabled)
+- relationship state
+- temperament
+- explicit context
+- deterministic policy rules
 
-The following behaviors remained intact:
+The resulting packet can guide an external behavior system while
+keeping the policy path visible.
 
-- Strategy weights were normalized and enforced
-- Full pre_state → decision → post_state snapshots were recorded
-- Strategy selection changed in response to internal state
-- Output content aligned with selected strategy (e.g., “dream” vs “reflect”)
-- All transitions were traceable, inspectable, and replayable
-- No hidden state mutation occurred outside logged paths
+## Governance and Scenario Policies
 
-The following behaviors disappeared as expected:
+The integrated facade contains deterministic evaluators for areas
+such as:
 
-- Token-level variability
-- Stylistic richness
-- Sampling-based randomness
-- Model-driven phrasing diversity
+- claims and intent assessment
+- effect assessment
+- governance
+- commerce
+- prices
+- law
+- punishment and reintegration
+- world events and world effects
 
-### Architectural Implication
+These evaluators return structured decisions or state changes.
 
-If Ghost were a purely performative or decorative system, removing the language model would collapse its behavior into static or repetitive output.
+They do not independently execute real-world actions. A game or
+application chooses how to apply the result.
 
-This did not occur.
+## Snapshot Boundary
 
-Instead:
+Ghost supports snapshot-based persistence.
 
-Different inputs
-→ different internal states
-→ different strategy selection
-→ different constrained outputs
+Snapshots allow an application to:
 
-This chain executed entirely without a language model.
+- save engine state
+- restore a prior state
+- create equal starting points for deterministic comparisons
+- test alternative branches from the same history
+- serialize state without relying on hidden model memory
 
-### Determinism Boundary
+The epistemic runtime and integrated API both expose snapshot
+operations.
 
-Ghost is deterministic up to the strategy selection boundary.
+Ghost Revolution benchmarks use exact snapshot restoration to
+compare different policies from the same game state.
 
-Any nondeterminism exists only in:
-- Optional language rendering
-- Explicitly gated, post-decision expression
+## LLM Boundary
 
-All internal reasoning, state transitions, and control logic are deterministic, logged, and auditable.
+Language models are optional.
 
-### Conclusion
+Two supported integration patterns are demonstrated by the current
+project.
 
-Phase A demonstrates that Ghost is not a prompt artifact, Rube Goldberg machine, or stylistic illusion.
+### Narration
 
-It is a deterministic state machine whose behavior survives ablation.
+An LLM receives a resolved state packet and renders prose.
 
-The language model, when enabled, does not create behavior — it renders it.
+The model does not decide the authoritative damage, relationship
+transition, world state, death, timer, or legal outcome.
+
+### Proposed Intent
+
+In Ghost Revolution, an opponent strategist may propose a legal
+tactic and a hidden reaction plan.
+
+The deterministic runtime then:
+
+```text
+validates proposal
+-> locks accepted intent
+-> applies deterministic fallback when invalid
+-> waits for player commitment
+-> resolves the exchange
+-> exposes the resolved packet
+-> allows narration of that packet
+```
+
+There is no requirement that model-generated reasoning be accepted
+as state truth.
+
+## Authority Table
+
+| Concern | Authority |
+|---|---|
+| Relationship mutation | Ghost |
+| Social propagation | Ghost |
+| Belief records and revision | Ghost |
+| World-effect deltas | Ghost |
+| Snapshot state | Ghost |
+| Deterministic policy result | Ghost |
+| External animation | Application |
+| UI and terminal presentation | Application |
+| Final dialogue wording | Template or optional LLM |
+| Model proposal legality | Ghost validation |
+| External database writes | Application |
+
+## Design Guarantees
+
+The architecture is designed around:
+
+- deterministic state transitions
+- explicit inputs
+- bounded state
+- inspectable diagnostics
+- serialization-safe packets
+- reproducible snapshots
+- separation of state authority from generated language
+- deterministic fallback paths
+
+Specific guarantees are established by tests for specific modules
+and scenarios. They should not be generalized into claims of total
+AI safety, universal correctness, or universal superiority.
+
+## Non-Goals
+
+Ghost does not claim to be:
+
+- a general intelligence
+- a consciousness model
+- a complete autonomous agent
+- a general-purpose truth detector
+- a replacement for an application or game engine
+- proof that every downstream behavior will be correct

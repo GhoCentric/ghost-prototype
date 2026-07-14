@@ -1,161 +1,279 @@
-# Example Flow — How Ghost Influences Behavior (Non-Agentic)
+# Example Flow
 
-This document provides a concrete example of how the Ghost engine processes input, updates internal state, and constrains downstream behavior **without generating dialogue, actions, or plans**.
-
-Ghost does not act.  
-Ghost does not decide outcomes.  
-Ghost restricts what outcomes are allowed.
-
----
+This example shows how Ghost can connect a direct relationship
+event to social consequences while leaving external game behavior
+under application control.
 
 ## Scenario
 
-A player approaches an NPC shortly after stealing from a nearby shop.
+A player betrays a shopkeeper.
 
-The game engine reports this event to Ghost as contextual input.
+The game wants to update:
 
-Ghost receives **signals**, not intent:
-- proximity event
-- recent theft flag
-- NPC–player interaction request
+- the direct player-to-shopkeeper relationship
+- nearby observers
+- social heat
+- world-effect values
+- later NPC behavior
 
----
+## Step 1: Create the Relationship Runtime
 
-## Step 1 — Input Normalization
+```python
+from ghost.engine import GhostEngine
 
-Ghost routes and interprets input through deterministic parsing and pattern detection logic:
+ghost = GhostEngine()
+```
 
-- event_type = `player_interaction`
-- context_flag = `recent_theft`
-- target = `npc_merchant`
+## Step 2: Establish Prior History
 
-No interpretation, dialogue, or emotion occurs at this stage.
+```python
+ghost.apply_event(
+    "player",
+    "shopkeeper",
+    "help",
+)
 
----
+ghost.tick()
 
-## Step 2 — Memory Recall
+before = ghost.get_relationship(
+    "player",
+    "shopkeeper",
+)
+```
 
-Ghost queries persistent symbolic memory:
+`before` is an authoritative relationship packet.
 
-- Prior encounters with the player
-- Existing trust or suspicion levels
-- Recent contradiction or tension history
+It may contain trust, state, maturity, volatility, diagnostics, and
+transition information.
 
-Memory recall may strengthen or decay prior signals based on time and reinforcement rules.
+## Step 3: Apply and Propagate the Event
 
-Memory recall is implemented via distributed symbolic memory modules rather than a single retrieval stage.
+```python
+packet = ghost.propagate_social_event(
+    source="player",
+    target="shopkeeper",
+    event="betrayal",
+    observers=[
+        "guard",
+        "elder",
+        "rival",
+    ],
+    weights={
+        "guard": 1.0,
+        "elder": 0.7,
+        "rival": 0.25,
+    },
+)
+```
 
----
+`propagate_social_event(...)` applies the direct betrayal once and
+then produces the bounded observer and world-effect results derived
+from that event.
 
-## Step 3 — Internal State Update (Deterministic)
+Calling `apply_event(...)` first would record a separate additional
+betrayal, so the two operations should not be combined for the same
+single event.
 
-Ghost updates internal symbolic state using deterministic rules:
+Ghost deterministically updates its owned relationship state.
 
-- trust → decreases
-- suspicion → increases
-- tolerance → decreases
-- belief tension → increases
-- stability → checked and clamped if needed
+The application does not need to infer the change from generated
+dialogue.
 
-All updates are:
-- rule-based
-- bounded
-- observable
-- repeatable
+It can inspect both the stored relationship and the direct result
+inside the propagation packet:
 
-No language is generated.
+```python
+relationship = ghost.get_relationship(
+    "player",
+    "shopkeeper",
+)
 
----
+direct = packet["direct"]
 
-## Step 4 — Meta-Regulatory Enforcement
+print(
+    relationship["trust"]
+)
 
-Meta-regulatory controls evaluate system health:
+print(
+    relationship["state"]
+)
 
-- Prevent runaway escalation
-- Prevent collapse into passivity
-- Enforce stability thresholds
+print(
+    relationship["diagnostics"]
+)
 
-If instability or stagnation is detected, corrective pressure is applied **before any output is allowed**.
+print(
+    direct
+)
+```
 
----
+Depending on prior history and relationship parameters, the event
+may create a major negative shift, near-break pressure, or an
+actual relationship break.
 
-## Step 5 — Strategy Routing
+## Step 4: Inspect the Propagation Packet
 
-Based on internal state, Ghost selects an selects a response strategy via deterministic weighting and pressure overrides:
+The propagation packet can expose:
 
-Examples:
-- `dismissive`
-- `guarded`
-- `restricted`
-- `neutral`
+```text
+direct relationship result
+observer relationship changes
+social heat
+pressure
+severity
+world-effect deltas
+```
 
-This is **not** dialogue selection.  
-It is a **routing decision** that limits downstream options.
+The guard does not have to receive the same change as the
+shopkeeper. Observer weights keep secondary effects explicit.
 
----
+## Step 5: Map the Packet into Game Behavior
 
-## Step 6 — Constraint Snapshot Generation
+The game reads Ghost state and performs its own external actions.
 
-Ghost produces an authoritative state snapshot derived from current internal variables, including:
+```python
+guard_state = ghost.get_relationship(
+    "player",
+    "guard",
+)
 
-- allowed response modes
-- suppressed behaviors
-- bias weights
-- output gating flags
+heat = packet["heat"]
 
-This snapshot is authoritative for the remainder of the interaction.
+if (
+    guard_state["state"] == "hostile"
+    or heat >= 0.8
+):
+    access = "blocked"
 
----
+elif heat >= 0.4:
+    access = "restricted"
 
-## Step 7 — Downstream Selection (External System)
+else:
+    access = "normal"
+```
 
-An external system (dialogue tree, template engine, or optional LLM):
+`access` belongs to the game layer.
 
-- selects dialogue or actions **within Ghost’s constraints**
-- cannot access or modify Ghost’s internal state
-- cannot override forbidden modes
+Ghost supplied the causal state. The game decided how that state
+affects entry to the market.
 
-Example result:
+## Step 6: Use the Wider Facade
 
-> “We’re closed. Take your business elsewhere.”
+Applications that need epistemic, temperament, threat, governance,
+world-state, commerce, or law features can use `GhostAPI`.
 
-This line was not *chosen* by Ghost.  
-Other lines were made **invalid**.
+```python
+from ghost.api import GhostAPI
 
----
+api = GhostAPI()
 
-## Key Outcome
+api.apply_event(
+    "player",
+    "guard",
+    "betrayal",
+)
 
-Ghost did **not**:
-- write dialogue
-- choose actions
-- simulate emotions
-- pursue goals
+relationship = api.get_relationship(
+    "player",
+    "guard",
+)
 
-Ghost **did**:
-- enforce internal consistency
-- restrict invalid behavior
-- preserve causal continuity
+interpreted = (
+    api.interpret_relationship_packet(
+        npc="guard",
+        relationship=relationship,
+        temperament="suspicious",
+    )
+)
+```
 
----
+The interpretation packet does not replace the underlying
+relationship record. It gives the application structured metadata
+for that NPC profile.
 
-## Why This Matters
+## Step 7: Add Epistemic State
 
-This approach enables:
+Consider a second question:
 
-- believable consistency without scripted emotions
-- debuggable causality instead of opaque generation
-- stateful behavior without agentic autonomy
-- NPCs that react coherently without “thinking”
+```text
+Is an elite knight currently present in Crownmarket?
+```
 
-Ghost turns **state into constraint**, not language into cognition.
+The application may provide:
 
----
+- an objective world fact
+- a scout observation
+- a merchant report
+- patrol evidence
+- candidate beliefs
+- provenance for each source
 
-## Summary
+The public epistemic flow is:
 
-Ghost operates as a **deterministic internal-state authority** that constrains downstream systems.
+```text
+record_fact(...)
+-> observe(...) or report(...)
+-> add_evidence(...)
+-> evaluate_beliefs(...)
+-> get_belief(...)
+-> later evidence
+-> evaluate_beliefs(...) again
+```
 
-Language and action selection remain external.
+The merchant report is not automatically treated as objective
+truth.
 
-Behavior emerges from **what is no longer allowed**, not from simulated intent.
+A listener can hold a belief with uncertainty, investigate, receive
+stronger evidence, and revise that belief while the original report
+remains in the record.
+
+## Step 8: Optional Language Rendering
+
+An optional language model or template system can receive the
+resolved state packet and produce a line such as:
+
+```text
+"We're closed. The guard wants to speak with you."
+```
+
+That sentence does not mutate the relationship or world state.
+
+The authoritative sequence remains:
+
+```text
+external event
+-> deterministic Ghost mutation
+-> structured result packet
+-> external behavior mapping
+-> optional narration
+```
+
+## Why This Flow Matters
+
+The event has one traceable causal path:
+
+```text
+betrayal
+-> direct trust damage
+-> relationship pressure
+-> observer propagation
+-> social heat
+-> game access restriction
+-> optional dialogue
+```
+
+Dialogue is the visible surface, not the source of truth.
+
+## Limits
+
+This example does not claim that Ghost determines the universally
+correct behavior for every game.
+
+It demonstrates that:
+
+- state changes are explicit
+- history persists
+- secondary effects are inspectable
+- beliefs can remain separate from facts
+- generated language does not own state
+- external behavior remains under application control

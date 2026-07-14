@@ -1,189 +1,351 @@
-# State Model
+# Ghost State Model
 
-This document describes the internal state model used by the Ghost engine.
+Ghost stores explicit, inspectable state.
 
-The state model is not a personality simulation, emotional imitation, or agent framework. It is a symbolic bookkeeping system designed to track and regulate internal conditions that influence downstream behavior selection without generating behavior directly.
+The engine is not built around one universal state vector. It uses
+several related state domains, each with its own update rules and
+output packets.
 
-The purpose of the state model is **consistency, constraint, and interpretability**, not expressiveness.
+## Relationship State
 
----
+Relationship state is directional and persistent.
 
-## 1. Purpose of the State Model
+A relationship is identified by two entities:
 
-The state model exists to solve a specific class of problems common in NPC systems and LLM-based interactions:
+```text
+source -> target
+```
 
-- Inconsistent behavior across time
-- Personality drift caused by language generation
-- Difficulty reasoning about *why* a response occurred
-- Lack of durable internal conditions beyond conversational memory
+The reverse relationship may have different state.
 
-Rather than allowing dialogue or action selection to implicitly define an NPC’s internal condition, Ghost maintains an explicit, persistent internal state that is updated independently of language generation.
+Ghost uses separate positive and negative reservoirs:
 
-This state is used to **constrain** downstream systems, not replace them.
+```text
+trust = positive_reservoir - negative_reservoir
+```
 
----
+This preserves the difference between accumulated positive history
+and accumulated damage.
 
-## 2. Nature of State Variables
+A later positive event does not simply delete a prior betrayal.
 
-State variables in Ghost are:
+### Core Relationship Fields
 
-- Explicitly defined
-- Symbolic (not learned weights)
-- Observable and inspectable
-- Persistent across interactions
-- Subject to deterministic update rules
+A public relationship packet may include:
 
-They are not hidden embeddings, latent vectors, or emergent traits inferred by a model.
-
-If a variable is not defined in state, it is considered nonexistent and cannot influence behavior.
-
----
-
-## 3. Categories of State Variables
-Exact variable names and availability depend on the current implementation.
-
-The state model is organized into broad categories rather than fixed schemas. Exact variable names and counts are implementation-dependent.
-
-Typical categories include:
-
-### Relational State
-Represents conditions tied to specific entities or actors.
-
-Examples:
 - trust
-- suspicion
-- familiarity
-- tolerance
-
-These variables allow the system to differentiate how the same stimulus affects different relationships.
-
----
-
-### Affective / Reactivity State
-Represents sensitivity and responsiveness, not emotions in a human sense.
-
-Examples:
-- baseline reactivity
-- variance
+- readable state
+- latest transition
+- transition trigger
+- diagnostics
+- maturity
 - volatility
-- dampening factor
+- positive volatility
+- negative volatility
 
-These variables modulate *how strongly* stimuli affect other parts of the state.
+Readable relationship states currently include states such as:
 
----
+```text
+hostile
+neutral
+friendly
+```
 
-### Memory Persistence State
-Controls how long state changes endure.
+### Diagnostics
 
-Examples:
-- decay rate
-- reinforcement strength
-- persistence bias
+Diagnostics explain the latest mutation.
 
-This allows Ghost to model differences between short-lived reactions and long-term consequences without narrative memory.
+Depending on the event and path, fields may include:
 
----
+- event
+- channel
+- base amount
+- effective gain
+- trust before
+- trust after
+- delta
+- absolute delta
+- direction
+- severity
+- pressure
+- near-break status
+- transition
+- trigger
+- maturity
+- volatility
 
-### Meta-Stability State
-Tracks the overall coherence and integrity of the internal state.
+These fields allow external systems to distinguish a small negative
+shift from a relationship break even when both are technically
+negative events.
 
-Examples:
-- stability
-- contradiction pressure
-- saturation thresholds
+### Maturity and Volatility
 
-These variables exist to prevent runaway feedback, oscillation, or incoherent state combinations.
+Maturity represents accumulated relationship stability.
 
----
+Volatility determines how strongly future events move the
+relationship.
 
-## 4. Update Rules (Conceptual)
+Positive and negative volatility can differ, allowing two
+relationships with similar trust to respond differently to the
+same new event.
 
-State variables are updated through explicit, deterministic rules. These rules are designed to be simple, inspectable, and predictable.
+Maturity does not erase history. It modifies future sensitivity.
 
-Common rule patterns include:
+## Temporal State
 
-- **Decay**  
-  State values drift toward a baseline over time unless reinforced.
+`tick()` advances time-dependent engine behavior.
 
-- **Reinforcement**  
-  Repeated or consistent stimuli strengthen persistence.
+Temporal updates may decay or stabilize values according to the
+current subsystem rules.
 
-- **Asymmetry**  
-  Certain variables are easier to decrease than increase (e.g. trust).
+Time does not automatically reset the relationship to neutral.
+Persistent history and asymmetry remain part of the model.
 
-- **Clamping**  
-  Upper and lower bounds prevent unbounded growth.
+## Near-Break and Pressure State
 
-- **Cross-modulation**  
-  Some variables influence the sensitivity or decay rate of others.
+Ghost can distinguish between:
 
-No variable updates itself through language generation. All updates are driven by external stimuli routed through the state update layer.
+- ordinary movement
+- major negative movement
+- near-break pressure
+- an actual relationship break
+- de-escalation
+- forgiveness
+- other state shifts
 
----
+Pressure labels make the meaning of a transition explicit for
+downstream systems.
 
-## 5. What the State Model Does *Not* Do
+## Social State
 
-The Ghost state model is intentionally limited.
+Social propagation converts one direct event into bounded effects
+on observers and world systems.
 
-It does **not**:
+A propagation packet may contain:
 
-- Generate dialogue
-- Select actions
-- Form goals or intentions
-- Perform planning
-- Reason symbolically about the world
-- Simulate consciousness or selfhood
+- source
+- target
+- event
+- direct relationship result
+- observer results
+- observer weights
+- heat
+- severity
+- pressure
+- world effects
 
-State represents **condition**, not **decision**.
+Social heat represents how strongly a direct event should matter
+outside the original relationship.
 
----
+External systems may map heat into:
 
-## 6. Relationship to Dialogue and Actions
+- rumor strength
+- guard suspicion
+- town fear
+- faction pressure
+- public reputation
+- escalation risk
 
-State variables are not meant to be expressed directly in dialogue.
+World-effect values are deltas or structured state updates, not
+commands to animate or narrate a particular response.
 
-Instead, they influence behavior indirectly by constraining downstream systems such as:
+## Temperament State
 
-- Dialogue trees
-- Template selection
-- Action availability
-- Response tone bands
-- Information disclosure thresholds
+Temperament is an interpretation layer over authoritative state.
 
-For example, a high suspicion state may:
+Supported profiles include examples such as:
 
-- Remove cooperative dialogue options
-- Bias toward evasive phrasing
-- Suppress information-sharing actions
+- calm
+- anxious
+- confident
+- suspicious
+- resentful
+- loyal
+- volatile
 
-The resulting dialogue expresses state *implicitly* through behavior, not explicitly through self-description.
+Temperament output may include:
 
----
+- emotional read
+- stance
+- fear
+- suspicion
+- anger
+- confidence
+- loyalty
+- relief
+- intensity
 
-## 7. Observability and Instrumentation
+Temperament does not rewrite the relationship history.
 
-During development and testing, Ghost can expose or describe its internal state.
+Two NPCs can receive the same relationship packet and interpret it
+differently while the authoritative trust and event history remain
+unchanged.
 
-This capability exists for:
+## Threat-Response State
 
-- Debugging
-- Validation
-- Consistency testing
-- Differentiating literal state from abstraction
+Threat-response evaluation combines explicit inputs such as:
 
-This descriptive layer is considered **instrumentation**, not in-world behavior, and can be disabled or routed to logs in production systems.
+- NPC identity
+- relationship state
+- temperament
+- supplied context
 
----
+It returns a deterministic response packet suitable for an external
+guard, dialogue, or behavior layer.
 
-## 8. Design Philosophy
+This is policy evaluation, not autonomous world execution.
 
-The state model prioritizes:
+## Epistemic State
 
-- Mechanical consistency over narrative richness
-- Interpretability over emergence
-- Constraint over improvisation
-- Explicit limits over implied capability
+The epistemic runtime tracks what is true, what was observed, what
+was reported, what evidence exists, and what an actor currently
+believes.
 
-Ghost assumes that believable behavior emerges from **what is made impossible**, not from what is freely generated.
+These are separate record types.
 
-The state model exists to make that constraint space stable, inspectable, and durable.
+### Objective Facts
+
+Facts describe authoritative world state supplied by the
+application.
+
+A fact can include:
+
+- fact identifier
+- source
+- subject
+- predicate
+- object
+- attributes
+
+### Observations
+
+Observations describe visible or measured information available to
+an observer.
+
+They can include:
+
+- observer
+- kind
+- visible features
+- reliability
+- provenance
+- subject
+
+An observation is evidence available to an actor. It is not
+necessarily a complete objective fact.
+
+### Reports
+
+Reports represent claims communicated between actors.
+
+A report can track:
+
+- speaker
+- audience
+- claim
+- confidence
+- source belief
+- provenance
+
+Reports are not promoted to truth automatically.
+
+### Evidence
+
+Evidence can support or contradict candidate beliefs.
+
+It may include:
+
+- evidence type
+- source
+- supported candidates
+- contradicted candidates
+- subject
+- actors who can access it
+- provenance
+
+### Beliefs
+
+Beliefs belong to a holder and subject.
+
+Belief evaluation can consider:
+
+- candidate interpretations
+- available evidence
+- report quality
+- previous belief state
+- provenance
+
+The resulting belief may expose confidence and uncertainty without
+changing the objective fact record.
+
+### Revision
+
+New evidence can revise a prior belief.
+
+The system can preserve:
+
+```text
+earlier report
+earlier belief
+new evidence
+revised belief
+provenance chain
+```
+
+This allows deterministic correction without pretending that the
+earlier actor possessed knowledge they did not have.
+
+### Propagation
+
+A belief can be reported or propagated to another actor while
+remaining distinct from objective state.
+
+The listener can evaluate the claim using its own evidence and
+confidence path.
+
+## Governance and World State
+
+The integrated API also maintains or evaluates structured state for:
+
+- verified world facts
+- claims and assessed intent
+- effects
+- governance decisions
+- commerce access
+- prices
+- law
+- warnings
+- punishment
+- reintegration
+- world events
+- world-effect deltas
+
+These systems use explicit records and deterministic evaluation
+rather than free-form language as state authority.
+
+## Serialization
+
+Public state packets and snapshots are designed to remain
+serialization-safe.
+
+Snapshot support is used for:
+
+- persistence
+- deterministic replay
+- branch comparison
+- tests
+- benchmark forks
+- restoring epistemic history
+
+## What State Does Not Mean
+
+Ghost state should not be interpreted as proof that an NPC:
+
+- is conscious
+- experiences human emotion
+- has unrestricted agency
+- knows objective truth
+- has formed a plan unless a plan record explicitly exists
+
+State is an engineering representation used to preserve causality,
+history, policy, and uncertainty.

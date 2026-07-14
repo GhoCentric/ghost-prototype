@@ -1,67 +1,141 @@
 # Ghost Engine Documentation
 
-This folder contains supporting technical documentation for the Ghost internal-state reasoning engine.
+This directory documents the current public architecture of
+`ghocentric-ghost-engine` version 1.8.0.
 
-Ghost is not a single model, algorithm, or agent. It is a layered system designed to maintain, regulate, and expose a persistent internal symbolic state. That state is used to produce advisory signals and constraints that bias downstream systems — not to directly control dialogue, actions, or planning.
+Ghost is a deterministic Python state engine for persistent
+interactive systems. It is designed to sit underneath game logic,
+NPC behavior, reputation systems, social simulations, policy
+systems, and optional language-model interfaces.
 
-Ghost does not generate goals, actions, or dialogue on its own. It evaluates internal conditions and shapes what downstream systems are likely or permitted to produce through constraint-first routing and gating.
+Ghost owns structured state and deterministic state transitions.
+External applications decide how those packets become animation,
+dialogue, UI, quests, combat presentation, or other side effects.
 
----
+## Documentation Index
 
-## Core Idea
+- [`architecture.md`](architecture.md)
+  explains the current engine layers, authority boundaries,
+  snapshots, deterministic resolution, and optional LLM integration.
 
-Most AI and NPC systems conflate three distinct concerns:
+- [`state_model.md`](state_model.md)
+  describes relationship state, social propagation, temperament,
+  threat evaluation, epistemic records, world state, and diagnostics.
 
-- Internal state and reasoning  
-- Decision-making  
-- Language or action output  
+- [`example_flow.md`](example_flow.md)
+  walks through a public-API interaction from direct relationship
+  change to social consequences and external game behavior.
 
-Ghost deliberately separates these layers.
+## Installation
 
-Ghost maintains an explicit internal symbolic state (belief tension, emotional vectors, stability metrics, contradiction tracking), updates that state deterministically, and then emits advisory signals that bias or constrain downstream behavior.
+```bash
+pip install ghocentric-ghost-engine
+```
 
-Language generation, animation, and action selection remain external.
+## Installed Demo Commands
 
----
+The package currently installs eight terminal demos:
 
-## High-Level Data Flow
+```text
+ghost-demo
+ghost-npc-demo
+ghost-shopkeeper-demo
+ghost-math-demo
+ghost-diagnostics-demo
+ghost-social-demo
+ghost-temperament-demo
+ghost-threat-response-demo
+```
 
-At a high level, Ghost operates as follows:
+These demos cover different parts of the public engine:
 
-1. An external system provides a situation, stimulus, or query  
-2. Ghost updates its internal symbolic state deterministically  
-3. Internal state produces advisory signals, routing preferences, or output gates  
-4. An external system selects dialogue or actions within those constraints  
+- relationship persistence and emotional inertia
+- external NPC behavior mapping
+- a playable shopkeeper loop
+- relationship math
+- diagnostic packets
+- social propagation and world effects
+- temperament interpretation
+- threat-response evaluation
 
-Ghost never directly selects dialogue or actions. It selects internal strategies and constraints that shape downstream behavior without exercising agency or control.
+Ghost Revolution is a larger development example built on top of
+the engine. It demonstrates persistent town memory, social
+consequences, epistemic state, deterministic combat resolution,
+and optional LLM narration.
 
----
+## Public Surfaces
 
-## Why This Exists
+The current package exposes two primary integration surfaces.
 
-Ghost exists to address failure modes common in language-driven systems where language generation is treated as cognition:
+`GhostEngine` provides the focused relationship runtime:
 
-- Narrative drift
-- Inconsistent personality
-- Prompt exploitation
-- Hallucinated intent or memory
-- Opaque or irreproducible reasoning
+```python
+from ghost.engine import GhostEngine
 
-By making internal state explicit and language downstream, Ghost prioritizes:
+ghost = GhostEngine()
 
-- Consistency over novelty  
-- Observability over performance  
-- Constraint over improvisation  
+ghost.apply_event(
+    "player",
+    "shopkeeper",
+    "help",
+)
 
----
+relationship = ghost.get_relationship(
+    "player",
+    "shopkeeper",
+)
+```
 
-## What Ghost Is Not
+`GhostAPI` provides the wider integrated facade:
 
-Ghost is intentionally limited. It is not:
+```python
+from ghost.api import GhostAPI
 
-- An autonomous agent  
-- A general intelligence  
-- A dialogue system  
-- A persona generator  
+ghost = GhostAPI()
 
-These limits are not shortcomings — they define the architecture.
+ghost.apply_event(
+    "player",
+    "shopkeeper",
+    "betrayal",
+)
+
+snapshot = ghost.snapshot()
+```
+
+The wider facade includes relationship, social, epistemic,
+governance, world-state, commerce, law, reintegration,
+temperament, threat-response, and adapter-related methods.
+
+## Authority Boundary
+
+Ghost may deterministically resolve:
+
+- state transitions
+- relationship changes
+- diagnostics
+- observer propagation
+- social heat
+- world-effect deltas
+- belief evaluation and revision
+- structured policy results
+- legal move validation in integrated examples
+
+Ghost does not directly perform external side effects such as:
+
+- rendering animation
+- displaying dialogue
+- moving a game character
+- charging a real payment
+- modifying an external database without application code
+- granting an LLM authority over engine state
+
+The application consumes Ghost packets and decides how to represent
+or apply them.
+
+## Source of Truth
+
+The package implementation, public tests, `pyproject.toml`, and the
+root `README.md` are the source of truth for released behavior.
+
+These documents explain the architecture without replacing the API
+contract or promising behavior that is not present in the package.
