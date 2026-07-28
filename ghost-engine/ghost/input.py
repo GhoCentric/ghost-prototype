@@ -66,14 +66,37 @@ def contains_any(text: str, terms) -> bool:
     return any(term in t for term in terms)
 
 
+def _normalize_numeric_text(text: str) -> str:
+    """
+    Normalize spacing and punctuation without translating digits.
+
+    General text normalization intentionally supports leetspeak,
+    including digit-to-letter replacements. Numeric extraction must
+    preserve literal integer tokens such as ``20`` and ``50``.
+    """
+
+    raw = (text or "").lower().strip()
+    cleaned = []
+
+    for character in raw:
+        if character.isalnum() or character.isspace():
+            cleaned.append(character)
+        else:
+            cleaned.append(" ")
+
+    return " ".join("".join(cleaned).split())
+
+
 def extract_mentioned_number(text: str):
     """
-    Returns the first integer found in text.
+    Return the first literal integer found in text.
+
     Returns None if no integer is found.
     """
-    t = normalize_text(text)
 
-    for word in t.split():
+    raw = _normalize_numeric_text(text)
+
+    for word in raw.split():
         if word.isdigit():
             return int(word)
 
@@ -89,7 +112,8 @@ def extract_mentioned_gold_price(text: str):
     - "20 gold" -> 20
     - "pay 50 coins" -> 50
     """
-    raw = normalize_text(text)
+
+    raw = _normalize_numeric_text(text)
 
     if not raw:
         return None
@@ -109,22 +133,27 @@ def extract_mentioned_gold_price(text: str):
         "trade",
     )
 
-    for i, word in enumerate(words):
+    for index, word in enumerate(words):
         if not word.isdigit():
             continue
 
         value = int(word)
 
-        prev_word = words[i - 1] if i > 0 else ""
-        next_word = words[i + 1] if i + 1 < len(words) else ""
+        previous_word = (
+            words[index - 1]
+            if index > 0
+            else ""
+        )
+        next_word = (
+            words[index + 1]
+            if index + 1 < len(words)
+            else ""
+        )
 
         if next_word in money_words:
             return value
 
-        if prev_word in price_context:
-            return value
-
-        if prev_word in price_context and next_word in money_words:
+        if previous_word in price_context:
             return value
 
     return None

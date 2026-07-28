@@ -57,3 +57,8 @@ ghost-diagnostics-demo = "ghost.examples.relationship_diagnostics_demo:main"
 ghost-social-demo = "ghost.examples.social_propagation_demo:main"
 ghost-temperament-demo = "ghost.examples.temperament_demo:main"
 ghost-threat-response-demo = "ghost.examples.threat_response_demo:main"
+
+[tool.pytest.ini_options]
+markers = [
+    "performance: local throughput regression checks that must run without coverage tracing",
+]

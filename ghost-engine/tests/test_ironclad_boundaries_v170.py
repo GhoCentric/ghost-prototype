@@ -47,7 +47,7 @@ def test_ghost_api_relationship_events_use_engine_canonical_packet():
     assert packet["diagnostics"] == direct["diagnostics"]
 
 
-def test_ghost_api_legacy_delta_events_are_explicitly_marked():
+def test_ghost_api_previous_delta_events_use_canonical_pipeline():
     api = GhostAPI()
 
     packet = api.apply_event(
@@ -58,7 +58,7 @@ def test_ghost_api_legacy_delta_events_are_explicitly_marked():
         },
     )
 
-    assert packet["mode"] == "legacy_delta_event"
+    assert packet["mode"] == "canonical_relationship_event"
     assert packet["relationship"] == api.get_relationship(
         "player",
         "shopkeeper",
@@ -157,8 +157,8 @@ def test_snapshot_is_strict_json_safe_after_many_events():
 
     snapshot = engine.snapshot()
 
-    assert snapshot["ghost_version"] == "1.7.5"
-    assert snapshot["schema_version"] == "1.7.5"
+    assert snapshot["ghost_version"] == "1.8.0"
+    assert snapshot["schema_version"] == "1.0"
 
     assert_strict_json_safe(snapshot)
 
@@ -240,10 +240,11 @@ def test_relationships_all_returns_safe_copy():
     assert live["trust"] != 999.0
 
 
-def test_version_constants_are_synced():
-    assert ghost.__version__ == "1.7.5"
-    assert GHOST_VERSION == "1.7.5"
-    assert GHOST_SNAPSHOT_SCHEMA_VERSION == "1.7.5"
+def test_package_version_and_snapshot_schema_are_separate():
+    assert ghost.__version__ == "1.8.0"
+    assert GHOST_VERSION == "1.8.0"
+    assert GHOST_SNAPSHOT_SCHEMA_VERSION == "1.0"
+    assert GHOST_VERSION != GHOST_SNAPSHOT_SCHEMA_VERSION
 
 
 def test_engine_apply_event_accepts_intensity_without_breaking_schema():

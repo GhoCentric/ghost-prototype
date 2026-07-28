@@ -1,1006 +1,551 @@
 # ghocentric-ghost-engine
 
-A lightweight, deterministic state engine for NPC relationships, persistent interactive state, emotional inertia, social propagation, temperament interpretation, and gameplay-readable diagnostics.
+A deterministic state engine for persistent NPC relationships, social consequences,
+epistemic state, scenario resolution, and AI-driven game systems.
 
-Ghost is not a language model.
+Ghost is not a language model, a renderer, or a replacement for a game engine.
 
-Ghost is not an autonomous decision-maker.
+Ghost provides the authoritative state layer underneath higher-level systems. It
+tracks what happened, validates what may change, preserves the result, and returns
+JSON-safe packets that a game, simulation, dialogue layer, or optional LLM can use.
 
-Ghost does not generate dialogue, choose actions, or replace game logic.
+> **Core principle:** models and game code may propose events or decisions. Ghost
+> owns deterministic state mutation and the record of what became true.
 
-Ghost exposes structured state. Your game, simulation, dialogue system, faction system, or optional AI layer decides what to do with that state.
+## Current Release
+
+```text
+Package:    ghocentric-ghost-engine
+Version:    1.8.0
+Python:     3.9+
+Runtime dependencies: none
+Validation: 1,296 passed, 1 skipped
+```
+
+The actively maintained package is this `ghost-engine/` directory.
 
 ## Installation
 
-    pip install ghocentric-ghost-engine
+```bash
+pip install ghocentric-ghost-engine
+```
 
-## What Ghost Is
+## Quick Start
 
-Ghost is a deterministic Python state engine designed to sit underneath higher-level interactive systems such as:
+`GhostAPI` is the recommended integration surface.
 
-- NPC behavior systems
-- dialogue engines
-- shopkeeper and guard logic
-- faction reputation systems
-- town or kingdom simulation systems
-- social consequence systems
-- LLM-driven character layers
-- game AI prototypes
+```python
+from ghost import GhostAPI
 
-Ghost tracks persistent state over time and exposes that state through clean public dictionaries.
+ghost = GhostAPI()
 
-The project is focused on architecture, deterministic behavior, serialization safety, and runtime correctness.
-
-## Demo Commands
-
-After installation, Ghost includes seven runnable demo commands:
-
-    ghost-demo
-    ghost-npc-demo
-    ghost-shopkeeper-demo
-    ghost-math-demo
-    ghost-diagnostics-demo
-    ghost-social-demo
-    ghost-temperament-demo
-    ghost-threat-response-demo
-
-Each demo proves a different layer of the engine:
-
-- ghost-demo compares Ghost state evolution against a simple linear baseline
-- ghost-npc-demo shows Ghost state mapped into external NPC behavior
-- ghost-shopkeeper-demo runs a playable terminal shopkeeper mini game
-- ghost-math-demo explains Ghost relationship math and gameplay mapping
-- ghost-diagnostics-demo shows measurable relationship diagnostics
-- ghost-social-demo demonstrates observer effects, social heat, and world-effect packets
-- ghost-temperament-demo shows how different NPC temperaments interpret the same state differently
-- ghost-threat-response-demo shows deterministic NPC response recommendations from persistent Ghost state and game context
-
-## Basic Usage
-
-    from ghost.engine import GhostEngine
-
-    engine = GhostEngine()
-
-    engine.step({
-        "source": "npc_engine",
-        "intent": "threat",
-        "actor": "player",
-        "target": "guard",
-        "intensity": 0.5,
-    })
-
-    state = engine.state()
-
-    print(state["npc"]["threat_level"])
-
-Ghost mutates state only through explicit calls such as step(), apply_event(), tick(), and propagate_social_event().
-
-All public-facing state is dictionary-based and serialization-safe.
-
-## Public Relationship API
-
-Ghost includes a direct public API for working with relationships as a reusable runtime system.
-
-    from ghost.engine import GhostEngine
-
-    ghost = GhostEngine()
-
-    ghost.apply_event("player", "shopkeeper", "help")
-    ghost.apply_event("player", "shopkeeper", "insult")
-    ghost.apply_event("player", "shopkeeper", "betrayal")
-
-    relationship = ghost.get_relationship("player", "shopkeeper")
-
-    print(relationship)
-
-Example relationship output:
-
+packet = ghost.apply_event(
+    "player",
+    "shopkeeper",
     {
-        "trust": -0.703,
-        "state": "hostile",
-        "transition": ("neutral", "hostile"),
-        "trigger": {
-            "event": "relationship_broken"
-        },
-        "diagnostics": {
-            "event": "betrayal",
-            "channel": "neg",
-            "from_state": "neutral",
-            "to_state": "hostile",
-            "trust_before": 0.047,
-            "trust_after": -0.703,
-            "delta": -0.750,
-            "abs_delta": 0.750,
-            "direction": "negative",
-            "severity": 0.750,
-            "pressure": "relationship_broken",
-            "near_break": False,
-        },
-        "maturity": 0.03,
-        "volatility": 1.0,
-        "positive_volatility": 1.0,
-        "negative_volatility": 1.0,
-    }
+        "type": "betrayal",
+        "intensity": 1.0,
+    },
+)
 
-The public relationship API includes:
+relationship = ghost.get_relationship(
+    "player",
+    "shopkeeper",
+)
 
-    ghost.apply_event(a, b, event)
-    ghost.tick()
-    ghost.get_relationship(a, b)
+print(packet["relationship"]["state"])
+print(relationship["trust"])
+```
 
-    ghost.propagate_social_event(
-        source,
-        target,
-        event,
-        observers=None,
-        weights=None,
-    )
+Use `GhostEngine` directly for lower-level engine access, focused tests, or
+specialized integrations.
 
-These methods make Ghost usable as a direct state engine for NPC, faction, town, reputation, and social consequence systems.
+## What Ghost Owns
 
-## Relationship Model
+Ghost currently provides deterministic systems for:
 
-Ghost relationships use a dual-channel memory model:
+- relationship state and emotional inertia;
+- maturity, volatility, pressure, transitions, and diagnostics;
+- social propagation and bounded world effects;
+- temperament interpretation;
+- threat-response policy;
+- objective facts, observations, reports, beliefs, evidence, provenance, and
+  explicit belief revision;
+- validated scenario configuration and atomic scenario resolution;
+- fight-level objective packets, initiative state, and recovery-read control;
+- JSON-safe snapshots, strict restoration, and legacy snapshot migration;
+- public packet validation and copy isolation;
+- optional LLM prompt and response adapters.
 
-    trust = positive_reservoir - negative_reservoir
+Ghost does **not** own:
 
-Each relationship tracks:
+- graphics, animation, physics, pathfinding, input, or audio;
+- a game's custom inventory, quest, combat, or economy implementation;
+- unrestricted autonomous NPC control;
+- arbitrary natural-language truth;
+- hidden network calls from the deterministic core.
 
-- positive reservoir
-- negative reservoir
-- trust
-- state
-- transition
-- trigger
-- diagnostics
-- maturity
-- volatility
-- positive volatility
-- negative volatility
+## The Authority Boundary
 
-This allows relationship damage to persist independently from recovery.
+A normal integration follows this shape:
 
-A single helpful action after betrayal does not instantly erase the betrayal.
+```text
+game event or observation
+        ↓
+Ghost validates and updates authoritative state
+        ↓
+Ghost returns copied state, diagnostics, or a bounded policy packet
+        ↓
+the host game applies that result to its own mechanics and presentation
+```
 
-## Emotional Inertia
+In v1.8.0, Ghost can return selected or locked decisions inside specific bounded
+systems, such as threat-response labels and combat-control packets. It does not
+automatically discover an arbitrary game's NPC abilities or execute engine-specific
+functions.
 
-Ghost is designed to handle oscillating interaction patterns.
+A generic registered-agent capability runtime is a future layer, not a current
+public guarantee.
 
-Example:
+## Relationship State
 
-    insult -> help -> insult -> help
+Ghost relationships use separate positive and negative reservoirs:
 
-A simple linear system may average this out quickly.
+```text
+trust = positive reservoir - negative reservoir
+```
 
-Ghost preserves emotional direction through persistent positive and negative reservoirs.
+This preserves emotional history. A later helpful action does not automatically
+erase betrayal, repeated abuse, or accumulated hostility.
 
-This means repeated harm, betrayal, or hostility can continue to affect the relationship even after later positive actions.
+```python
+from ghost import GhostAPI
 
-## Relationship States
+ghost = GhostAPI()
 
-Ghost exposes readable relationship states:
-
-    relationship["state"]        # hostile, neutral, or friendly
-    relationship["transition"]   # example: ("neutral", "hostile")
-    relationship["trigger"]      # example: {"event": "relationship_broken"}
-    relationship["diagnostics"]  # measurable explanation of the latest change
-
-Ghost can generate structured trigger events such as:
-
-- relationship_broken
-- deescalation
-- forgiveness
-- state_shift
-
-Ghost does not perform game actions directly.
-
-It exposes state so another system can respond.
-
-## Diagnostics
-
-Relationship diagnostics explain what changed, how strongly it changed, and why.
-
-Diagnostics may include:
-
-- event
-- channel
-- base amount
-- effective gain
-- trust before
-- trust after
-- delta
-- absolute delta
-- severity
-- direction
-- pressure
-- near-break status
-- maturity
-- volatility
-- transition
-- trigger
-
-This makes Ghost useful for debugging and for external systems such as dialogue, guard suspicion, faction reputation, quest access, pricing, and social consequence logic.
-
-Example diagnostic packet:
-
+ghost.apply_event(
+    "player",
+    "merchant",
     {
-        "event": "betrayal",
-        "channel": "neg",
-        "base_amount": 0.7,
-        "effective_gain": 0.7546,
-        "from_state": "friendly",
-        "to_state": "hostile",
-        "trust_before": 0.2009,
-        "trust_after": -0.5537,
-        "delta": -0.7546,
-        "abs_delta": 0.7546,
-        "direction": "negative",
-        "severity": 0.7546,
-        "maturity": 0.02,
-        "maturity_modifier": 0.98,
-        "volatility": 1.0,
-        "positive_volatility": 1.0,
-        "negative_volatility": 1.0,
-        "transition": ("friendly", "hostile"),
-        "trigger": {
-            "event": "relationship_broken"
-        },
-        "pressure": "relationship_broken",
-        "near_break": False,
-    }
+        "type": "help",
+        "intensity": 1.0,
+    },
+)
 
-Ghost exposes the measurable state change.
-
-The game decides what happens next.
-
-## Relationship Maturity and Volatility
-
-Ghost relationships support maturity and volatility.
-
-Maturity represents relationship stability over repeated interactions.
-
-Volatility controls how strongly new events affect a relationship.
-
-Ghost tracks:
-
-- maturity
-- volatility
-- positive_volatility
-- negative_volatility
-- maturity_gain
-- maturity_cap
-
-Maturity does not erase history.
-
-Maturity reduces future emotional swing.
-
-This means the same betrayal can produce different outcomes depending on relationship history.
-
-A short relationship can break immediately after betrayal.
-
-A long relationship with repeated positive history may absorb one betrayal without instantly becoming hostile.
-
-Positive and negative volatility can also differ.
-
-This allows personalities to behave differently under the same event sequence.
-
-## Personality Presets
-
-Relationships can have different emotional profiles.
-
-    ghost.relationships.set_personality("A", "B", "resentful")
-
-Available relationship presets include:
-
-- balanced
-- forgiving
-- resentful
-- volatile
-
-Each preset can affect:
-
-- gain sensitivity
-- decay speed
-- recovery behavior
-- maturity behavior
-- positive volatility
-- negative volatility
-
-The same event sequence can produce different emotional outcomes depending on the relationship profile.
-
-## Near-Break Pressure
-
-Neutral does not always mean calm.
-
-Ghost can detect a strained neutral state through near_break.
-
-Example:
-
+ghost.apply_event(
+    "player",
+    "merchant",
     {
-        "trust": -0.538,
-        "state": "neutral",
-        "diagnostics": {
-            "pressure": "near_break",
-            "near_break": True,
-            "direction": "negative",
-            "severity": 0.655,
-        }
-    }
+        "type": "betrayal",
+        "intensity": 1.0,
+    },
+)
 
-This lets external systems react before a relationship fully becomes hostile.
+relationship = ghost.get_relationship(
+    "player",
+    "merchant",
+)
 
-Near-break pressure can support:
+print(relationship["state"])
+print(relationship["diagnostics"])
+```
 
-- warning dialogue
-- higher prices
-- quest denial
-- access restriction
-- guard suspicion
-- faction tension
-- town pressure
+Public relationship packets can expose:
+
+- trust;
+- friendly, neutral, or hostile state;
+- transition and trigger data;
+- pressure and near-break state;
+- maturity and volatility;
+- positive and negative volatility;
+- measurable change diagnostics.
+
+Relationship personalities include:
+
+```text
+balanced
+forgiving
+resentful
+volatile
+```
 
 ## Social Propagation
 
-Ghost can propagate a direct relationship event to observers.
-
-    from ghost.engine import GhostEngine
-
-    ghost = GhostEngine()
-
-    packet = ghost.propagate_social_event(
-        source="player",
-        target="shopkeeper",
-        event="betrayal",
-        observers=["guard", "elder", "rival"],
-        weights={
-            "guard": 1.0,
-            "elder": 0.7,
-            "rival": 0.25,
-        },
-    )
-
-    print(packet)
-
-Social propagation can expose:
-
-- direct relationship damage
-- observer trust changes
-- social heat
-- pressure labels
-- weighted observer reactions
-- world-effect packets
-
-Example propagation output:
-
-    {
-        "source": "player",
-        "target": "shopkeeper",
-        "event": "betrayal",
-        "heat": 1.0,
-        "severity": 0.77,
-        "pressure": "relationship_broken",
-        "direct": {
-            "trust": -0.77,
-            "state": "hostile",
-            "diagnostics": {
-                "pressure": "relationship_broken",
-                "near_break": False,
-            },
-        },
-        "propagated": [
-            {
-                "affected": "guard",
-                "source_event": "betrayal",
-                "source_pressure": "relationship_broken",
-                "heat": 1.0,
-                "trust_delta": -0.20,
-                "relationship": {
-                    "trust": -0.20,
-                    "state": "neutral",
-                },
-            }
-        ],
-        "world_effects": {
-            "pressure_delta": 0.20,
-            "fear_delta": 0.08,
-            "resentment_delta": 0.08,
-            "order_delta": -0.04,
-            "guard_suspicion_delta": 0.35,
-        },
-    }
+A direct event can produce deterministic secondary effects for observers.
+
+```python
+packet = ghost.propagate_social_event(
+    source="player",
+    target="shopkeeper",
+    event="betrayal",
+    observers=[
+        "guard",
+        "elder",
+        "rival",
+    ],
+    weights={
+        "guard": 1.0,
+        "elder": 0.7,
+        "rival": 0.25,
+    },
+)
+```
+
+Propagation packets can contain:
+
+- the direct relationship result;
+- bounded observer trust changes;
+- social heat;
+- pressure labels;
+- fear, resentment, order, and guard-suspicion deltas;
+- copied relationship and world-state data.
+
+## Epistemic State
+
+Ghost separates objective runtime truth from what actors observe, report, believe,
+and later revise.
+
+```text
+objective fact
+    ≠ observation
+    ≠ spoken report
+    ≠ belief
+```
+
+A report does not become truth, and receiving a report does not silently force a
+belief.
+
+```python
+from ghost import GhostAPI
+
+ghost = GhostAPI()
+
+ghost.record_fact(
+    fact_id="millcross_food_001",
+    source="game_rule",
+    subject="royal_guard",
+    predicate="confiscated",
+    object="millcross_food",
+    attributes={
+        "quantity": 6,
+    },
+)
+
+report = ghost.report(
+    speaker="villager_3",
+    audience="player",
+    claim={
+        "statement": "They took everything.",
+    },
+    confidence=0.82,
+)
+
+assert ghost.get_belief(
+    "player",
+    "millcross_food_loss",
+) is None
+```
+
+Public epistemic operations include:
+
+```text
+record_fact
+get_fact
+observe
+report
+add_evidence
+evaluate_beliefs
+get_belief
+propagate_belief
+```
+
+Beliefs are actor-owned, provenance-aware, explicitly evaluated, and linked across
+revisions. Epistemic state is included in snapshots and deterministic restoration.
+
+Run the public smoke demo:
+
+```bash
+python -m ghost.examples.epistemic_api_smoke_demo
+```
+
+## Threat-Response Policy
+
+Ghost can evaluate a bounded set of deterministic response labels from persistent
+relationship state, temperament, and explicit caller-owned context.
 
-This can support systems such as:
+```python
+packet = ghost.evaluate_npc_threat_response(
+    npc="merchant",
+    source="player",
+    target="merchant",
+    temperament="anxious",
+    context={
+        "player_armed": True,
+        "player_aiming": True,
+        "escape_route": True,
+    },
+)
 
-- rumors
-- guard suspicion
-- faction pressure
-- town reputation
-- public betrayal consequences
-- social escalation
+print(packet["selected_response"])
+```
 
-Ghost still does not decide what observers do.
+Current labels are:
 
-It exposes the state packet.
+```text
+fight
+call_guards
+confront
+surrender
+flee
+freeze
+warn
+ignore
+```
 
-## Social Heat
+The policy is read-only. It returns a recommendation packet; it does not animate or
+execute the response.
 
-Social heat measures how much a direct relationship event should matter to observers or world systems.
+## Combat Control
 
-The current pressure ordering is:
+The public core includes small deterministic combat-control contracts:
 
-    relationship_broken > near_break > major_negative_shift > state_shift > normal shifts
+```text
+build_combat_objective
+advance_combat_initiative
+lock_combat_recovery_read
+resolve_combat_recovery
+```
 
-This means a full relationship break creates more social heat than a strained neutral state.
+These packets validate objective pressure, initiative transitions, hidden recovery
+reads, and deterministic resolution without randomness.
 
-Social heat is exposed in propagation packets as:
+They are not a universal combat system. Ghost Revolution uses them as part of a
+larger game-specific reference implementation.
 
-    packet["heat"]
+## Scenario Runtime
 
-External systems can use heat to scale:
+`ScenarioRuntime` wraps `GhostAPI` with validated JSON-safe scenario configuration
+and atomic action resolution.
 
-- rumor strength
-- guard suspicion
-- town fear
-- faction reaction
-- world pressure
-- observer trust loss
-- escalation chance
+A rejected action restores the prior checkpoint instead of leaving partial state
+behind. This provides a tested boundary for game-specific facades without moving
+their presentation logic into Ghost core.
 
-## Temperament Layer
+## Snapshots and Restoration
 
-v1.7.0 adds deterministic NPC temperament interpretation.
+Use `snapshot()` for saves and external boundaries.
 
-The same relationship state can be interpreted differently by different NPC profiles.
+```python
+snapshot = ghost.snapshot()
 
-Example temperament profiles include:
+restored = GhostAPI.from_snapshot(
+    snapshot
+)
 
-- calm
-- anxious
-- confident
-- suspicious
-- resentful
-- loyal
-- volatile
+assert restored.snapshot() == snapshot
+```
 
-Temperament output can include:
+Snapshots include separate package and schema metadata:
 
-- emotional_read
-- stance
-- fear
-- suspicion
-- anger
-- confidence
-- loyalty
-- relief
-- intensity
+```text
+ghost_version
+schema_version
+```
 
-The temperament layer does not choose actions.
+Package release numbers and snapshot schema versions are intentionally independent.
+The current runtime validates complete snapshot structure, rejects unsupported
+schemas, migrates supported legacy metadata, and restores copied state.
 
-It gives external systems structured interpretation metadata.
+`state()` is a live mutable view intended for controlled inspection. Do not use it
+as a save-file or external adapter contract.
 
-Example external mapping:
+## Optional LLM Layer
 
-- anxious_guard -> avoid or call help
-- confident_guard -> confront
-- suspicious_guard -> restrict access
-- resentful_guard -> escalate
-- loyal_guard -> hesitate
-- volatile_guard -> overreact
+Ghost does not require an LLM.
 
-Ghost exposes state.
+The package includes optional helpers and the Ghost Revolution reference demo,
+where an LLM can propose constrained strategy or narration while deterministic game
+state remains authoritative.
 
-Your game decides the behavior.
+The reference rule is:
 
-## Packaged Demos
+```text
+LLM proposes
+Ghost validates or resolves
+the host game presents the result
+```
 
-## ghost-demo
+API keys are caller-owned and read from environment configuration. They are not
+embedded in the package.
 
-The proof demo compares Ghost emotional inertia against a standard linear baseline.
+## Ghost Revolution Reference Demo
 
-Run:
+`ghost.examples.ghost_revolution` is a terminal reference implementation used to
+exercise Ghost under a larger persistent game loop.
 
-    ghost-demo
+It demonstrates:
 
-Or:
+- towns that retain player-history consequences;
+- relationships, social pressure, and epistemic belief state;
+- guarded-town reports, evidence, investigation, and belief revision;
+- raid preparation, recruitment, heat, and kingdom pressure;
+- deterministic snapshots and branch restoration;
+- a king and Champion fight with LLM strategy proposals;
+- separate opponent prediction and physical combat action;
+- symmetric heavy, light, feint, bait, parry, deflect, and dodge options;
+- Ghost-authoritative combat resolution and audit packets;
+- LLM narration conditioned on accumulated game state.
 
-    python -m ghost.examples.relationship_proof_demo
+Ghost Revolution is an example and test laboratory. Its towns, king, menus, combat
+damage, and presentation are not universal Ghost-core concepts.
 
-This demonstrates that Ghost retains emotional history after betrayal while a simple baseline rapidly normalizes.
+Local Android launchers included in the repository are:
 
-## ghost-npc-demo
+```bash
+./run-llm-ai-dev.sh
+./run-llm-ai-cinematic.sh
+```
 
-The NPC demo shows how a small external behavior layer can consume Ghost state over a deterministic 10-tick sequence.
+They expect a local `.env.local` containing `OPENAI_API_KEY`. Do not commit that
+file.
 
-Run:
+## Packaged CLI Demos
 
-    ghost-npc-demo
+The installed package exposes:
 
-Or:
+```text
+ghost-demo
+ghost-npc-demo
+ghost-shopkeeper-demo
+ghost-math-demo
+ghost-diagnostics-demo
+ghost-social-demo
+ghost-temperament-demo
+ghost-threat-response-demo
+```
 
-    python -m ghost.examples.simple_npc_demo
+Each demo exercises a different public layer without requiring a cloned repository.
 
-This demo uses:
+## Controlled Benchmark
 
-- engine.step(...)
-- engine.apply_event(a, b, event)
-- engine.tick()
-- engine.get_relationship(a, b)
+`BENCHMARK_RESULTS.md` records a deterministic 42-trial Ghost Revolution benchmark
+that compares a naive “reports are truth” policy with Ghost's provenance-aware
+policy under equal two-action budgets.
 
-The NPC behavior is not chosen by Ghost directly.
+The benchmark is deliberately narrow. It demonstrates that separating reports,
+evidence, and belief revision changes actual game decisions and their heat/fear
+consequences. It is not a claim of general intelligence or a general-purpose truth
+detector.
 
-Ghost exposes state. The NPC code decides how to respond.
+Reproduce it with:
 
-## ghost-shopkeeper-demo
+```bash
+python -m ghost.examples.ghost_revolution.benchmarks.epistemic_scenario_matrix_benchmark
+```
 
-The shopkeeper demo is a playable terminal mini game.
+## Quality Lanes
 
-Run:
+See `QUALITY.md` for exact commands.
 
-    ghost-shopkeeper-demo
+```bash
+pytest -q
+pytest -q -m performance
+```
 
-Or:
+Coverage is separated into core and Ghost Revolution runtime lanes so terminal
+presentation and local performance tests do not distort each other.
 
-    python -m ghost.examples.shopkeeper_mini_game
+Current synchronized repository validation:
 
-The shopkeeper demo uses only the public GhostEngine API and shows how trust, pressure, relationship state, prices, quest availability, and dialogue can change based on player actions.
+```text
+1,296 passed
+1 skipped
+146 Python test files
+```
 
-## ghost-math-demo
+## Project Layout
 
-The math demo explains the small mathematical contract behind Ghost.
+```text
+ghost/
+    api.py
+    engine.py
+    relationships.py
+    epistemic.py
+    threat_response.py
+    combat.py
+    objectives.py
+    scenario.py
+    scenario_runtime.py
+    examples/
 
-Run:
+tests/
+    ghost_revolution/
+    integration/
+    performance/
+    property/
+    regression/
 
-    ghost-math-demo
-
-Or:
-
-    python -m ghost.examples.ghost_math_helper
-
-This demo walks through:
-
-- clamp behavior
-- relationship reservoirs
-- trust calculation
-- tick decay
-- state thresholds
-- game behavior mapping
-- balanced personality math
-- resentful personality math
-- maturity behavior
-- volatility behavior
-- positive and negative volatility
-- short-history versus long-history betrayal outcomes
-- personality-specific relationship outcomes
-
-## ghost-diagnostics-demo
-
-The diagnostics demo explains the measurable diagnostic packet behind relationship changes.
-
-Run:
-
-    ghost-diagnostics-demo
-
-Or:
-
-    python -m ghost.examples.relationship_diagnostics_demo
-
-This demo shows what changed, how hard it changed, and why.
-
-## ghost-social-demo
-
-The social propagation demo shows how a direct relationship event can create bounded secondary effects on observers and world-level pressure.
-
-Run:
-
-    ghost-social-demo
-
-Or:
-
-    python -m ghost.examples.social_propagation_demo
-
-This demo shows:
-
-- direct relationship damage
-- observer reactions
-- weighted propagation
-- relationship_broken social heat
-- near_break social heat
-- world-effect packets
-- JSON-safe propagation output
-- deterministic social consequence state
-
-## Threat-Response Policy (v1.8.0)
-
-Ghost is a state engine. It does not animate an NPC, attack, flee,
-or call guards by itself.
-
-The threat-response policy reads persistent Ghost relationship state,
-temperament, and explicit caller-owned game context, then returns a
-deterministic JSON-safe recommendation.
-
-Supported response labels:
-
-    fight
-    call_guards
-    confront
-    surrender
-    flee
-    freeze
-    warn
-    ignore
-
-Public API:
-
-    packet = ghost.evaluate_threat_response(
-        npc="merchant",
-        relationship=relationship_packet,
-        temperament="anxious",
-        context={
-            "player_armed": True,
-            "player_aiming": True,
-            "escape_route": True,
-        },
-    )
-
-For a live Ghost relationship:
-
-    packet = ghost.evaluate_npc_threat_response(
-        npc="merchant",
-        source="player",
-        target="merchant",
-        temperament="anxious",
-        context={
-            "player_armed": True,
-            "player_aiming": True,
-            "escape_route": True,
-        },
-    )
-
-The returned packet includes the selected response, reason, score map,
-normalized context, Ghost-derived signals, and relationship interpretation.
-Evaluation is read-only and does not mutate the relationship packet.
-
-## ghost-threat-response-demo
-
-Run:
-
-    ghost-threat-response-demo
-
-Or:
-
-    python -m ghost.examples.threat_response_demo
-
-This demo proves that the same player threat can produce different
-recommendations:
-
-- anxious civilian with an escape route -> flee
-- same civilian trapped -> surrender
-- armed resentful rival under attack -> fight
-- suspicious guard near authority -> call_guards
-
-## ghost-temperament-demo
-
-The temperament demo shows how the same relationship state can be interpreted through different NPC temperament profiles.
-
-Run:
-
-    ghost-temperament-demo
-
-Or:
-
-    python -m ghost.examples.temperament_demo
-
-This demo shows that Ghost does not pick an action, write dialogue, or decide combat.
-
-Ghost exposes deterministic interpretation metadata.
-
-## Validation
-
-Current v1.7.4 validation:
-
-    269 tests passing
-
-The test suite includes:
-
-- deterministic replay tests
-- public API tests
-- packet schema tests
-- public numeric boundary tests
-- ID validation tests
-- snapshot isolation tests
-- JSON-safety tests
-- relationship invariant tests
-- social propagation tests
-- temperament tests
-- scale-safety tests
-- mathematical invariant tests
-- property-based fuzz tests
-- test-suite quality checks
+BENCHMARK_RESULTS.md
+QUALITY.md
+coverage.core.ini
+coverage.revolution.ini
+pyproject.toml
+```
 
 ## Design Guarantees
 
-Ghost is designed around these principles:
+Ghost is built around:
 
-- deterministic runtime behavior
-- explicit state mutation
-- dictionary-based public state
-- serialization-safe snapshots
-- bounded state changes
-- no hidden LLM calls
-- no autonomous action selection
-- no dialogue generation
-- no internal typed object leakage through public state
+- deterministic runtime behavior;
+- explicit mutation;
+- bounded numerical state;
+- validated public inputs;
+- copied public outputs;
+- JSON-safe packet contracts;
+- atomic compound operations;
+- strict snapshot restoration;
+- package-version and schema-version separation;
+- no silent conversion of reports into truth;
+- no arbitrary LLM mutation of authoritative state.
 
-Ghost is a state engine.
+## Current Limits
 
-External systems decide behavior.
+Ghost v1.8.0 is still an alpha package.
 
-## Ghost Does Not
+Current limitations include:
 
-Ghost does not:
+- Python is the authoritative implementation;
+- Unreal and Godot adapters do not exist yet;
+- generic agent registration and capability binding are not public yet;
+- host games still own engine-specific execution;
+- Ghost Revolution is a terminal reference demo rather than a finished commercial
+  game;
+- benchmark scenarios are controlled and intentionally narrow.
 
-- choose actions
-- generate dialogue
-- interpret natural language
-- replace an LLM
-- act as an autonomous agent
-- store memory implicitly
-- decide what a character should do
+## Roadmap Direction
 
-These responsibilities belong to external systems that consume Ghost state.
+The next architectural goal is an engine-neutral agent action runtime:
 
-## Project Structure
+```text
+register agent and capabilities
+submit observation
+select one legal action
+report execution result
+update persistent state
+```
 
-    ghost/              core engine modules
-    ghost/examples/     packaged CLI demos
-    tests/              runtime, property, regression, and invariant tests
-    pyproject.toml      package configuration
-    README.md           project documentation
+Only after that contract is stable should Unreal and Godot adapters expose thin
+engine-facing components around the same Ghost authority.
 
-## Status
+## Development Note
 
-Ghost Engine remains in early development.
+Ghost was designed by Shane Heckathorn and built through an AI-assisted,
+Android-first development workflow using extensive deterministic tests, audits,
+backups, and reproducible terminal patches.
 
-As of v1.7.4:
+The implementation workflow is AI-assisted. The architecture, product direction,
+state contracts, testing decisions, and acceptance criteria are human-directed.
 
-- the deterministic interaction core is stable
-- the public relationship API is available
-- relationship maturity and volatility are available
-- relationship diagnostics are available
-- near-break pressure is available
-- social propagation is available
-- observer weighting is available
-- social heat is available
-- world-effect packets are available
-- tick() returns a public readable packet
-- temperament interpretation metadata is available
-- seven CLI demos are packaged and runnable
-- persistent distrust is reflected during recovery
-- microscopic decay drift reports as stable diagnostics
-- the full test suite passes with 261 tests
+## License
 
-This project is intended as a foundation for experimentation, research, and future system design rather than a finished product.
-
-## Release History
-
-## v1.7.4
-
-- Added deterministic governance handling for apology language.
-- Added text-to-event support for phrases such as `I am sorry`, `I was wrong`, `Please forgive me`, and `I apologize`.
-- Added threat severity bands:
-  - `warning`
-  - `implied_retaliation`
-  - `coercive_ultimatum`
-  - `direct_harm`
-- Added distinct threat-band severity, pressure, world-effect, and escalation behavior.
-- Added contextual threat guards for negation, reported speech, third-party warnings, self-defense conditions, and reputation-only language.
-- Added clause-aware threat handling so valid direct threats are not hidden by unrelated quoted, negated, or conditional language elsewhere in the same message.
-- Added bounded apology recovery:
-  - apologies do not create trust from neutral or positive relationships
-  - repair is capped and diminishes as trust approaches neutral
-  - repeated apology cannot erase repeated abuse
-- Added governance regression coverage for wording variation, threat collisions, threat-band ordering, apology behavior, and apology spam resistance.
-- Confirmed clean wheel build, installed-wheel behavior, and public package validation.
-
-## v1.7.3
-
-- Added a bounded positive goodwill reservoir cap.
-- Added mature relationship stability-breach behavior for betrayal.
-- Added high-severity negative-event shock handling.
-- Added a maturity-resistance floor for severe negative events.
-- Added relative shock detection based on recent event magnitude.
-- Added recent-event magnitude tracking per relationship.
-- Added public shock and stability-breach diagnostics.
-- Added regression coverage for mature betrayal shock, relative attack shock, and preserved low-history near-break behavior.
-- Confirmed the full regression suite passes with 269 tests.
-
-## v1.7.2
-
-- Added persistent distrust to temperament interpretation.
-- Added `wary` emotional reads for materially negative neutral relationships.
-- Added `reserved` stance for wary observers.
-- Preserved `near_break` during recovery while trust remains structurally near hostile.
-- Added stable diagnostic behavior for microscopic decay drift.
-- Added regression tests for persistent distrust, near-break recovery, and tiny decay diagnostics.
-- Confirmed the full regression suite passes with 261 tests.
-
-## v1.7.1
-
-- Established `GhostAPI` as the recommended public integration boundary.
-- Added documented public support for `apply_event`, `get_relationship`, `tick`, `snapshot`, and `interpret_npc_relationship`.
-- Added public version and snapshot schema metadata.
-- Added state-versus-snapshot boundary coverage.
-- Added clean installed-package public API verification.
-- Confirmed public packets remain JSON-safe.
-
-## v1.7.0
-
-- Added deterministic NPC temperament interpretation layer
-- Added ghost-temperament-demo CLI entry point
-- Added ghost.examples.temperament_demo
-- Added temperament profiles such as calm, anxious, confident, suspicious, resentful, loyal, and volatile
-- Added temperament interpretation metadata for fear, suspicion, anger, confidence, loyalty, relief, stance, emotional_read, and intensity
-- Added stricter public numeric validation for NaN, infinity, invalid relationship intensity, invalid social heat, and invalid temperament values
-- Added stronger ID validation and normalization behavior
-- Hardened GhostEngine.step() so bad public input does not mutate public state before validation
-- Added public packet schema tests
-- Added adversarial public-number tests
-- Added ironclad boundary tests
-- Added mathematical invariant tests
-- Added snapshot metadata tests
-- Added scale-safety tests
-- Added test-suite quality checks
-- Confirmed full regression suite passes with 248 tests
-
-## v1.6.0
-
-- Added social propagation through ghost.propagate_social_event(...)
-- Added direct event plus observer-effect propagation packets
-- Added weighted observers for different reaction strengths
-- Added bounded social heat calculation
-- Added social heat pressure ordering
-- Added near_break pressure for strained neutral relationships
-- Added near_break boolean to diagnostics
-- Added world-effect packets for social propagation
-- Added pressure, fear, resentment, order, and guard suspicion deltas to propagation output
-- Added public readable tick packets from ghost.tick()
-- Added ghost-social-demo CLI entry point
-- Added ghost.examples.social_propagation_demo
-- Added social propagation tests
-- Added tick packet tests
-- Confirmed full regression suite passes with v1.6.0 behavior
-
-## v1.5.0
-
-- Added relationship diagnostics output
-- Added diagnostic packets to public relationship state
-- Added trust before and trust after tracking
-- Added trust delta and absolute delta tracking
-- Added direction labels for positive, negative, and stable changes
-- Added severity calculation for relationship changes
-- Added pressure labels for relationship transitions and major shifts
-- Added effective gain reporting after maturity and volatility modifiers
-- Added maturity and volatility values to diagnostics
-- Added diagnostics for relationship tick decay
-- Added JSON-safe diagnostics validation
-- Added ghost-diagnostics-demo CLI entry point
-- Added ghost.examples.relationship_diagnostics_demo
-- Added tests for relationship diagnostics behavior
-- Added tests for diagnostics through get_relationship()
-- Added tests for diagnostics JSON safety
-
-## v1.4.0
-
-- Added relationship maturity
-- Added relationship volatility
-- Added split positive and negative volatility
-- Added maturity gain and maturity cap fields
-- Exposed maturity through public relationship output
-- Exposed volatility through public relationship output
-- Exposed positive and negative volatility through public relationship output
-- Updated personality presets with maturity and volatility behavior
-- Expanded ghost-math-demo with maturity and volatility examples
-- Demonstrated short-history versus long-history betrayal outcomes
-- Demonstrated personality-specific relationship outcomes
-- Added tests for relationship maturity and volatility behavior
-
-## v1.3.0
-
-- Added ghost-math-demo CLI entry point
-- Added ghost.examples.ghost_math_helper
-- Added developer-facing math demo for Ghost relationship mechanics
-- Documented clamp behavior, relationship reservoirs, trust calculation, tick decay, and state thresholds
-- Added balanced personality math walkthrough
-- Added resentful personality math walkthrough
-- Demonstrated how relationship state maps into gameplay behavior such as price changes and NPC behavior
-- Updated the public demo suite
-
-## v1.2.1
-
-- Cleaned packaged demo command structure
-- Removed redundant ghost-relationship-demo command from the public demo set
-- Restored ghost-demo as the relationship proof and baseline comparison demo
-- Updated ghost-npc-demo into a deterministic 10-tick Ghost API mapping demo
-- Improved NPC demo terminal formatting for phone-safe output
-- Shortened NPC behavior labels and dialogue to reduce terminal wrapping
-- Removed unused proof demo variable cleanup
-
-## v1.2.0
-
-- Added playable terminal shopkeeper mini game
-- Added ghost-shopkeeper-demo CLI entry point
-- Added playable terminal demo behavior for shopkeeper interactions
-- Demonstrated trust, emotional pressure, relationship state, pricing, quest availability, and dialogue changes through public API usage
-- Added resentful NPC personality setup to the shopkeeper demo
-- Added wait and tick explanation to demonstrate time-based relationship decay
-- Added emotional pressure display such as damaged but not broken and broken
-- Improved command input support for typed commands such as buy bread, show status, and wait
-
-## v1.1.1
-
-- Fixed missing public GhostEngine.apply_event() wrapper
-- Fixed missing public GhostEngine.tick() wrapper
-- Fixed missing public GhostEngine.get_relationship() wrapper
-- Added missing relationship graph support for public event application
-- Confirmed public relationship API returns trust, state, transition, and trigger output directly from GhostEngine
-
-## v1.1.0
-
-- Added public relationship runtime API
-- Added ghost.apply_event(a, b, event)
-- Added ghost.tick()
-- Added ghost.get_relationship(a, b)
-- Exposed relationship trust through public API
-- Exposed relationship state through public API
-- Exposed relationship transitions through public API
-- Exposed structured relationship triggers through public API
-- Expanded Ghost from proof-demo behavior into reusable runtime behavior
-- Made emotional inertia directly usable by external NPC, dialogue, faction, and simulation systems
-
-## v1.0.1
-
-- Finalized proof demo packaging
-- Added ghost-demo CLI entry point
-- Added proper demo main() entry point
-- Packaged proof demo inside ghost.examples
-- Made proof demo runnable without cloning the repository
-
-## v1.0.0
-
-- Promoted Ghost from basic state experiments into an emotional inertia runtime
-- Introduced dual-channel emotional memory model with positive and negative reservoirs
-- Replaced single-value trust updates with persistent emotional accumulation using pos - neg
-- Added resistance mechanics where negative history reduces the effectiveness of positive events
-- Added saturation mechanics with diminishing returns on repeated positive interactions
-- Implemented time-based relationship decay via tick()
-- Added per-relationship parameter system for gain and decay tuning
-- Introduced personality presets: balanced, forgiving, resentful, volatile
-- Added relationship state classification
-- Implemented transition detection between relationship states
-- Added structured trigger system with relationship_broken, deescalation, forgiveness, and state_shift
-- Expanded public API to expose state, transitions, and triggers
-- Established emotional inertia model as a first-class runtime system
-
-## v0.2.2
-
-- Fixed public state serialization issue in relationship subsystem
-- Replaced set-based storage with JSON-safe structures
-- Strengthened invariant coverage across runtime state
-
-## v0.2.1
-
-- Added actor-level threat accumulation tracking
-- Introduced deterministic nonlinear system modulation
-- Implemented passive idle-cycle decay
-- Added immutable JSON-safe snapshots
-
-## v0.2.0
-
-- Introduced multi-agent state mutation
-- Added relationship mutation logic
-- Implemented bounded cascade propagation
-- Achieved deterministic runtime guarantees
-
-## v0.1.x
-
-- Foundational architecture releases
+MIT. See the repository license.

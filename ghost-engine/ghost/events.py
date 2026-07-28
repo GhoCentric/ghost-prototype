@@ -22,9 +22,11 @@ class RelationshipEvent(GhostStrEnum):
     HELP = "help"
     GIFT = "gift"
     APOLOGIZE = "apologize"
+    APOLOGY = "apology"
 
     INSULT = "insult"
     THREAT = "threat"
+    THEFT = "theft"
     ATTACK = "attack"
     BETRAYAL = "betrayal"
 
@@ -86,6 +88,39 @@ def normalize_public_value(value: Any) -> str:
         value = value.value
 
     return str(value).lower().strip()
+
+
+GAME_ACTION_ALIASES = {
+    "apologize": "apology",
+    "apology": "apology",
+    "sorry": "apology",
+
+    "steal": "theft",
+    "theft": "theft",
+
+    "betray": "betrayal",
+    "betrayal": "betrayal",
+
+    "attack": "attack",
+    "greet": "greet",
+    "help": "help",
+    "gift": "gift",
+    "insult": "insult",
+    "threat": "threat",
+}
+
+
+def normalize_game_action(value: Any) -> str:
+    """
+    Normalize player-facing actions into Ghost's canonical
+    public game-action vocabulary.
+    """
+    action = normalize_public_value(value)
+
+    if not action:
+        raise ValueError("game action must not be empty")
+
+    return GAME_ACTION_ALIASES.get(action, action)
 
 
 def normalize_event(value: Any) -> str:

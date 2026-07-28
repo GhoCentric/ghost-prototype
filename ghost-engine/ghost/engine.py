@@ -11,8 +11,27 @@ from ghost.validation import (
 )
 from ghost.ids import normalize_id
 
-GHOST_VERSION = "1.7.5"
-GHOST_SNAPSHOT_SCHEMA_VERSION = "1.7.5"
+# Package/release metadata. GHOST_VERSION remains as the public
+# compatibility name used by existing integrations.
+GHOST_PACKAGE_VERSION = "1.8.0"
+GHOST_VERSION = GHOST_PACKAGE_VERSION
+
+# Persisted-format metadata. This changes only when the snapshot
+# contract changes, not whenever the package is released.
+GHOST_SNAPSHOT_SCHEMA_VERSION = "1.0"
+GHOST_LEGACY_SNAPSHOT_SCHEMA_VERSIONS = frozenset(
+    {
+        "1.7.5",
+    }
+)
+GHOST_SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS = (
+    frozenset(
+        {
+            GHOST_SNAPSHOT_SCHEMA_VERSION,
+        }
+    )
+    | GHOST_LEGACY_SNAPSHOT_SCHEMA_VERSIONS
+)
 
 def _json_safe(x):
 
@@ -40,6 +59,610 @@ def clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
 
 
+_ENGINE_SNAPSHOT_REQUIRED_KEYS = {
+    "agents",
+    "cycles",
+    "ghost_version",
+    "input",
+    "last_step",
+    "neighbors",
+    "npc",
+    "relationships",
+    "schema_version",
+    "social_propagation",
+}
+
+
+_ENGINE_RELATIONSHIP_NUMERIC_KEYS = {
+    "attachment",
+    "betrayal_shock_maturity_threshold",
+    "betrayal_shock_positive_threshold",
+    "betrayal_stability_breach_fraction",
+    "high_severity_shock_bonus",
+    "high_severity_threshold",
+    "maturity",
+    "maturity_cap",
+    "maturity_gain",
+    "neg",
+    "neg_decay",
+    "neg_gain",
+    "negative_volatility",
+    "pos",
+    "pos_decay",
+    "pos_gain",
+    "positive_reservoir_cap",
+    "positive_volatility",
+    "recent_event_decay",
+    "recent_event_magnitude",
+    "relative_shock_bonus",
+    "relative_shock_ratio",
+    "severe_negative_maturity_floor",
+    "stability_shock_maturity_threshold",
+    "stability_shock_positive_threshold",
+    "trust",
+    "volatility",
+}
+
+
+_ENGINE_RELATIONSHIP_NON_NEGATIVE_KEYS = {
+    "pos",
+    "neg",
+    "maturity",
+    "maturity_cap",
+    "maturity_gain",
+    "volatility",
+    "positive_volatility",
+    "negative_volatility",
+    "recent_event_magnitude",
+    "positive_reservoir_cap",
+}
+
+
+def _engine_snapshot_json_value(
+    value,
+    label: str,
+):
+    if value is None:
+        return
+
+    if isinstance(
+        value,
+        (
+            str,
+            bool,
+            int,
+        ),
+    ):
+        return
+
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError(
+                f"{label} must contain only finite numbers"
+            )
+
+        return
+
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _engine_snapshot_json_value(
+                item,
+                f"{label}[{index}]",
+            )
+
+        return
+
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise ValueError(
+                    f"{label} keys must be strings"
+                )
+
+            _engine_snapshot_json_value(
+                item,
+                f"{label}.{key}",
+            )
+
+        return
+
+    raise ValueError(
+        f"{label} must be JSON-safe"
+    )
+
+
+def _engine_snapshot_text(
+    value,
+    label: str,
+) -> str:
+    if not isinstance(value, str):
+        raise ValueError(
+            f"{label} must be a string"
+        )
+
+    normalized = value.strip()
+
+    if not normalized:
+        raise ValueError(
+            f"{label} cannot be empty"
+        )
+
+    return normalized
+
+
+def _engine_snapshot_number(
+    value,
+    label: str,
+) -> float:
+    if (
+        isinstance(value, bool)
+        or not isinstance(
+            value,
+            (
+                int,
+                float,
+            ),
+        )
+    ):
+        raise ValueError(
+            f"{label} must be a finite number"
+        )
+
+    number = float(value)
+
+    if not math.isfinite(number):
+        raise ValueError(
+            f"{label} must be a finite number"
+        )
+
+    return number
+
+
+def _engine_snapshot_non_negative_int(
+    value,
+    label: str,
+) -> int:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or value < 0
+    ):
+        raise ValueError(
+            f"{label} must be a non-negative integer"
+        )
+
+    return value
+
+
+def _validate_engine_relationship(
+    pair_key: str,
+    relationship,
+):
+    if not isinstance(relationship, dict):
+        raise ValueError(
+            "engine snapshot relationship "
+            f"{pair_key!r} must be a dict"
+        )
+
+    _engine_snapshot_json_value(
+        relationship,
+        (
+            "engine snapshot relationship "
+            f"{pair_key!r}"
+        ),
+    )
+
+    for key in _ENGINE_RELATIONSHIP_NUMERIC_KEYS:
+        if key not in relationship:
+            continue
+
+        value = _engine_snapshot_number(
+            relationship[key],
+            (
+                "engine snapshot relationship "
+                f"{pair_key!r} field {key}"
+            ),
+        )
+
+        if (
+            key
+            in _ENGINE_RELATIONSHIP_NON_NEGATIVE_KEYS
+            and value < 0.0
+        ):
+            raise ValueError(
+                "engine snapshot relationship "
+                f"{pair_key!r} field {key} "
+                "cannot be negative"
+            )
+
+    if all(
+        key in relationship
+        for key in (
+            "pos",
+            "neg",
+            "trust",
+        )
+    ):
+        expected_trust = (
+            float(relationship["pos"])
+            - float(relationship["neg"])
+        )
+
+        actual_trust = float(
+            relationship["trust"]
+        )
+
+        if not math.isclose(
+            actual_trust,
+            expected_trust,
+            rel_tol=1e-12,
+            abs_tol=1e-12,
+        ):
+            raise ValueError(
+                "engine snapshot relationship "
+                f"{pair_key!r} trust must equal pos - neg"
+            )
+
+    state = relationship.get("state")
+
+    if state is not None:
+        _engine_snapshot_text(
+            state,
+            (
+                "engine snapshot relationship "
+                f"{pair_key!r} state"
+            ),
+        )
+
+    last_event = relationship.get(
+        "last_event"
+    )
+
+    if last_event is not None:
+        _engine_snapshot_text(
+            last_event,
+            (
+                "engine snapshot relationship "
+                f"{pair_key!r} last_event"
+            ),
+        )
+
+    diagnostics = relationship.get(
+        "diagnostics"
+    )
+
+    if (
+        diagnostics is not None
+        and not isinstance(
+            diagnostics,
+            dict,
+        )
+    ):
+        raise ValueError(
+            "engine snapshot relationship "
+            f"{pair_key!r} diagnostics "
+            "must be a dict or None"
+        )
+
+    transition = relationship.get(
+        "transition"
+    )
+
+    if transition is not None:
+        if (
+            not isinstance(
+                transition,
+                (
+                    list,
+                    tuple,
+                ),
+            )
+            or len(transition) != 2
+            or not all(
+                isinstance(item, str)
+                and item.strip()
+                for item in transition
+            )
+        ):
+            raise ValueError(
+                "engine snapshot relationship "
+                f"{pair_key!r} transition "
+                "must contain two state strings"
+            )
+
+    trigger = relationship.get(
+        "trigger"
+    )
+
+    if (
+        trigger is not None
+        and not isinstance(trigger, dict)
+    ):
+        raise ValueError(
+            "engine snapshot relationship "
+            f"{pair_key!r} trigger "
+            "must be a dict or None"
+        )
+
+
+def _validate_engine_snapshot(
+    snapshot,
+) -> dict:
+    if not isinstance(snapshot, dict):
+        raise ValueError(
+            "engine snapshot must be a dict"
+        )
+
+    missing = (
+        _ENGINE_SNAPSHOT_REQUIRED_KEYS
+        - set(snapshot)
+    )
+
+    if missing:
+        raise ValueError(
+            "engine snapshot is missing required keys: "
+            + ", ".join(sorted(missing))
+        )
+
+    _engine_snapshot_json_value(
+        snapshot,
+        "engine snapshot",
+    )
+
+    schema_version = _engine_snapshot_text(
+        snapshot["schema_version"],
+        "engine snapshot schema version",
+    )
+
+    if (
+        schema_version
+        not in GHOST_SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS
+    ):
+        raise ValueError(
+            "unsupported engine snapshot schema version: "
+            f"{schema_version!r}"
+        )
+
+    _engine_snapshot_text(
+        snapshot["ghost_version"],
+        "engine snapshot ghost version",
+    )
+
+    _engine_snapshot_non_negative_int(
+        snapshot["cycles"],
+        "engine snapshot cycles",
+    )
+
+    agents = snapshot["agents"]
+
+    if not isinstance(agents, dict):
+        raise ValueError(
+            "engine snapshot agents must be a dict"
+        )
+
+    npc = snapshot["npc"]
+
+    if not isinstance(npc, dict):
+        raise ValueError(
+            "engine snapshot npc must be a dict"
+        )
+
+    if "threat_level" not in npc:
+        raise ValueError(
+            "engine snapshot npc is missing threat_level"
+        )
+
+    threat_level = _engine_snapshot_number(
+        npc["threat_level"],
+        "engine snapshot npc threat_level",
+    )
+
+    if threat_level < 0.0:
+        raise ValueError(
+            "engine snapshot npc threat_level "
+            "cannot be negative"
+        )
+
+    if "last_intent" not in npc:
+        raise ValueError(
+            "engine snapshot npc is missing last_intent"
+        )
+
+    relationships = snapshot[
+        "relationships"
+    ]
+
+    if not isinstance(
+        relationships,
+        dict,
+    ):
+        raise ValueError(
+            "engine snapshot relationships must be a dict"
+        )
+
+    relationship_pairs = set()
+
+    for pair_key, relationship in (
+        relationships.items()
+    ):
+        if not isinstance(pair_key, str):
+            raise ValueError(
+                "engine snapshot relationship keys "
+                "must be strings"
+            )
+
+        parts = pair_key.split("|")
+
+        if (
+            len(parts) != 2
+            or not parts[0]
+            or not parts[1]
+            or parts[0] == parts[1]
+        ):
+            raise ValueError(
+                "engine snapshot relationship key "
+                f"{pair_key!r} is invalid"
+            )
+
+        actor_a, actor_b = parts
+
+        canonical = tuple(
+            sorted(
+                (
+                    actor_a,
+                    actor_b,
+                )
+            )
+        )
+
+        if canonical in relationship_pairs:
+            raise ValueError(
+                "engine snapshot contains a duplicate "
+                "relationship pair"
+            )
+
+        relationship_pairs.add(
+            canonical
+        )
+
+        _validate_engine_relationship(
+            pair_key,
+            relationship,
+        )
+
+    neighbors = snapshot["neighbors"]
+
+    if not isinstance(neighbors, dict):
+        raise ValueError(
+            "engine snapshot neighbors must be a dict"
+        )
+
+    normalized_neighbors = {}
+
+    for actor, actor_neighbors in (
+        neighbors.items()
+    ):
+        actor = _engine_snapshot_text(
+            actor,
+            "engine snapshot neighbor actor",
+        )
+
+        if not isinstance(
+            actor_neighbors,
+            list,
+        ):
+            raise ValueError(
+                "engine snapshot neighbor lists "
+                "must be lists"
+            )
+
+        normalized = []
+
+        for neighbor in actor_neighbors:
+            neighbor = _engine_snapshot_text(
+                neighbor,
+                (
+                    "engine snapshot neighbor "
+                    f"for {actor}"
+                ),
+            )
+
+            if neighbor == actor:
+                raise ValueError(
+                    "engine snapshot actor cannot "
+                    "neighbor itself"
+                )
+
+            if neighbor in normalized:
+                raise ValueError(
+                    "engine snapshot neighbor list "
+                    f"for {actor!r} contains duplicates"
+                )
+
+            normalized.append(
+                neighbor
+            )
+
+        normalized_neighbors[actor] = (
+            normalized
+        )
+
+    for actor, actor_neighbors in (
+        normalized_neighbors.items()
+    ):
+        for neighbor in actor_neighbors:
+            reverse = normalized_neighbors.get(
+                neighbor,
+                [],
+            )
+
+            if actor not in reverse:
+                raise ValueError(
+                    "engine snapshot neighbor graph "
+                    "must be symmetric"
+                )
+
+    for actor_a, actor_b in relationship_pairs:
+        if (
+            actor_b
+            not in normalized_neighbors.get(
+                actor_a,
+                [],
+            )
+            or actor_a
+            not in normalized_neighbors.get(
+                actor_b,
+                [],
+            )
+        ):
+            raise ValueError(
+                "engine snapshot relationship pairs "
+                "must exist in the neighbor graph"
+            )
+
+    propagation = snapshot[
+        "social_propagation"
+    ]
+
+    if not isinstance(
+        propagation,
+        list,
+    ):
+        raise ValueError(
+            "engine snapshot social_propagation "
+            "must be a list"
+        )
+
+    if len(propagation) > 25:
+        raise ValueError(
+            "engine snapshot social_propagation "
+            "cannot contain more than 25 packets"
+        )
+
+    if not all(
+        isinstance(packet, dict)
+        for packet in propagation
+    ):
+        raise ValueError(
+            "engine snapshot social_propagation "
+            "must contain only dict packets"
+        )
+
+    validated = copy.deepcopy(
+        snapshot
+    )
+
+    # The restored runtime is now owned by the installed package.
+    # Preserve compatibility through the schema version, then emit
+    # current producer metadata on its next snapshot.
+    validated["ghost_version"] = GHOST_VERSION
+    validated["schema_version"] = (
+        GHOST_SNAPSHOT_SCHEMA_VERSION
+    )
+
+    return validated
+
+
 class GhostEngine:
     """
     Core Ghost engine.
@@ -49,24 +672,102 @@ class GhostEngine:
     - All state mutation occurs via step()
     """
 
-    def __init__(self, context: dict | None = None):
+    def __init__(
+        self,
+        context: dict | None = None,
+    ):
+        """
+        Construct a fresh engine from optional runtime configuration.
+
+        Snapshot restoration is intentionally separate and must use
+        GhostEngine.from_snapshot().
+        """
         if context is None:
             context = {}
 
-        self._ctx = copy.deepcopy(context)
+        self._initialize_context(
+            context
+        )
 
-        # Subsystems
-        self.agents: AgentRegistry = AgentRegistry(self._ctx)
-        self.relationships: RelationshipGraph = RelationshipGraph(self._ctx)
+    @classmethod
+    def from_snapshot(
+        cls,
+        snapshot: dict,
+    ) -> "GhostEngine":
+        """
+        Restore a GhostEngine only after validating the complete
+        persisted engine contract.
 
-        # Baseline state
-        self._ctx.setdefault("cycles", 0)
-        self._ctx.setdefault("input", None)
-        self._ctx.setdefault("last_step", None)
+        Restoration bypasses __init__ so construction configuration and
+        persisted runtime state remain separate public boundaries.
+        """
+        validated = _validate_engine_snapshot(
+            snapshot
+        )
 
-        npc = self._ctx.setdefault("npc", {})
-        npc.setdefault("threat_level", 0.0)
-        npc.setdefault("last_intent", None)
+        engine = cls.__new__(
+            cls
+        )
+
+        engine._initialize_context(
+            validated
+        )
+
+        return engine
+
+    def _initialize_context(
+        self,
+        context: dict,
+    ) -> None:
+        """
+        Bind copied context state and initialize engine subsystems.
+
+        Public callers enter through __init__() for construction or
+        from_snapshot() for restoration.
+        """
+        self._ctx = copy.deepcopy(
+            context
+        )
+
+        self.agents = AgentRegistry(
+            self._ctx
+        )
+
+        self.relationships = (
+            RelationshipGraph(
+                self._ctx
+            )
+        )
+
+        self._ctx.setdefault(
+            "cycles",
+            0,
+        )
+
+        self._ctx.setdefault(
+            "input",
+            None,
+        )
+
+        self._ctx.setdefault(
+            "last_step",
+            None,
+        )
+
+        npc = self._ctx.setdefault(
+            "npc",
+            {},
+        )
+
+        npc.setdefault(
+            "threat_level",
+            0.0,
+        )
+
+        npc.setdefault(
+            "last_intent",
+            None,
+        )
 
     def step(self, step_data=None):
         """
@@ -230,11 +931,16 @@ class GhostEngine:
 
         return ctx
 
-    def apply_event(self, a, b, event, intensity: float = 1.0):
+    def apply_event(
+        self,
+        a,
+        b,
+        event,
+        intensity: float = 1.0,
+        event_spec: dict | None = None,
+    ):
         """
-        Apply a relationship event between two actors.
-
-        Public wrapper around the relationship runtime.
+        Apply one relationship event through RelationshipGraph.
         """
         return self.relationships.apply_event(
             a,
@@ -244,6 +950,7 @@ class GhostEngine:
                 intensity,
                 "relationship event intensity",
             ),
+            event_spec=event_spec,
         )
 
     def propagate_social_event(
@@ -253,6 +960,7 @@ class GhostEngine:
         event,
         observers=None,
         weights=None,
+        intensity: float = 1.0,
     ):
         """
         Apply a direct relationship event and propagate bounded
@@ -269,6 +977,10 @@ class GhostEngine:
             event=event,
             observers=observers,
             weights=weights,
+            intensity=validate_unit_interval(
+                intensity,
+                "social event intensity",
+            ),
         )
 
     def tick(self):
@@ -305,7 +1017,9 @@ class GhostEngine:
         """
         snapshot = _json_safe(copy.deepcopy(self._ctx))
 
-        snapshot.setdefault("ghost_version", GHOST_VERSION)
-        snapshot.setdefault("schema_version", GHOST_SNAPSHOT_SCHEMA_VERSION)
+        snapshot["ghost_version"] = GHOST_VERSION
+        snapshot["schema_version"] = (
+            GHOST_SNAPSHOT_SCHEMA_VERSION
+        )
 
         return snapshot

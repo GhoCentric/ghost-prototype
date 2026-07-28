@@ -29,12 +29,20 @@ interpretive state.
 
 from .engine import (
     GHOST_SNAPSHOT_SCHEMA_VERSION,
+    GHOST_SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS,
     GHOST_VERSION,
     GhostEngine,
 )
-from .events import normalize_event
+from .relationships import RelationshipGraph
+from copy import deepcopy
+
+from .events import (
+    normalize_event,
+    normalize_game_action,
+)
 from .ids import normalize_pair_ids
 from .validation import (
+    validate_finite_number,
     validate_non_negative_finite,
     validate_unit_interval,
 )
@@ -60,26 +68,164 @@ from .policies import (
     ReintegrationPolicy,
 )
 from .world import WorldRuntime
+from .epistemic import EpistemicRuntime
+from .objectives import (
+    build_combat_objective_packet,
+)
+from .combat import (
+    advance_combat_initiative_packet,
+    lock_combat_recovery_read_packet,
+    resolve_combat_recovery_packet,
+)
 
 
 # -----------------------------
 # DEFAULT EVENT MAP
 # -----------------------------
-DEFAULT_EVENT_MAP = {
-    "neutral": {"trust": 0.0},
-    "greet": {"trust": +0.02, "attachment": +0.01},
-    "help": {"trust": +0.2, "attachment": +0.05},
-    "cooperate": {"trust": +0.08, "attachment": +0.02},
-    "apology": {"trust": +0.05},
-    "disengage": {"trust": +0.01},
-    "pressure": {"trust": -0.08},
-    "manipulate": {"trust": -0.10},
-    "deceive": {"trust": -0.15},
-    "insult": {"trust": -0.3},
-    "threat": {"trust": -0.5},
-    "theft": {"trust": -0.6, "attachment": -0.2},
-    "betrayal": {"trust": -0.8, "attachment": -0.5},
+# Keep one private authoritative template. DEFAULT_EVENT_MAP remains a
+# copied compatibility export, so external mutation cannot alter future
+# GhostAPI instances.
+_DEFAULT_EVENT_MAP_TEMPLATE = (
+    RelationshipGraph.public_event_map()
+)
+
+DEFAULT_EVENT_MAP = deepcopy(
+    _DEFAULT_EVENT_MAP_TEMPLATE
+)
+
+
+def _fresh_default_event_map() -> dict:
+    return deepcopy(
+        _DEFAULT_EVENT_MAP_TEMPLATE
+    )
+
+
+_GHOST_API_SNAPSHOT_REQUIRED_KEYS = {
+    "engine",
+    "schema_version",
+    "world",
 }
+
+
+_GHOST_API_SNAPSHOT_OPTIONAL_KEYS = {
+    "epistemic",
+    "event_map",
+    "ghost_version",
+    "transitions",
+}
+
+
+def _api_snapshot_json_value(
+    value,
+    label: str,
+):
+    if value is None:
+        return
+
+    if isinstance(
+        value,
+        (
+            str,
+            bool,
+            int,
+        ),
+    ):
+        return
+
+    if isinstance(value, float):
+        validate_finite_number(
+            value,
+            label,
+        )
+
+        return
+
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _api_snapshot_json_value(
+                item,
+                f"{label}[{index}]",
+            )
+
+        return
+
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise ValueError(
+                    f"{label} keys must be strings"
+                )
+
+            _api_snapshot_json_value(
+                item,
+                f"{label}.{key}",
+            )
+
+        return
+
+    raise ValueError(
+        f"{label} must be JSON-safe"
+    )
+
+
+def _validate_snapshot_event_map(
+    event_map,
+) -> dict | None:
+    if event_map is None:
+        return None
+
+    if not isinstance(event_map, dict):
+        raise ValueError(
+            "snapshot event_map must be a dict"
+        )
+
+    validated = {}
+
+    for event_name, deltas in (
+        event_map.items()
+    ):
+        if (
+            not isinstance(event_name, str)
+            or not event_name.strip()
+        ):
+            raise ValueError(
+                "snapshot event_map names "
+                "must be non-empty strings"
+            )
+
+        if not isinstance(deltas, dict):
+            raise ValueError(
+                "snapshot event_map entries "
+                "must be dicts"
+            )
+
+        validated_deltas = {}
+
+        for key, value in deltas.items():
+            if (
+                not isinstance(key, str)
+                or not key.strip()
+            ):
+                raise ValueError(
+                    "snapshot event_map delta names "
+                    "must be non-empty strings"
+                )
+
+            validated_deltas[key] = (
+                validate_finite_number(
+                    value,
+                    (
+                        "snapshot event_map delta "
+                        f"{event_name}.{key}"
+                    ),
+                )
+            )
+
+        validated[event_name] = (
+            validated_deltas
+        )
+
+    return validated
 
 
 class GhostAPI:
@@ -92,92 +238,367 @@ class GhostAPI:
     Use GhostEngine directly only when lower-level engine access is needed.
     """
 
-    # -----------------------------
-    # RELATIONSHIP STATE THRESHOLDS
-    # -----------------------------
-    STATE_THRESHOLDS = {
-        "hostile": -0.2,
-        "unfriendly": -0.05,
-        "neutral": 0.05,
-        "friendly": 0.2,
-        "loyal": 1.0,
-    }
-
-    APOLOGY_RECOVERY_FRACTION = 0.25
-
     def __init__(
         self,
         config: dict | None = None,
         event_map: dict | None = None,
     ):
-        self.engine = GhostEngine(config or {})
-        self._transitions = {}
-        self.event_map = event_map or DEFAULT_EVENT_MAP
+        """
+        Construct a fresh high-level runtime.
 
-        # Policy/runtime modules
+        Caller-owned configuration is copied at the boundary. Snapshot
+        restoration is intentionally separate and must use
+        GhostAPI.from_snapshot().
+        """
+        if config is not None and not isinstance(
+            config,
+            dict,
+        ):
+            raise ValueError(
+                "config must be a dict or None"
+            )
+
+        validated_event_map = (
+            _fresh_default_event_map()
+            if event_map is None
+            else _validate_snapshot_event_map(
+                event_map
+            )
+        )
+
+        self._bind_runtime(
+            engine=GhostEngine(
+                deepcopy(config)
+                if config is not None
+                else {}
+            ),
+            event_map=validated_event_map,
+            world=WorldRuntime(),
+            epistemic=EpistemicRuntime(),
+        )
+
+    def _bind_runtime(
+        self,
+        *,
+        engine: GhostEngine,
+        event_map: dict,
+        world: WorldRuntime,
+        epistemic: EpistemicRuntime,
+    ) -> None:
+        """
+        Attach already-constructed or already-restored runtime parts.
+
+        Mutable configuration is copied so no caller, snapshot packet,
+        or compatibility export shares live runtime configuration.
+        """
+        self.engine = engine
+        self.event_map = deepcopy(event_map)
+        self.world = world
+        self.epistemic = epistemic
+
+        # Patch 7 retires the inert pre-v1.8 transition cache. Remove it
+        # when rebinding an object created by older code in the same
+        # process. Legacy snapshot packets are still accepted below.
+        self.__dict__.pop(
+            "_transitions",
+            None,
+        )
+
         self.commerce = CommercePolicy()
         self.pricing = PricingPolicy()
         self.law = LawPolicy()
-        self.reintegration = ReintegrationPolicy()
-        self.world = WorldRuntime()
+        self.reintegration = (
+            ReintegrationPolicy()
+        )
+
+    @classmethod
+    def from_snapshot(
+        cls,
+        snapshot: dict,
+    ) -> "GhostAPI":
+        """
+        Restore a complete GhostAPI runtime from a validated snapshot.
+
+        Older supported packets may omit ghost_version, event_map,
+        transitions, or epistemic. Unknown packet fields are rejected.
+        Restoration bypasses __init__ and preserves the construction /
+        restoration split established by the prior patch.
+        """
+        if not isinstance(snapshot, dict):
+            raise ValueError(
+                "snapshot must be a dict"
+            )
+
+        keys = set(snapshot)
+
+        allowed = (
+            _GHOST_API_SNAPSHOT_REQUIRED_KEYS
+            | _GHOST_API_SNAPSHOT_OPTIONAL_KEYS
+        )
+
+        unknown = keys - allowed
+
+        if unknown:
+            raise ValueError(
+                "snapshot has unsupported keys: "
+                + ", ".join(sorted(unknown))
+            )
+
+        missing = (
+            _GHOST_API_SNAPSHOT_REQUIRED_KEYS
+            - keys
+        )
+
+        if missing:
+            raise ValueError(
+                "snapshot is missing required keys: "
+                + ", ".join(sorted(missing))
+            )
+
+        _api_snapshot_json_value(
+            snapshot,
+            "snapshot",
+        )
+
+        schema_version = snapshot[
+            "schema_version"
+        ]
+
+        if (
+            schema_version
+            not in GHOST_SUPPORTED_SNAPSHOT_SCHEMA_VERSIONS
+        ):
+            raise ValueError(
+                "unsupported GhostAPI snapshot "
+                "schema version: "
+                f"{schema_version!r}"
+            )
+
+        ghost_version = snapshot.get(
+            "ghost_version"
+        )
+
+        if ghost_version is not None:
+            if (
+                not isinstance(ghost_version, str)
+                or not ghost_version.strip()
+            ):
+                raise ValueError(
+                    "snapshot ghost_version must be "
+                    "a non-empty string"
+                )
+
+        engine_snapshot = snapshot[
+            "engine"
+        ]
+
+        world_snapshot = snapshot[
+            "world"
+        ]
+
+        if not isinstance(
+            engine_snapshot,
+            dict,
+        ):
+            raise ValueError(
+                "snapshot engine must be a dict"
+            )
+
+        if not isinstance(
+            world_snapshot,
+            dict,
+        ):
+            raise ValueError(
+                "snapshot world must be a dict"
+            )
+
+        event_map = (
+            _validate_snapshot_event_map(
+                snapshot.get(
+                    "event_map"
+                )
+            )
+        )
+
+        legacy_transitions = snapshot.get(
+            "transitions"
+        )
+
+        if legacy_transitions is not None:
+            if not isinstance(
+                legacy_transitions,
+                dict,
+            ):
+                raise ValueError(
+                    "snapshot transitions must be a dict"
+                )
+
+            _api_snapshot_json_value(
+                legacy_transitions,
+                "snapshot transitions",
+            )
+
+        if "epistemic" in snapshot:
+            epistemic_snapshot = (
+                snapshot["epistemic"]
+            )
+
+            if not isinstance(
+                epistemic_snapshot,
+                dict,
+            ):
+                raise ValueError(
+                    "snapshot epistemic "
+                    "must be a dict"
+                )
+        else:
+            epistemic_snapshot = None
+
+        api = cls.__new__(
+            cls
+        )
+
+        api._bind_runtime(
+            engine=GhostEngine.from_snapshot(
+                deepcopy(
+                    engine_snapshot
+                )
+            ),
+            event_map=(
+                event_map
+                if event_map is not None
+                else _fresh_default_event_map()
+            ),
+            world=WorldRuntime.from_dict(
+                deepcopy(
+                    world_snapshot
+                )
+            ),
+            epistemic=(
+                EpistemicRuntime.from_snapshot(
+                    deepcopy(
+                        epistemic_snapshot
+                    )
+                )
+                if epistemic_snapshot is not None
+                else EpistemicRuntime()
+            ),
+        )
+
+        return api
+
+    def restore_snapshot(self, snapshot: dict) -> dict:
+        """
+        Restore this API instance in-place from snapshot() output.
+
+        Returns the restored JSON-safe public snapshot.
+        """
+        restored = self.from_snapshot(snapshot)
+
+        self._bind_runtime(
+            engine=restored.engine,
+            event_map=restored.event_map,
+            world=restored.world,
+            epistemic=restored.epistemic,
+        )
+
+        return self.snapshot()
 
     # -----------------------------
     # CORE METHOD
     # -----------------------------
-    def apply_event(self, source: str, target: str, event: dict):
-        source, target = normalize_pair_ids(source, target)
+    def apply_event(
+        self,
+        source: str,
+        target: str,
+        event: dict,
+    ):
+        source, target = normalize_pair_ids(
+            source,
+            target,
+        )
 
         if not isinstance(event, dict):
-            raise ValueError("Event must be a dict")
+            raise ValueError(
+                "Event must be a dict"
+            )
 
-        event_type = normalize_event(event.get("type"))
+        event_type = normalize_game_action(
+            event.get("type")
+        )
+
         intensity = validate_unit_interval(
-            event.get("intensity", 1.0),
+            event.get(
+                "intensity",
+                1.0,
+            ),
             "event intensity",
         )
 
         if event_type not in self.event_map:
-            raise ValueError(f"Unknown event type: {event_type}")
+            raise ValueError(
+                f"Unknown event type: {event_type}"
+            )
 
-        base_deltas = self.event_map[event_type]
+        base_deltas = deepcopy(
+            self.event_map[event_type]
+        )
+
+        if not isinstance(base_deltas, dict):
+            raise ValueError(
+                "event map entries must be dicts"
+            )
+
+        for key, value in base_deltas.items():
+            validate_finite_number(
+                value,
+                f"event map delta {key}",
+            )
+
+        default_deltas = (
+            _DEFAULT_EVENT_MAP_TEMPLATE.get(
+                event_type
+            )
+        )
+
+        is_default_event = (
+            default_deltas is not None
+            and base_deltas == default_deltas
+        )
+
+        relationship = self.engine.apply_event(
+            source,
+            target,
+            event_type,
+            intensity=intensity,
+            event_spec=(
+                None
+                if is_default_event
+                else base_deltas
+            ),
+        )
+
+        diagnostics = (
+            relationship.get(
+                "diagnostics"
+            )
+            or {}
+        )
+
         scaled_deltas = {
-            k: v * intensity for k, v in base_deltas.items()
+            key: value * intensity
+            for key, value in (
+                base_deltas.items()
+            )
         }
 
-        if event_type == "apology":
-            current = self.engine.get_relationship(source, target)
-            current_trust = float(current.get("trust", 0.0))
-
-            if current_trust >= 0.0:
-                scaled_deltas["trust"] = 0.0
-            else:
-                remaining_damage = -current_trust
-                diminishing_limit = (
-                    remaining_damage
-                    * self.APOLOGY_RECOVERY_FRACTION
+        if "trust" in scaled_deltas:
+            scaled_deltas["trust"] = (
+                diagnostics.get(
+                    "delta",
+                    scaled_deltas["trust"],
                 )
-
-                scaled_deltas["trust"] = min(
-                    scaled_deltas.get("trust", 0.0),
-                    diminishing_limit,
-                )
-
-        if event_type in self.engine.relationships.RELATIONSHIP_EVENT_MAP:
-            relationship = self.engine.apply_event(
-                source,
-                target,
-                event_type,
-                intensity=intensity,
             )
-            mode = "canonical_relationship_event"
-        else:
-            self.engine.relationships.apply_delta(
-                source,
-                target,
-                scaled_deltas,
-            )
-            relationship = self.engine.get_relationship(source, target)
-            mode = "legacy_delta_event"
 
         return {
             "source": source,
@@ -187,13 +608,33 @@ class GhostAPI:
                 "intensity": intensity,
             },
             "deltas": scaled_deltas,
-            "mode": mode,
+            "mode": (
+                "canonical_relationship_event"
+                if is_default_event
+                else "configured_relationship_event"
+            ),
             "relationship": relationship,
-            "trust": relationship.get("trust"),
-            "state": relationship.get("state"),
-            "transition": relationship.get("transition"),
-            "trigger": relationship.get("trigger"),
-            "diagnostics": relationship.get("diagnostics"),
+            "trust": relationship.get(
+                "trust"
+            ),
+            "state": relationship.get(
+                "state"
+            ),
+            "transition": deepcopy(
+                relationship.get(
+                    "transition"
+                )
+            ),
+            "trigger": deepcopy(
+                relationship.get(
+                    "trigger"
+                )
+            ),
+            "diagnostics": deepcopy(
+                relationship.get(
+                    "diagnostics"
+                )
+            ),
         }
 
     def propagate_event(
@@ -213,7 +654,7 @@ class GhostAPI:
         if not isinstance(event, dict):
             raise ValueError("Event must be a dict")
 
-        event_type = normalize_event(event.get("type"))
+        event_type = normalize_game_action(event.get("type"))
         intensity = validate_unit_interval(
             event.get("intensity", 1.0),
             "event intensity",
@@ -267,10 +708,13 @@ class GhostAPI:
 
         self.world.tick()
 
+        epistemic = self.epistemic.tick()
+
         return {
             "event": "tick",
             "relationships": relationships.get("relationships", []),
             "world": self.world.to_dict(),
+            "epistemic": epistemic,
         }
 
     def step(self, step_data: dict | None = None):
@@ -289,6 +733,162 @@ class GhostAPI:
         should use snapshot() when they need JSON-safe copied state.
         """
         return self.engine.state()
+
+    # -----------------------------
+    # EPISTEMIC STATE v1.8.0
+    # -----------------------------
+    def record_fact(
+        self,
+        fact_id: str,
+        source: str,
+        subject: str,
+        predicate: str,
+        object: str,
+        attributes: dict | None = None,
+    ) -> dict:
+        """Record objective truth without exposing it automatically."""
+        return self.epistemic.record_fact(
+            fact_id=fact_id,
+            source=source,
+            subject=subject,
+            predicate=predicate,
+            object=object,
+            attributes=attributes,
+        )
+
+    def get_fact(
+        self,
+        fact_id: str,
+    ) -> dict | None:
+        """
+        Return objective runtime truth for an integration layer.
+
+        Calling this does not imply an in-world actor knows the fact.
+        """
+        return self.epistemic.get_fact(fact_id)
+
+    def observe(
+        self,
+        observer: str,
+        kind: str,
+        visible_features: list[str] | tuple[str, ...],
+        reliability: float,
+        provenance: dict | None = None,
+        subject: str | None = None,
+    ) -> dict:
+        """Record what one actor observed or received."""
+        return self.epistemic.observe(
+            observer=observer,
+            kind=kind,
+            visible_features=visible_features,
+            reliability=reliability,
+            provenance=provenance,
+            subject=subject,
+        )
+
+    def report(
+        self,
+        speaker: str,
+        audience: str | list[str] | tuple[str, ...] | set[str],
+        claim: dict,
+        confidence: float,
+        source_belief_id: str | None = None,
+        provenance: dict | None = None,
+    ) -> dict:
+        """
+        Record a communicated claim.
+
+        A report is not objective truth and does not force belief.
+        """
+        return self.epistemic.report(
+            speaker=speaker,
+            audience=audience,
+            claim=claim,
+            confidence=confidence,
+            source_belief_id=source_belief_id,
+            provenance=provenance,
+        )
+
+    def add_evidence(
+        self,
+        evidence_type: str,
+        source: str,
+        supports: dict | None = None,
+        contradicts: dict | None = None,
+        subject: str | None = None,
+        available_to: (
+            str
+            | list[str]
+            | tuple[str, ...]
+            | set[str]
+            | None
+        ) = None,
+        provenance: dict | None = None,
+    ) -> dict:
+        """Append evidence without silently revising beliefs."""
+        return self.epistemic.add_evidence(
+            evidence_type=evidence_type,
+            source=source,
+            supports=supports,
+            contradicts=contradicts,
+            subject=subject,
+            available_to=available_to,
+            provenance=provenance,
+        )
+
+    def evaluate_beliefs(
+        self,
+        holder: str,
+        subject: str,
+        candidates: dict | None = None,
+        evidence_ids: list[str] | tuple[str, ...] | None = None,
+        report_quality: dict | None = None,
+        previous_belief_id: str | None = None,
+        provenance: dict | None = None,
+    ) -> dict:
+        """Create or explicitly revise one actor-owned belief packet."""
+        return self.epistemic.evaluate_beliefs(
+            holder=holder,
+            subject=subject,
+            candidates=candidates,
+            evidence_ids=evidence_ids,
+            report_quality=report_quality,
+            previous_belief_id=previous_belief_id,
+            provenance=provenance,
+        )
+
+    def get_belief(
+        self,
+        holder: str,
+        subject: str,
+    ) -> dict | None:
+        """Return one holder's latest belief for one subject."""
+        return self.epistemic.get_belief(
+            holder,
+            subject,
+        )
+
+    def propagate_belief(
+        self,
+        speaker: str,
+        audience: str | list[str] | tuple[str, ...] | set[str],
+        belief_id: str,
+        confidence: float | None = None,
+        provenance: dict | None = None,
+    ) -> dict:
+        """
+        Turn a speaker-owned belief into a report.
+
+        Recipients receive the claim, not automatic belief.
+        """
+        return self.epistemic.propagate_belief(
+            speaker=speaker,
+            audience=audience,
+            belief_id=belief_id,
+            confidence=confidence,
+            provenance=provenance,
+        )
+
     # -----------------------------
     # STATELESS TEMPERAMENT INTERPRETATION
     # -----------------------------
@@ -389,6 +989,87 @@ class GhostAPI:
             relationship=relationship,
             temperament=temperament,
             context=context,
+        )
+
+    # -----------------------------
+    # STRATEGIC OBJECTIVE CONTRACTS
+    # -----------------------------
+    def build_combat_objective(
+        self,
+        *,
+        actor: str,
+        target: str,
+        actor_health: int,
+        actor_max_health: int,
+        target_health: int,
+        target_max_health: int,
+        turns_remaining: int,
+        expected_damage_per_success: int,
+        deadline_label: str = "the deadline",
+    ) -> dict:
+        """
+        Build a deterministic fight-level objective packet.
+
+        Ghost defines the objective and tactical horizon. An external
+        policy may propose a legal tactic, but Ghost remains authoritative
+        for validation, state mutation, consequences, and terminal state.
+        """
+        return build_combat_objective_packet(
+            actor=actor,
+            target=target,
+            actor_health=actor_health,
+            actor_max_health=(
+                actor_max_health
+            ),
+            target_health=target_health,
+            target_max_health=(
+                target_max_health
+            ),
+            turns_remaining=turns_remaining,
+            expected_damage_per_success=(
+                expected_damage_per_success
+            ),
+            deadline_label=deadline_label,
+        )
+
+    def advance_combat_initiative(
+        self,
+        *,
+        previous_state: str,
+        event: str,
+    ) -> dict:
+        """Advance one deterministic Ghost-owned initiative state."""
+        return advance_combat_initiative_packet(
+            previous_state=previous_state,
+            event=event,
+        )
+
+    def lock_combat_recovery_read(
+        self,
+        *,
+        selection_key: str,
+        proposed_move: str | None,
+        fallback_move: str = "dodge",
+    ) -> dict:
+        """Validate and lock a hidden forced-recovery prediction."""
+        return lock_combat_recovery_read_packet(
+            selection_key=selection_key,
+            proposed_move=proposed_move,
+            fallback_move=fallback_move,
+        )
+
+    def resolve_combat_recovery(
+        self,
+        *,
+        read_packet: dict,
+        player_move: str,
+        light_damage: int = 1,
+    ) -> dict:
+        """Resolve a locked recovery read without randomness."""
+        return resolve_combat_recovery_packet(
+            read_packet=read_packet,
+            player_move=player_move,
+            light_damage=light_damage,
         )
 
     # -----------------------------
@@ -665,6 +1346,7 @@ class GhostAPI:
         event: str,
         observers: list[str] | tuple[str, ...] | None = None,
         weights: dict[str, float] | None = None,
+        intensity: float = 1.0,
     ) -> dict:
         """
         Apply a direct relationship event and propagate bounded
@@ -673,12 +1355,19 @@ class GhostAPI:
         Returns the v1.6 social propagation packet consumed by
         interpret_social_packet().
         """
+        event = normalize_game_action(event)
+        intensity = validate_unit_interval(
+            intensity,
+            "social event intensity",
+        )
+
         return self.engine.propagate_social_event(
             source=source,
             target=target,
             event=event,
             observers=observers,
             weights=weights,
+            intensity=intensity,
         )
 
     def propagate_social_effect(
@@ -724,72 +1413,6 @@ class GhostAPI:
     # -----------------------------
     # RELATIONSHIP READ STATE
     # -----------------------------
-    def _clamp(self, value, min_v=-1.0, max_v=1.0):
-        return max(min(value, max_v), min_v)
-
-    def _get_state(self, trust: float) -> str:
-        t = self.STATE_THRESHOLDS
-
-        if trust <= t["hostile"]:
-            return "hostile"
-        elif trust <= t["unfriendly"]:
-            return "unfriendly"
-        elif trust <= t["neutral"]:
-            return "neutral"
-        elif trust <= t["friendly"]:
-            return "friendly"
-        else:
-            return "loyal"
-
-    def _detect_transition(self, a: str, b: str, new_state: str):
-        key = f"{a}|{b}"
-
-        prev = self._transitions.get(key)
-
-        transition = None
-
-        if prev is not None and prev != new_state:
-            transition = (prev, new_state)
-
-        self._transitions[key] = new_state
-
-        return transition
-
-    def _handle_transition(self, _a: str, _b: str, transition):
-        if not transition:
-            return None
-
-        prev, new = transition
-
-        if new == "hostile":
-            return {
-                "event": "relationship_broken",
-                "from": prev,
-                "to": new,
-            }
-
-        if prev == "hostile" and new != "hostile":
-            return {
-                "event": "deescalation",
-                "from": prev,
-                "to": new,
-            }
-
-        if new in ("friendly", "loyal") and prev in (
-            "unfriendly",
-            "neutral",
-        ):
-            return {
-                "event": "forgiveness",
-                "from": prev,
-                "to": new,
-            }
-
-        return {
-            "event": "state_shift",
-            "from": prev,
-            "to": new,
-        }
 
     def get_relationship(self, a: str, b: str) -> dict:
         """
@@ -806,13 +1429,14 @@ class GhostAPI:
         GhostAPI.snapshot() is the safe external boundary for persistence,
         adapter contracts, save/load flows, and engine-facing integrations.
 
-        The wrapped GhostEngine snapshot remains available under "engine".
-        Top-level metadata is also exposed so adapter layers can version the
-        public GhostAPI packet without digging into engine internals.
+        The packet contains all state required by from_snapshot() to
+        restore a deterministic GhostAPI runtime.
         """
         return {
             "ghost_version": GHOST_VERSION,
             "schema_version": GHOST_SNAPSHOT_SCHEMA_VERSION,
             "engine": self.engine.snapshot(),
             "world": self.world.to_dict(),
+            "epistemic": self.epistemic.snapshot(),
+            "event_map": deepcopy(self.event_map),
         }
