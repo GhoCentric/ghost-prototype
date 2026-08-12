@@ -535,10 +535,7 @@ def parse_king_fight_opponent_intent(
     cleaned = text
 
     if cleaned.startswith("```"):
-        lines = cleaned.splitlines()
-
-        if lines:
-            lines = lines[1:]
+        lines = cleaned.splitlines()[1:]
 
         if (
             lines

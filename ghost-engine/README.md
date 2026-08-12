@@ -19,7 +19,7 @@ Package:    ghocentric-ghost-engine
 Version:    1.8.0
 Python:     3.9+
 Runtime dependencies: none
-Validation: 1,296 passed, 1 skipped
+Validation: 1,667 passed, 1 skipped
 ```
 
 The actively maintained package is this `ghost-engine/` directory.
@@ -409,6 +409,40 @@ Local Android launchers included in the repository are:
 They expect a local `.env.local` containing `OPENAI_API_KEY`. Do not commit that
 file.
 
+
+## Order Coordination Reference Application
+
+`ghost.examples.order_coordination` is a separate application-layer proof built
+only on Ghost's public API. Restaurant/order concepts are **not** part of the
+Ghost core.
+
+The reference workflow demonstrates:
+
+- authoritative item state that does not come from model narration;
+- explicit ambiguity when more than one modifier target remains plausible;
+- customer clarification represented as evidence and belief revision;
+- corrections that invalidate stale confirmation;
+- idempotent operation IDs and rollback after failed compound operations;
+- strict snapshot restoration for items, ambiguities, corrections,
+  confirmations, ledger history, and Ghost epistemic references;
+- submission gating that refuses unresolved ambiguity or stale confirmation.
+
+Run the deterministic demo with:
+
+```bash
+python -m ghost.examples.order_coordination_demo
+```
+
+The companion benchmark modules include a deterministic fault-containment
+benchmark, a paired live-model benchmark, and an offline report replay. The live
+benchmark makes one model call per scenario trial and applies the same extracted
+packet to transcript-only and Ghost-backed modes. Model confidence remains
+advisory metadata rather than mutation authority.
+
+This reference application is intentionally narrow. It demonstrates transferable
+state-authority and coordination patterns; it does not claim speech-recognition
+accuracy, general model intelligence, or production restaurant readiness.
+
 ## Packaged CLI Demos
 
 The installed package exposes:
@@ -452,15 +486,21 @@ pytest -q
 pytest -q -m performance
 ```
 
-Coverage is separated into core and Ghost Revolution runtime lanes so terminal
-presentation and local performance tests do not distort each other.
+Coverage is separated into three maintained branch-coverage lanes:
+
+- reusable Ghost core;
+- the complete Ghost Revolution package;
+- the Order Coordination reference application.
+
+Performance checks remain uninstrumented so coverage tracing does not distort
+throughput floors. Fresh human-readable and machine-readable results are
+published in [`COVERAGE.md`](COVERAGE.md).
 
 Current synchronized repository validation:
 
 ```text
-1,296 passed
+1,667 passed
 1 skipped
-146 Python test files
 ```
 
 ## Project Layout
@@ -536,6 +576,21 @@ update persistent state
 
 Only after that contract is stable should Unreal and Godot adapters expose thin
 engine-facing components around the same Ghost authority.
+
+A separate future emotional-state direction is also intentionally **not** part
+of the v1.8.0 runtime. Its current architectural boundary is:
+
+```text
+emotional intensity is independent
+attention/salience is competitive
+deterministic behavioral pressure may be exposed
+the external agent, game, or LLM owns the actual action
+```
+
+The intended design uses multiple independently bounded emotional channels
+inside one Ghost agent rather than one Ghost instance per emotion. Spotlight,
+internal conflict, per-channel inertia/decay, and provenance-linked emotional
+drivers are future work, not current public guarantees.
 
 ## Development Note
 

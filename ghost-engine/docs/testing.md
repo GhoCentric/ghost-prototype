@@ -1,166 +1,94 @@
-## Reproduce in <60 Seconds
+# Testing and Validation
 
-install runtime
-pip install ghocentric-ghost-engine
+Ghost's executable test suite lives in [`../tests`](../tests).
+Files under `docs/` are documentation only and are not a second test suite.
 
-clone repo for tests
-git clone https://github.com/GhoCentric/ghost-prototype.git
-cd ghost-prototype/ghost-engine
+## Current v1.8.0 Checkpoint
 
-run invariant tests (current engine, fully reproducible)
-python -m docs.tests.test_ghost_invariants
+From the `ghost-engine/` directory:
 
-Expected:
-
-• ALL INVARIANTS HOLD  
-
-
----
-
-## About the Stress Benchmark
-
-The stress benchmark (`bench_runtime_stress.py`) was originally written
-against an earlier internal runtime wrapper used during large-scale
-simulation development.
-
-The current public `GhostEngine` exposes a smaller, stricter API focused on:
-
-• deterministic state evolution  
-• invariant safety  
-• serialization guarantees  
-• architectural correctness  
-
-Because of this intentional API tightening, the benchmark does **not**
-run directly against the current engine without adaptation.
-
----
-
-## Why It Is Still Included
-
-The benchmark remains as:
-
-• a proof-of-concept scalability reference  
-• evidence of prior large-scale runtime validation  
-• documentation of the interaction workload model used during development  
-
-It demonstrates sustained high-load execution under:
-
-• 5,000 agents  
-• 10,000 interactions/tick  
-• 50 ticks  
-
-with observed throughput around:
-
-• ~13k interactions/sec sustained (device dependent)
-
----
-
-## If You Want to Run It
-
-The script can be adapted easily by replacing internal runtime calls with
-public `GhostEngine.step()` usage. This is intentionally left undone to:
-
-• keep the benchmark historically accurate  
-• avoid mixing internal and public APIs  
-• preserve clarity around the current engine design boundary
-
-# Testing & Validation
-
-This document outlines the testing strategy and validation evidence for the Ghost Engine runtime.
-
-The goal of these tests is to verify:
-
-- correctness of state evolution
-- stability under load
-- emergent behavior consistency
-- runtime scalability
-- memory safety under stress
-
----
-
-# Test Overview
-
-Ghost Engine is validated using three layers:
-
-1. **Invariant Tests** – correctness + stability guarantees  
-2. **Coverage & Pass Evidence** – runtime verification proof  
-3. **Stress Benchmarks** – scalability + emergence testing  
-
----
-
-# 1. Invariant Testing
-
-Invariant tests validate core runtime guarantees across ticks and interactions.
-
-Covered behaviors:
-
-- bounded affect values  
-- stable relationship evolution  
-- safe decay behavior  
-- no invalid state transitions  
-- consistent tick progression  
-
-Files:
-
-```
-tests/test_ghost_invariants.py
-tests/bench_runtime_stress.py
+```bash
+python -m pytest -q
 ```
 
----
+Expected result for the synchronized v1.8.0 checkpoint:
 
-# 2. Coverage & Execution Evidence
+```text
+1667 passed, 1 skipped
+```
 
-## Pytest Results
+The skipped test is intentionally gated. Normal validation does not require an
+API key or a real network call.
 
-![Pytest Pass](testing/pytest_pass.jpg)
+## Install Development Test Tools
 
-## Coverage Results
+Ghost has no runtime dependencies. Local validation uses:
 
-![Coverage](testing/coverage.jpg)
+```bash
+python -m pip install pytest hypothesis pytest-cov
+```
 
-These confirm runtime correctness across tested surfaces.
+## Quality Lanes
 
----
+The authoritative commands and coverage boundaries are documented in
+[`../QUALITY.md`](../QUALITY.md).
 
-# 3. Runtime Stress Benchmark
+Published v1.8.0 results are summarized in
+[`../COVERAGE.md`](../COVERAGE.md), with raw evidence under
+[`coverage/v1.8.0/`](coverage/v1.8.0/).
 
-The runtime was tested under sustained high-load interaction scenarios to validate:
+The maintained branch-coverage lanes are:
 
-- scaling behavior  
-- emergent faction formation  
-- cascade propagation  
-- runtime stability  
+- reusable Ghost core;
+- the complete Ghost Revolution package;
+- Order Coordination.
 
-## Benchmark Configuration
+All three are expected to remain at 100% statements and branches.
 
-- Device: Pixel 6a (Termux)  
-- Agents: 5,000  
-- Interactions: 10,000 per tick  
-- Duration: 50 ticks  
+## What the Suite Covers
 
-## Results
+The current suite validates, among other things:
 
-![Runtime Stress Benchmark](testing/runtime_stress_benchmark.jpg)
+- deterministic state evolution and bounded relationship math;
+- JSON-safe public packets and copy isolation;
+- snapshot validation, migration, restoration, and atomic failure behavior;
+- social propagation, temperament, threat response, and policy branches;
+- epistemic facts, observations, claims, evidence, provenance, beliefs, and
+  revision;
+- combat control, objectives, scenario configuration, and scenario runtime;
+- Ghost Revolution campaign state, guards, raids, combat, feints, endgame
+  routing, LLM boundaries, presentation, benchmarks, and deterministic snapshot
+  forks;
+- Order Coordination ambiguity, correction, confirmation freshness,
+  idempotency, snapshot hardening, paired model proposals, and offline replay;
+- package imports, public API contracts, and throughput floors.
 
-Observed:
+## Reproducible Epistemic Benchmark
 
-- ~13.4k interactions/sec sustained  
-- ~430k relationships active  
-- stable large-cluster emergence  
-- consistent cascade propagation  
+The controlled Ghost Revolution scenario matrix is documented in
+[`../BENCHMARK_RESULTS.md`](../BENCHMARK_RESULTS.md).
 
-The runtime remained stable throughout execution with no failures.
+Run it with:
 
----
+```bash
+python -m ghost.examples.ghost_revolution.benchmarks.epistemic_scenario_matrix_benchmark
+```
 
-# Conclusion
+## Order Coordination Reference Tests
 
-These tests demonstrate that Ghost Engine:
+Run the deterministic demo with:
 
-- maintains stable evolution under heavy load  
-- scales efficiently across large agent populations  
-- produces consistent emergent structures  
-- remains safe across extended runtime execution  
+```bash
+python -m ghost.examples.order_coordination_demo
+```
 
-Together, they provide strong validation of runtime correctness and performance.
+Order Coordination is application-layer example code. The core owns generic
+state/epistemic primitives; the application owns items, modifiers,
+clarification, confirmation, and submission policy.
+
+## Evidence Policy
+
+Generated screenshots are not stored as current validation evidence because
+they become stale as the package evolves. Reproducible commands,
+machine-readable coverage reports, committed tests, benchmark source, and exact
+terminal-output text reports are the source of truth.

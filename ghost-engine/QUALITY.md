@@ -1,70 +1,91 @@
 # Ghost Quality Lanes
 
-Ghost uses separate quality lanes so terminal demos, coverage tracing,
-and performance checks do not distort one another.
+Ghost separates normal validation, performance checks, and branch-coverage
+tracing so one lane does not distort another.
 
 ## Full Normal Suite
 
-Runs every test, including local performance regression checks.
+Runs every maintained test, including local performance regression checks.
 
-    pytest -q
+```bash
+python -m pytest -q
+```
+
+Current v1.8.0 checkpoint:
+
+```text
+1667 passed, 1 skipped
+```
+
+The skipped test is intentionally gated and normal validation does not require a
+real network call.
 
 ## Performance Only
 
-Runs local throughput checks without coverage tracing.
+Runs throughput checks without coverage tracing.
 
-    pytest -q -m performance
+```bash
+python -m pytest -q -m performance
+```
 
-## Core Coverage
+Coverage instrumentation must not be used to judge performance floors.
 
-Measures Ghost core modules while excluding examples and terminal demos.
+## Reusable Core Coverage
 
-    REPORT_DIR="quality-reports/core_$(date +%Y%m%d_%H%M%S)"
-    mkdir -p "$REPORT_DIR"
+Measures the reusable `ghost` package while excluding `ghost/examples/` through
+`coverage.core.ini`.
 
-    pytest -q -m "not performance" \
-      --cov=ghost \
-      --cov-config=coverage.core.ini \
-      --cov-report=term \
-      --cov-report="json:$REPORT_DIR/coverage.json"
+```bash
+python -m pytest -q -m "not performance"   --cov=ghost   --cov-config=coverage.core.ini   --cov-report=term-missing   --cov-report=json:docs/coverage/v1.8.0/core.json
+```
 
-## Ghost Revolution Runtime Coverage
+Release target: 100% executable statements and 100% branch outcomes.
 
-Measures the deterministic Revolution runtime only:
+## Complete Ghost Revolution Package Coverage
 
-- configuration
-- social bridge
-- raid domain
-- campaign facade
+Measures every Python runtime file under
+`ghost.examples.ghost_revolution`, including presentation, developer tooling,
+benchmarks, and the campaign runtime.
 
-Terminal presentation remains outside this lane.
+```bash
+python -m pytest -q tests/ghost_revolution   --cov=ghost.examples.ghost_revolution   --cov-config=coverage.revolution.ini   --cov-branch   --cov-report=term-missing   --cov-report=json:docs/coverage/v1.8.0/revolution.json
+```
 
-    REPORT_DIR="quality-reports/revolution_$(date +%Y%m%d_%H%M%S)"
-    mkdir -p "$REPORT_DIR"
+Release target: 100% executable statements and 100% branch outcomes.
 
-    pytest -q -m "not performance" \
-      --cov=ghost.examples.ghost_revolution_config \
-      --cov=ghost.examples.ghost_revolution_social \
-      --cov=ghost.examples.ghost_revolution_raid \
-      --cov=ghost.examples.ghost_revolution_demo \
-      --cov-config=coverage.revolution.ini \
-      --cov-report=term \
-      --cov-report="json:$REPORT_DIR/coverage.json"
+## Order Coordination Coverage
+
+Measures all five Order Coordination application/benchmark modules with their
+focused tests.
+
+```bash
+python -m pytest -q   tests/test_order_coordination_v180.py   tests/test_order_coordination_benchmark_v180.py   tests/test_order_coordination_live_benchmark_v180.py   tests/test_order_coordination_report_replay_v180.py   tests/test_order_coordination_coverage_closure_v180.py   tests/test_order_coordination_snapshot_hardening_v180.py   --cov=ghost.examples.order_coordination   --cov=ghost.examples.order_coordination_benchmark   --cov=ghost.examples.order_coordination_demo   --cov=ghost.examples.order_coordination_live_benchmark   --cov=ghost.examples.order_coordination_report_replay   --cov-branch   --cov-report=term-missing   --cov-report=json:docs/coverage/v1.8.0/order_coordination.json
+```
+
+Release target: 100% executable statements and 100% branch outcomes.
+
+## Published Evidence
+
+Current human-readable and machine-readable results live under:
+
+```text
+COVERAGE.md
+docs/coverage/v1.8.0/
+```
+
+The JSON files preserve per-file coverage data. The text files preserve the
+exact pytest/coverage output from the publication run.
 
 ## Policy
 
-Do not add a fail-under threshold until every missing path is reviewed.
+Coverage is a release-quality signal, not a substitute for requirement review.
+A path should be classified before it is hidden, excluded, or deleted.
 
-A missing path must be classified as one of:
+Current v1.8.0 targets:
 
-1. reachable behavior that needs a test
-2. defensive behavior that needs an invalid-input test
-3. obsolete code that should be deleted
-4. terminal presentation behavior belonging in its own lane
-
-Target:
-
-- Core lane: 100 percent statements and branches
-- Revolution runtime lane: 100 percent statements and branches
-- Performance: normal pytest only, never coverage-traced
-- Mutation testing: later, on GitHub Actions or normal Linux
+- reusable core: 100% statements and branches;
+- complete Ghost Revolution package: 100% statements and branches;
+- Order Coordination: 100% statements and branches;
+- performance: normal pytest only, never judged under coverage tracing;
+- full uninstrumented suite: release gate;
+- mutation testing: future work on a conventional CI/Linux environment.

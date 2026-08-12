@@ -66,6 +66,23 @@ does not automatically require a save-schema change.
 Ghost Revolution remains a game-specific reference demo. Its towns, combat damage,
 menus, and presentation are not universal Ghost-core concepts.
 
+
+### Order Coordination reference application
+
+- Added `ghost.examples.order_coordination` as an application-layer proof built
+  on the public `GhostAPI`; no restaurant/order concepts were added to core.
+- Added explicit ambiguous-target state, customer clarification, evidence-backed
+  belief revision, correction handling, confirmation revision binding,
+  idempotent operation IDs, submission gating, and JSON-safe snapshots.
+- Hardened snapshot restoration for correction and confirmation record schemas,
+  item references, epistemic observation/belief references, revision
+  consistency, and ledger consistency.
+- Added deterministic, paired live-model, and offline-replay benchmark tools.
+- The live benchmark reuses one raw model proposal across transcript-only and
+  Ghost-backed modes and treats model confidence as advisory metadata.
+- Order Coordination remains a narrow reference application rather than a
+  production ordering product or universal Ghost-core domain.
+
 ### Snapshot and restoration hardening
 
 Seven audit areas were closed:
@@ -119,10 +136,13 @@ Additional cleanup:
 - Current synchronized repository result:
 
 ```text
-1,296 passed
+1,667 passed
 1 skipped
-146 Python test files
 ```
+
+- Reusable Ghost core: 100% statements and branches.
+- Complete Ghost Revolution package: 100% statements and branches.
+- Order Coordination reference application: 100% statements and branches.
 
 - Added `QUALITY.md`, `BENCHMARK_RESULTS.md`, `coverage.core.ini`, and
   `coverage.revolution.ini`.
