@@ -124,5 +124,10 @@ def run_demo() -> dict:
     }
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the demo as a console-script-safe entry point."""
     run_demo()
+
+
+if __name__ == "__main__":
+    main()

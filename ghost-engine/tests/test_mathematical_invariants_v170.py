@@ -148,7 +148,7 @@ def assert_snapshot_invariants(snapshot):
     assert isinstance(snapshot["cycles"], int)
     assert snapshot["cycles"] >= 0
 
-    assert snapshot["ghost_version"] == "1.8.0"
+    assert snapshot["ghost_version"] == "1.9.0"
     assert snapshot["schema_version"] == "1.0"
 
     npc = snapshot["npc"]

@@ -5,6 +5,40 @@ All notable changes to `ghocentric-ghost-engine` are documented here.
 Package release numbers and snapshot schema versions are separate. A package update
 does not automatically require a save-schema change.
 
+## v1.9.0
+
+### Packaging and public CLI surface
+
+- Bumped the package/runtime producer version from `1.8.0` to `1.9.0`.
+- Kept `GHOST_SNAPSHOT_SCHEMA_VERSION` at `1.0`; this release does not change
+  the serialized snapshot contract.
+- Added public console commands `ghost-epistemic-demo`,
+  `ghost-revolution-demo`, and `ghost-order-coordination-demo`.
+- Added a console-safe `main()` wrapper to the Order Coordination demo.
+- Added persistent v1.9 packaging/CLI regression coverage.
+- Verified the built wheel and sdist with `python -m build` and `twine check`.
+- Verified 55 / 55 packaged Python files and 11 / 11 console-script entry
+  points from the built wheel.
+- Verified an isolated pip install, real pip-generated wrapper routing for all
+  11 commands, end-to-end execution of the epistemic and Order Coordination
+  demos, and a separate sdist install/import.
+- Current full suite: `1674 passed, 1 skipped`.
+
+### Coverage
+
+- Reusable Ghost core: 3,112 / 3,112
+  statements and 1,276 / 1,276 branches
+  covered (100% / 100%).
+- Complete Ghost Revolution package:
+  7,149 / 7,149 statements
+  and 2,736 / 2,736 branches
+  covered (100% / 100%).
+- Order Coordination: 1,624 / 1,624
+  statements and 542 / 542 branches
+  covered (100% / 100%).
+- Added fresh versioned evidence under `docs/coverage/v1.9.0/`; the committed
+  `docs/coverage/v1.8.0/` evidence remains unchanged as historical evidence.
+
 ## v1.8.0 — Epistemic State, Combat Control, Scenarios, and Runtime Hardening
 
 ### Epistemic state

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghocentric-ghost-engine"
-version = "1.8.0"
+version = "1.9.0"
 description = "A deterministic state engine for NPC systems and persistent interactive state."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -57,6 +57,9 @@ ghost-diagnostics-demo = "ghost.examples.relationship_diagnostics_demo:main"
 ghost-social-demo = "ghost.examples.social_propagation_demo:main"
 ghost-temperament-demo = "ghost.examples.temperament_demo:main"
 ghost-threat-response-demo = "ghost.examples.threat_response_demo:main"
+ghost-epistemic-demo = "ghost.examples.epistemic_api_smoke_demo:main"
+ghost-revolution-demo = "ghost.examples.ghost_revolution.demo:main"
+ghost-order-coordination-demo = "ghost.examples.order_coordination_demo:main"
 
 [tool.pytest.ini_options]
 markers = [

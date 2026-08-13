@@ -16,10 +16,10 @@ JSON-safe packets that a game, simulation, dialogue layer, or optional LLM can u
 
 ```text
 Package:    ghocentric-ghost-engine
-Version:    1.8.0
+Version:    1.9.0
 Python:     3.9+
 Runtime dependencies: none
-Validation: 1,667 passed, 1 skipped
+Validation: 1,674 passed, 1 skipped
 ```
 
 The actively maintained package is this `ghost-engine/` directory.
@@ -456,6 +456,9 @@ ghost-diagnostics-demo
 ghost-social-demo
 ghost-temperament-demo
 ghost-threat-response-demo
+ghost-epistemic-demo
+ghost-revolution-demo
+ghost-order-coordination-demo
 ```
 
 Each demo exercises a different public layer without requiring a cloned repository.
