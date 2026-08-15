@@ -5,6 +5,25 @@ All notable changes to `ghocentric-ghost-engine` are documented here.
 Package release numbers and snapshot schema versions are separate. A package update
 does not automatically require a save-schema change.
 
+## v1.9.1
+
+### Ghost Revolution public developer CLI
+
+- Bumped the package/runtime producer version from `1.9.0` to `1.9.1` while
+  keeping snapshot schema `1.0` unchanged.
+- Added `ghost-revolution-dev` for direct access to existing late-game,
+  champion, siege, and king-fight developer shortcuts without an API key.
+- Added `ghost-revolution-llm-dev` for opt-in live opponent + narration LLM use.
+- The live launcher requests the user's own OpenAI API key with hidden terminal
+  input, does not read `.env.local`, does not write or echo the entered key, and
+  restores managed environment variables on exit/error.
+- Kept `httpx` optional rather than adding a base runtime dependency.
+- Explicitly documents Ghost Revolution as a playable reference prototype and
+  systems demonstration, not a finished game.
+- Added persistent launcher and layout regression tests.
+- Current full suite: `1680 passed, 1 skipped`.
+- Refreshed all maintained coverage lanes at 100% statements and branches.
+
 ## v1.9.0
 
 ### Packaging and public CLI surface

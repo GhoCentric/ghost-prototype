@@ -13,7 +13,7 @@ from ghost.ids import normalize_id
 
 # Package/release metadata. GHOST_VERSION remains as the public
 # compatibility name used by existing integrations.
-GHOST_PACKAGE_VERSION = "1.9.0"
+GHOST_PACKAGE_VERSION = "1.9.1"
 GHOST_VERSION = GHOST_PACKAGE_VERSION
 
 # Persisted-format metadata. This changes only when the snapshot

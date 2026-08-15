@@ -47,7 +47,7 @@ def test_engine_sequence_is_deterministic_and_strict_json_safe():
 
     assert snap_a == snap_b
     assert snap_a["cycles"] == 3
-    assert snap_a["ghost_version"] == "1.9.0"
+    assert snap_a["ghost_version"] == "1.9.1"
     assert snap_a["schema_version"] == "1.0"
 
     assert_strict_json_safe(snap_a)

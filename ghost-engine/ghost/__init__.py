@@ -3,7 +3,7 @@ ghocentric-ghost-engine
 Public API surface.
 """
 
-__version__ = "1.9.0"
+__version__ = "1.9.1"
 
 from .api import GhostAPI
 

@@ -16,10 +16,10 @@ JSON-safe packets that a game, simulation, dialogue layer, or optional LLM can u
 
 ```text
 Package:    ghocentric-ghost-engine
-Version:    1.9.0
+Version:    1.9.1
 Python:     3.9+
 Runtime dependencies: none
-Validation: 1,674 passed, 1 skipped
+Validation: 1,680 passed, 1 skipped
 ```
 
 The actively maintained package is this `ghost-engine/` directory.
@@ -458,8 +458,28 @@ ghost-temperament-demo
 ghost-threat-response-demo
 ghost-epistemic-demo
 ghost-revolution-demo
+ghost-revolution-dev
+ghost-revolution-llm-dev
 ghost-order-coordination-demo
 ```
+
+Ghost Revolution is a **playable reference prototype and systems demonstration,
+not a finished game**.
+
+- `ghost-revolution-demo` starts the normal campaign from Day 1.
+- `ghost-revolution-dev` opens the developer shortcut panel so later-game
+  states, siege routes, champion combat, and the king fight can be reached
+  directly.
+- `ghost-revolution-llm-dev` opens the same developer panel with the real LLM
+  opponent and real LLM fight narration enabled. It requests the user's own
+  OpenAI API key with hidden terminal input for that process only. The launcher
+  does not read `.env.local` or write the entered key to disk. Live mode uses
+  the optional `httpx` package; if it is missing, the command prints the exact
+  install instruction.
+
+Ghost remains authoritative over deterministic state and combat resolution;
+the LLM layers propose opponent intent and narration around that resolved state.
+
 
 Each demo exercises a different public layer without requiring a cloned repository.
 

@@ -37,6 +37,7 @@ def test_package_contains_all_demo_modules():
         "social.py",
         "scripted_playthroughs.py",
         "symmetric_combat.py",
+        "live_llm_dev.py",
         "town_memory.py",
     }
 

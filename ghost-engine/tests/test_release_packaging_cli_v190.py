@@ -31,6 +31,10 @@ EXPECTED_SCRIPTS = {
         "ghost.examples.epistemic_api_smoke_demo:main",
     "ghost-revolution-demo":
         "ghost.examples.ghost_revolution.demo:main",
+    "ghost-revolution-dev":
+        "ghost.examples.ghost_revolution.dev_shortcuts:main",
+    "ghost-revolution-llm-dev":
+        "ghost.examples.ghost_revolution.live_llm_dev:main",
     "ghost-order-coordination-demo":
         "ghost.examples.order_coordination_demo:main",
 }
@@ -43,10 +47,10 @@ def _pyproject() -> dict:
 
 
 def test_v190_package_and_runtime_versions():
-    assert _pyproject()["project"]["version"] == "1.9.0"
-    assert ghost.__version__ == "1.9.0"
-    assert GHOST_PACKAGE_VERSION == "1.9.0"
-    assert GHOST_VERSION == "1.9.0"
+    assert _pyproject()["project"]["version"] == "1.9.1"
+    assert ghost.__version__ == "1.9.1"
+    assert GHOST_PACKAGE_VERSION == "1.9.1"
+    assert GHOST_VERSION == "1.9.1"
 
 
 def test_v190_snapshot_schema_intentionally_remains_v1():
@@ -55,9 +59,9 @@ def test_v190_snapshot_schema_intentionally_remains_v1():
     api = GhostAPI()
     snapshot = api.snapshot()
 
-    assert snapshot["ghost_version"] == "1.9.0"
+    assert snapshot["ghost_version"] == "1.9.1"
     assert snapshot["schema_version"] == "1.0"
-    assert snapshot["engine"]["ghost_version"] == "1.9.0"
+    assert snapshot["engine"]["ghost_version"] == "1.9.1"
     assert snapshot["engine"]["schema_version"] == "1.0"
 
 
@@ -71,9 +75,9 @@ def test_v190_v180_producer_snapshot_remains_restoreable():
     restored = GhostAPI.from_snapshot(snapshot)
     current = restored.snapshot()
 
-    assert current["ghost_version"] == "1.9.0"
+    assert current["ghost_version"] == "1.9.1"
     assert current["schema_version"] == "1.0"
-    assert current["engine"]["ghost_version"] == "1.9.0"
+    assert current["engine"]["ghost_version"] == "1.9.1"
     assert current["engine"]["schema_version"] == "1.0"
 
 
@@ -114,12 +118,14 @@ def test_v190_order_coordination_console_wrapper_returns_none(
 def test_v190_readme_lists_version_validation_and_new_cli_commands():
     text = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "Version:    1.9.0" in text
-    assert "Validation: 1,674 passed, 1 skipped" in text
+    assert "Version:    1.9.1" in text
+    assert "Validation: 1,680 passed, 1 skipped" in text
 
     for command in (
         "ghost-epistemic-demo",
         "ghost-revolution-demo",
+        "ghost-revolution-dev",
+        "ghost-revolution-llm-dev",
         "ghost-order-coordination-demo",
     ):
         assert command in text
