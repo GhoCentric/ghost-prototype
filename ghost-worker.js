@@ -5,6 +5,7 @@ const postStatus=(message,detail='')=>self.postMessage({kind:'status',message,de
 
 const PY=String.raw`
 import io, json, hashlib
+import ghost
 from contextlib import redirect_stdout
 from ghost import GhostAPI
 from ghost.examples.epistemic_api_smoke_demo import run_demo as _epistemic_run_demo
@@ -104,6 +105,89 @@ def ghost_social_determinism_demo():
         "elder_trust": float(parsed["elder"]["trust"]),
     }, allow_nan=False)
 
+def ghost_emotion_demo():
+    def profile(sensitivities=None):
+        g = GhostAPI()
+        for _ in range(20):
+            g.apply_event(
+                "player",
+                "guard",
+                {"type": "help", "intensity": 1.0},
+            )
+        g.register_emotional_agent(
+            "guard",
+            sensitivities=sensitivities,
+        )
+        packet = g.apply_layered_event(
+            "player",
+            "guard",
+            {"type": "betrayal", "intensity": 1.0},
+        )
+        state = packet["layered_state"]
+        return {
+            "relationship": {
+                "trust": float(state["trust"]),
+                "state": state["relationship_state"],
+            },
+            "levels": {
+                name: float(value)
+                for name, value in state["emotional_levels"].items()
+            },
+            "dominant_emotion": state["dominant_emotion"],
+            "dominant_salience": float(state["dominant_salience"] or 0.0),
+            "raw_leader_emotion": state["raw_leader_emotion"],
+            "raw_leader_salience": float(state["raw_leader_salience"] or 0.0),
+            "spotlight_switch_margin": float(state["spotlight_switch_margin"]),
+        }
+
+    def run_once():
+        balanced = profile()
+        fear_sensitive = profile({
+            "anger": 0.5,
+            "fear": 3.0,
+            "grief": 0.5,
+        })
+        return {
+            "balanced": balanced,
+            "fear_sensitive": fear_sensitive,
+        }
+
+    output_a = json.dumps(
+        run_once(),
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    output_b = json.dumps(
+        run_once(),
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    parsed = json.loads(output_a)
+    balanced = parsed["balanced"]
+    fear_sensitive = parsed["fear_sensitive"]
+    same_relationship = (
+        balanced["relationship"] == fear_sensitive["relationship"]
+    )
+    different_emotions = (
+        balanced["levels"] != fear_sensitive["levels"]
+    )
+    different_spotlight = (
+        balanced["dominant_emotion"]
+        != fear_sensitive["dominant_emotion"]
+    )
+    return json.dumps({
+        **parsed,
+        "same_relationship": same_relationship,
+        "different_emotions": different_emotions,
+        "different_spotlight": different_spotlight,
+        "match": output_a == output_b,
+        "hash_a": hashlib.sha256(output_a.encode("utf-8")).hexdigest(),
+        "hash_b": hashlib.sha256(output_b.encode("utf-8")).hexdigest(),
+        "bytes": len(output_a.encode("utf-8")),
+    }, allow_nan=False)
+
 def _belief(b):
     cause=b["dimensions"]["cause"]
     quantity=b["dimensions"]["quantity"]
@@ -169,7 +253,9 @@ def ghost_preflight():
     assert b["elder"]["trust"] < 0.0
     assert c["checks"]["ledger_revised_player_belief"] is True
     assert c["initial"]["id"] != c["revised"]["id"]
-    return json.dumps({"relationship":True,"determinism":True,"social":True,"epistemic":True})
+    assert ghost.__version__ == "1.9.2"
+    assert hasattr(GhostAPI, "apply_layered_event")
+    return json.dumps({"version":"1.9.2","relationship":True,"determinism":True,"social":True,"epistemic":True,"multi_emotion_api":True})
 `;
 
 async function boot(){
@@ -178,10 +264,10 @@ async function boot(){
   postStatus('Loading package installer…','Preparing micropip');
   await pyodide.loadPackage('micropip');
   const micropip=pyodide.pyimport('micropip');
-  postStatus('Installing Ghost v1.9.1…','Fetching the released pure-Python wheel from PyPI');
-  await micropip.install('ghocentric-ghost-engine==1.9.1');
+  postStatus('Installing Ghost v1.9.2…','Fetching the released pure-Python wheel from PyPI');
+  await micropip.install('ghocentric-ghost-engine==1.9.2');
   micropip.destroy();
-  postStatus('Validating engine paths…','Relationship history • determinism • social propagation • epistemic revision');
+  postStatus('Validating engine paths…','Relationship history • multi-emotion state • determinism • social propagation • epistemic revision');
   await pyodide.runPythonAsync(PY);
   JSON.parse(await pyodide.runPythonAsync('ghost_preflight()'));
   self.postMessage({kind:'ready'});
@@ -190,7 +276,7 @@ readyPromise=boot().catch(err=>{self.postMessage({kind:'fatal',error:err?.stack|
 
 async function execute(type){
   await readyPromise;
-  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',social:'ghost_social_demo()',social_determinism:'ghost_social_determinism_demo()',epistemic:'ghost_epistemic_demo()',epistemic_determinism:'ghost_epistemic_determinism_demo()'}[type];
+  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',emotion:'ghost_emotion_demo()',social:'ghost_social_demo()',social_determinism:'ghost_social_determinism_demo()',epistemic:'ghost_epistemic_demo()',epistemic_determinism:'ghost_epistemic_determinism_demo()'}[type];
   if(!code)throw new Error(`Unknown request: ${type}`);
   return JSON.parse(await pyodide.runPythonAsync(code));
 }

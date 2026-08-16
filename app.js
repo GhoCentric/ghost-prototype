@@ -18,14 +18,29 @@ function request(type){ return new Promise((resolve,reject)=>{ const id=++reqId;
 function bar(el,v,scale=1.6){ const n=Math.max(-scale,Math.min(scale,Number(v))), pct=Math.abs(n)/scale*50; if(n>=0){el.style.left='50%';el.style.width=`${pct}%`;el.style.background='var(--green)'}else{el.style.left=`${50-pct}%`;el.style.width=`${pct}%`;el.style.background='var(--red)'} }
 function mini(el,v,scale=1){ const n=Math.max(-scale,Math.min(scale,Number(v))); el.style.width=`${50+(n/scale)*50}%`; el.style.background=n<0?'var(--red)':'var(--green)'; }
 function confidence(barEl,textEl,v){ const n=Math.max(0,Math.min(1,Number(v))); barEl.style.width=`${n*100}%`; textEl.textContent=`confidence ${n.toFixed(3)}`; }
+function emotionLevel(v){ const n=Math.max(0,Math.min(1,Number(v))); return n; }
+function emotionBar(el,v){ const n=emotionLevel(v); el.style.width=`${n*100}%`; el.dataset.level=n.toFixed(3); }
+function renderEmotion(prefix,obj){
+ const levels=obj.levels||{};
+ const state=String(obj.relationship?.state||'—').toUpperCase();
+ $(`${prefix}Relation`).textContent=`${state} ${trust(obj.relationship?.trust)}`;
+ for(const name of ['anger','fear','grief','hope','joy']){
+   const value=emotionLevel(levels[name]??0);
+   const cap=name[0].toUpperCase()+name.slice(1);
+   $(`${prefix}${cap}Val`).textContent=value.toFixed(3);
+   emotionBar($(`${prefix}${cap}Bar`),value);
+ }
+ $(`${prefix}Spotlight`).textContent=String(obj.dominant_emotion||'none').toUpperCase();
+ $(`${prefix}Salience`).textContent=`salience ${Number(obj.dominant_salience||0).toFixed(3)} • switch margin ${Number(obj.spotlight_switch_margin||0).toFixed(2)}`;
+}
 
 function boot(){
  ready=false; $('start').disabled=true; $('start').querySelector('span').textContent='Loading Ghost…'; $('retry').classList.add('hidden');
- status('loading','Booting Ghost…','Pyodide → Python → ghocentric-ghost-engine==1.9.1');
- if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js?v=audit-hotfix-1',{type:'module'});
+ status('loading','Booting Ghost…','Pyodide → Python → ghocentric-ghost-engine==1.9.2');
+ if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js?v=emotion-192-1',{type:'module'});
  worker.onmessage=(e)=>{ const m=e.data;
    if(m.kind==='status'){status('loading',m.message,m.detail||'');return}
-   if(m.kind==='ready'){ready=true;status('ready','Ghost v1.9.1 running','Validated: relationship history • determinism • social propagation • epistemic revision');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Millcross';return}
+   if(m.kind==='ready'){ready=true;status('ready','Ghost v1.9.2 running','Validated: relationship history • multi-emotion state • determinism • social propagation • epistemic revision');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Millcross';return}
    if(m.kind==='fatal'){status('error','Ghost failed to load',m.error||'Unknown error');$('retry').classList.remove('hidden');return}
    if(m.id&&pending.has(m.id)){const p=pending.get(m.id);pending.delete(m.id);m.ok?p.resolve(m.result):p.reject(new Error(m.error||'Ghost request failed'));}
  };
@@ -50,7 +65,7 @@ $('betray').onclick=async()=>{
     $(`${prefix}Tag`).classList.add(hostile?'hostile':'friendly');
   }
   $('historyCaption').textContent=`Ghost returned ${d.short.after.state} for A and ${d.long.after.state} for B.`;
-  $('historyProof').classList.remove('hidden'); $('determinismPanel').classList.remove('hidden'); $('historyNext').classList.remove('hidden'); btn.textContent='SAME EVENT RESOLVED'; toast('Same event. Different accumulated state.');
+  $('historyProof').classList.remove('hidden'); $('determinismPanel').classList.remove('hidden'); $('emotionLayer').classList.remove('hidden'); btn.textContent='SAME EVENT RESOLVED'; toast('Same event. Different accumulated state.');
  }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('historyCaption').textContent=e.message}
 };
 
@@ -66,6 +81,27 @@ $('determinism').onclick=async()=>{
   btn.textContent=d.match?'DETERMINISM VERIFIED':'MISMATCH DETECTED';
   toast(d.match?'Same input. Same output.':'Determinism check failed.');
  }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('historyCaption').textContent=e.message}
+};
+
+$('emotionAction').onclick=async()=>{
+ const btn=$('emotionAction'); btn.disabled=true; btn.textContent='GHOST IS LAYERING STATE…';
+ try{
+  const d=await request('emotion');
+  renderEmotion('balanced',d.balanced);
+  renderEmotion('fear',d.fear_sensitive);
+  $('emotionCompare').classList.remove('hidden');
+  $('emotionProof').classList.remove('hidden');
+  $('emotionRelationCheck').textContent=d.same_relationship?'SAME — CONTROL HELD':'MISMATCH';
+  $('emotionVectorCheck').textContent=d.different_emotions&&d.different_spotlight?'DIFFERENT — ANGER ↔ FEAR':'CHECK FAILED';
+  $('emotionReplayCheck').textContent=d.match?'MATCH — SAME CANONICAL JSON':'MISMATCH';
+  $('emotionHash').textContent=d.hash_a;
+  btn.textContent='EMOTIONAL STATE LAYERED';
+  $('historyNext').classList.remove('hidden');
+  toast('Same relationship. Different emotional state.');
+ }catch(e){
+  btn.disabled=false;btn.textContent='TRY EMOTION LAYER AGAIN';
+  $('historyCaption').textContent=e.message;
+ }
 };
 
 $('historyNext').onclick=()=>screen('social');
