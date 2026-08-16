@@ -157,7 +157,7 @@ def test_snapshot_is_strict_json_safe_after_many_events():
 
     snapshot = engine.snapshot()
 
-    assert snapshot["ghost_version"] == "1.9.1"
+    assert snapshot["ghost_version"] == "1.9.2"
     assert snapshot["schema_version"] == "1.0"
 
     assert_strict_json_safe(snapshot)
@@ -241,8 +241,8 @@ def test_relationships_all_returns_safe_copy():
 
 
 def test_package_version_and_snapshot_schema_are_separate():
-    assert ghost.__version__ == "1.9.1"
-    assert GHOST_VERSION == "1.9.1"
+    assert ghost.__version__ == "1.9.2"
+    assert GHOST_VERSION == "1.9.2"
     assert GHOST_SNAPSHOT_SCHEMA_VERSION == "1.0"
     assert GHOST_VERSION != GHOST_SNAPSHOT_SCHEMA_VERSION
 

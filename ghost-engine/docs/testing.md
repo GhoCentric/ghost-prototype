@@ -2,7 +2,7 @@
 
 Ghost's executable test suite lives in [`../tests`](../tests).
 
-## Current v1.9.1 Checkpoint
+## Current v1.9.2 Checkpoint
 
 From the `ghost-engine/` directory:
 
@@ -13,7 +13,7 @@ python -m pytest -q
 Expected synchronized checkpoint:
 
 ```text
-1680 passed, 1 skipped
+1763 passed, 1 skipped
 ```
 
 The skipped test is intentionally gated. Normal validation does not require an
@@ -22,7 +22,7 @@ API key or a real network call.
 ## Maintained Coverage Lanes
 
 The authoritative commands live in [`../QUALITY.md`](../QUALITY.md). Current
-machine-readable and text evidence lives under [`coverage/v1.9.1/`](coverage/v1.9.1/).
+machine-readable and text evidence lives under [`coverage/v1.9.2/`](coverage/v1.9.2/).
 
 - reusable Ghost core;
 - complete Ghost Revolution package;
@@ -30,9 +30,9 @@ machine-readable and text evidence lives under [`coverage/v1.9.1/`](coverage/v1.
 
 All three are required to remain at 100% statements and branches.
 
-## Public v1.9.1 CLI Commands
+## Public v1.9.2 CLI Commands
 
-The package exposes thirteen console commands. v1.9.1 adds:
+The package exposes thirteen console commands. v1.9.2 adds:
 
 ```text
 ghost-revolution-dev

@@ -1,7 +1,8 @@
 # ghocentric-ghost-engine
 
-A deterministic state engine for persistent NPC relationships, social consequences,
-epistemic state, scenario resolution, and AI-driven game systems.
+A deterministic state engine for persistent NPC relationships, independent
+multi-emotion state, social consequences, epistemic state, scenario resolution,
+and AI-driven game systems.
 
 Ghost is not a language model, a renderer, or a replacement for a game engine.
 
@@ -12,14 +13,18 @@ JSON-safe packets that a game, simulation, dialogue layer, or optional LLM can u
 > **Core principle:** models and game code may propose events or decisions. Ghost
 > owns deterministic state mutation and the record of what became true.
 
+**Live browser demo:** https://ghocentric.github.io/ghost-prototype/
+**PyPI:** https://pypi.org/project/ghocentric-ghost-engine/
+**Source:** https://github.com/GhoCentric/ghost-prototype
+
 ## Current Release
 
 ```text
 Package:    ghocentric-ghost-engine
-Version:    1.9.1
+Version:    1.9.2
 Python:     3.9+
 Runtime dependencies: none
-Validation: 1,680 passed, 1 skipped
+Validation: 1,763 passed, 1 skipped
 ```
 
 The actively maintained package is this `ghost-engine/` directory.
@@ -64,7 +69,9 @@ specialized integrations.
 
 Ghost currently provides deterministic systems for:
 
-- relationship state and emotional inertia;
+- relationship state with separate positive and negative history;
+- independent bounded multi-emotion state with per-channel inertia, salience,
+  and deterministic spotlight hysteresis;
 - maturity, volatility, pressure, transitions, and diagnostics;
 - social propagation and bounded world effects;
 - temperament interpretation;
@@ -99,7 +106,7 @@ Ghost returns copied state, diagnostics, or a bounded policy packet
 the host game applies that result to its own mechanics and presentation
 ```
 
-In v1.8.0, Ghost can return selected or locked decisions inside specific bounded
+In v1.9.2, Ghost can return selected or locked decisions inside specific bounded
 systems, such as threat-response labels and combat-control packets. It does not
 automatically discover an arbitrary game's NPC abilities or execute engine-specific
 functions.
@@ -167,6 +174,111 @@ balanced
 forgiving
 resentful
 volatile
+```
+
+## Multi-Emotion State
+
+Ghost v1.9.2 keeps relationship state and emotional state as separate persistent
+layers.
+
+The default emotional channels are independently bounded in `0..1`:
+
+```text
+anger
+fear
+grief
+hope
+joy
+```
+
+An emotional level is not an event weight. Ghost distinguishes:
+
+```text
+level        = current emotional state
+impulse      = signed event input
+sensitivity  = per-agent gain
+inertia      = persistence toward baseline over time
+salience     = current attention pressure
+spotlight    = stateful dominant attention
+```
+
+Event outcomes are deterministic. Ghost combines an explicit event impulse with
+event intensity, per-agent sensitivity, and caller-owned context modifiers.
+Positive impulses saturate toward `1.0`; negative impulses reduce the current
+level. Each channel later moves toward its own baseline according to its inertia.
+
+```python
+from ghost import GhostAPI
+
+ghost = GhostAPI()
+
+ghost.register_emotional_agent(
+    "guard",
+    sensitivities={
+        "anger": 1.0,
+        "fear": 1.0,
+        "grief": 1.0,
+    },
+)
+
+packet = ghost.apply_layered_event(
+    "player",
+    "guard",
+    {
+        "type": "betrayal",
+        "intensity": 1.0,
+    },
+)
+
+print(packet["layered_state"]["relationship_state"])
+print(packet["layered_state"]["trust"])
+print(packet["layered_state"]["emotional_levels"])
+print(packet["layered_state"]["dominant_emotion"])
+```
+
+The same relationship result can coexist with different emotional vectors when
+agents have different sensitivities.
+
+Spotlight selection uses deterministic hysteresis. Emotion levels update
+immediately, but a near-tied raw salience leader does not replace the incumbent
+spotlight until it clears the configured switch margin. The default margin is
+`0.05`.
+
+```text
+raw leader: hope   0.595
+incumbent:  anger  0.548
+gap:               0.046
+margin:            0.050
+
+result: retain anger spotlight
+```
+
+The next tick can still produce a real handoff when another emotion clears the
+margin.
+
+Ghost exposes emotional state and pressure. It does not turn an emotion directly
+into an engine-specific action.
+
+Public operations:
+
+```text
+register_emotional_agent
+emotional_state
+emotional_event_profiles
+configure_emotional_event
+apply_emotional_event
+tick_emotions
+apply_layered_event
+```
+
+Emotion snapshot sub-schema `1.1` preserves spotlight state and the switch
+margin. Legacy emotion snapshot sub-schema `1.0` remains restorable.
+
+Run the focused demos:
+
+```bash
+python -m ghost.examples.emotional_state_demo
+python -m ghost.examples.emotional_spotlight_hysteresis_demo
 ```
 
 ## Social Propagation
@@ -522,7 +634,7 @@ published in [`COVERAGE.md`](COVERAGE.md).
 Current synchronized repository validation:
 
 ```text
-1,667 passed
+1,763 passed
 1 skipped
 ```
 
@@ -533,6 +645,7 @@ ghost/
     api.py
     engine.py
     relationships.py
+    emotions.py
     epistemic.py
     threat_response.py
     combat.py
@@ -573,7 +686,7 @@ Ghost is built around:
 
 ## Current Limits
 
-Ghost v1.8.0 is still an alpha package.
+Ghost v1.9.2 is still an alpha package.
 
 Current limitations include:
 
@@ -600,21 +713,11 @@ update persistent state
 Only after that contract is stable should Unreal and Godot adapters expose thin
 engine-facing components around the same Ghost authority.
 
-A separate future emotional-state direction is also intentionally **not** part
-of the v1.8.0 runtime. Its current architectural boundary is:
-
-```text
-emotional intensity is independent
-attention/salience is competitive
-deterministic behavioral pressure may be exposed
-the external agent, game, or LLM owns the actual action
-```
-
-The intended design uses multiple independently bounded emotional channels
-inside one Ghost agent rather than one Ghost instance per emotion. Spotlight,
-internal conflict, per-channel inertia/decay, and provenance-linked emotional
-drivers are future work, not current public guarantees.
-
+Multi-emotion state is now a public v1.9.2 layer. Relationship state remains
+separate from emotional state, and Ghost exposes emotional pressure without
+turning it directly into an engine-specific action. The next architectural goal
+remains the engine-neutral registered-agent action runtime above these existing
+state layers.
 ## Development Note
 
 Ghost was designed by Shane Heckathorn and built through an AI-assisted,

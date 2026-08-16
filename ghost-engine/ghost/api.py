@@ -69,6 +69,7 @@ from .policies import (
 )
 from .world import WorldRuntime
 from .epistemic import EpistemicRuntime
+from .emotions import EmotionRuntime
 from .objectives import (
     build_combat_objective_packet,
 )
@@ -108,6 +109,7 @@ _GHOST_API_SNAPSHOT_REQUIRED_KEYS = {
 
 
 _GHOST_API_SNAPSHOT_OPTIONAL_KEYS = {
+    "emotions",
     "epistemic",
     "event_map",
     "ghost_version",
@@ -275,6 +277,7 @@ class GhostAPI:
             event_map=validated_event_map,
             world=WorldRuntime(),
             epistemic=EpistemicRuntime(),
+            emotions=EmotionRuntime(),
         )
 
     def _bind_runtime(
@@ -284,6 +287,7 @@ class GhostAPI:
         event_map: dict,
         world: WorldRuntime,
         epistemic: EpistemicRuntime,
+        emotions: EmotionRuntime,
     ) -> None:
         """
         Attach already-constructed or already-restored runtime parts.
@@ -295,6 +299,7 @@ class GhostAPI:
         self.event_map = deepcopy(event_map)
         self.world = world
         self.epistemic = epistemic
+        self.emotions = emotions
 
         # Patch 7 retires the inert pre-v1.8 transition cache. Remove it
         # when rebinding an object created by older code in the same
@@ -320,7 +325,7 @@ class GhostAPI:
         Restore a complete GhostAPI runtime from a validated snapshot.
 
         Older supported packets may omit ghost_version, event_map,
-        transitions, or epistemic. Unknown packet fields are rejected.
+        transitions, epistemic, or emotions. Unknown packet fields are rejected.
         Restoration bypasses __init__ and preserves the construction /
         restoration split established by the prior patch.
         """
@@ -454,6 +459,18 @@ class GhostAPI:
         else:
             epistemic_snapshot = None
 
+        if "emotions" in snapshot:
+            emotions_snapshot = snapshot["emotions"]
+            if not isinstance(
+                emotions_snapshot,
+                dict,
+            ):
+                raise ValueError(
+                    "snapshot emotions must be a dict"
+                )
+        else:
+            emotions_snapshot = None
+
         api = cls.__new__(
             cls
         )
@@ -483,6 +500,15 @@ class GhostAPI:
                 if epistemic_snapshot is not None
                 else EpistemicRuntime()
             ),
+            emotions=(
+                EmotionRuntime.from_snapshot(
+                    deepcopy(
+                        emotions_snapshot
+                    )
+                )
+                if emotions_snapshot is not None
+                else EmotionRuntime()
+            ),
         )
 
         return api
@@ -500,6 +526,7 @@ class GhostAPI:
             event_map=restored.event_map,
             world=restored.world,
             epistemic=restored.epistemic,
+            emotions=restored.emotions,
         )
 
         return self.snapshot()
@@ -888,6 +915,155 @@ class GhostAPI:
             confidence=confidence,
             provenance=provenance,
         )
+
+    # -----------------------------
+    # MULTI-EMOTION STATE v1.9.2
+    # -----------------------------
+    def register_emotional_agent(
+        self,
+        agent: str,
+        initial: dict | None = None,
+        baseline: dict | None = None,
+        sensitivities: dict | None = None,
+        inertia: dict | None = None,
+        salience_bias: dict | None = None,
+        spotlight_switch_margin: float | None = None,
+    ) -> dict:
+        """Register or configure independent bounded emotional channels."""
+        return self.emotions.register_agent(
+            agent=agent,
+            initial=initial,
+            baseline=baseline,
+            sensitivities=sensitivities,
+            inertia=inertia,
+            salience_bias=salience_bias,
+            spotlight_switch_margin=spotlight_switch_margin,
+        )
+
+    def emotional_state(
+        self,
+        agent: str,
+    ) -> dict | None:
+        """Return copied emotional levels, salience, and history for one agent."""
+        return self.emotions.get_state(agent)
+
+    def emotional_event_profiles(self) -> dict:
+        """Return copied deterministic base impulse profiles."""
+        return self.emotions.event_profiles()
+
+    def configure_emotional_event(
+        self,
+        event: str,
+        impulses: dict,
+    ) -> dict:
+        """Replace one event's explicit signed emotional impulse profile."""
+        return self.emotions.configure_event_profile(
+            event,
+            impulses,
+        )
+
+    def apply_emotional_event(
+        self,
+        agent: str,
+        event: str,
+        intensity: float = 1.0,
+        source: str | None = None,
+        context_modifiers: dict | None = None,
+        impulse_overrides: dict | None = None,
+    ) -> dict:
+        """
+        Apply one deterministic emotional impulse without choosing an action.
+
+        Levels remain independently bounded in [0, 1]. Event impulses are
+        explicit signed inputs; sensitivity and context scale the impulse,
+        saturation limits the resulting level, and salience only exposes
+        current attention pressure.
+        """
+        return self.emotions.apply_event(
+            agent=agent,
+            event=event,
+            intensity=intensity,
+            source=source,
+            context_modifiers=context_modifiers,
+            impulse_overrides=impulse_overrides,
+        )
+
+    def tick_emotions(
+        self,
+        agent: str | None = None,
+        steps: int = 1,
+    ) -> dict:
+        """Decay emotional levels toward per-channel baselines via inertia."""
+        return self.emotions.tick(
+            agent=agent,
+            steps=steps,
+        )
+
+    def apply_layered_event(
+        self,
+        source: str,
+        target: str,
+        event: dict,
+        emotion_context: dict | None = None,
+        emotion_impulses: dict | None = None,
+    ) -> dict:
+        """
+        Atomically apply one event to relationship state and target emotions.
+
+        This is the explicit bridge between the existing relationship layer
+        and the new independent emotional layer. Ghost still does not choose
+        the target's action.
+        """
+        checkpoint = self.snapshot()
+        try:
+            relationship_packet = self.apply_event(
+                source,
+                target,
+                event,
+            )
+            resolved_event = relationship_packet["event"]
+            emotion_packet = self.apply_emotional_event(
+                agent=target,
+                event=resolved_event["type"],
+                intensity=resolved_event["intensity"],
+                source=source,
+                context_modifiers=emotion_context,
+                impulse_overrides=emotion_impulses,
+            )
+        except Exception:
+            self.restore_snapshot(checkpoint)
+            raise
+
+        emotional_state = emotion_packet["state"]
+        return {
+            "source": relationship_packet["source"],
+            "target": relationship_packet["target"],
+            "event": deepcopy(relationship_packet["event"]),
+            "relationship": relationship_packet,
+            "emotions": emotion_packet,
+            "layered_state": {
+                "trust": relationship_packet.get("trust"),
+                "relationship_state": relationship_packet.get("state"),
+                "emotional_levels": deepcopy(
+                    emotional_state["levels"]
+                ),
+                "dominant_emotion": emotional_state.get(
+                    "dominant_emotion"
+                ),
+                "dominant_salience": emotional_state.get(
+                    "dominant_salience"
+                ),
+                "raw_leader_emotion": emotional_state.get(
+                    "raw_leader_emotion"
+                ),
+                "raw_leader_salience": emotional_state.get(
+                    "raw_leader_salience"
+                ),
+                "spotlight_switch_margin": emotional_state.get(
+                    "spotlight_switch_margin"
+                ),
+            },
+        }
 
     # -----------------------------
     # STATELESS TEMPERAMENT INTERPRETATION
@@ -1432,7 +1608,7 @@ class GhostAPI:
         The packet contains all state required by from_snapshot() to
         restore a deterministic GhostAPI runtime.
         """
-        return {
+        packet = {
             "ghost_version": GHOST_VERSION,
             "schema_version": GHOST_SNAPSHOT_SCHEMA_VERSION,
             "engine": self.engine.snapshot(),
@@ -1440,3 +1616,6 @@ class GhostAPI:
             "epistemic": self.epistemic.snapshot(),
             "event_map": deepcopy(self.event_map),
         }
+        if self.emotions.has_state():
+            packet["emotions"] = self.emotions.snapshot()
+        return packet

@@ -5,6 +5,29 @@ All notable changes to `ghocentric-ghost-engine` are documented here.
 Package release numbers and snapshot schema versions are separate. A package update
 does not automatically require a save-schema change.
 
+## v1.9.2
+
+### Multi-emotion state + deterministic spotlight hysteresis
+
+- Added a separate persistent emotional-state layer alongside the existing
+  relationship layer.
+- Added default bounded `0..1` channels for anger, fear, grief, hope, and joy.
+- Added explicit signed event impulses, per-agent sensitivities, per-channel
+  inertia, baselines, salience bias, and configurable event profiles.
+- Added deterministic spotlight hysteresis with a default switch margin of
+  `0.05`, preventing near-tie attention flicker while allowing clear handoffs.
+- Added `apply_layered_event(...)` so one normalized event can update both the
+  existing relationship state and target emotional state without conflating
+  the two layers.
+- Added emotion snapshot sub-schema `1.1` while preserving restoration of
+  legacy emotion snapshot sub-schema `1.0`.
+- Kept the top-level Ghost snapshot schema at `1.0`.
+- Added multi-emotion, dynamics-torture, spotlight-hysteresis, and frozen
+  public-contract test suites.
+- Added live browser-demo / PyPI / source links to package-facing metadata.
+- Current full suite: `1763 passed, 1 skipped`.
+- Refreshed all maintained coverage lanes at 100% statements and branches.
+
 ## v1.9.1
 
 ### Ghost Revolution public developer CLI

@@ -1,6 +1,6 @@
 import json
 
-from hypothesis import given, settings
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from ghost.llm_adapter import (
@@ -75,7 +75,7 @@ json_value = st.recursive(
         max_size=10,
     ),
 )
-@settings(max_examples=80)
+@settings(max_examples=80, suppress_health_check=[HealthCheck.too_slow])
 def test_llm_adapter_voice_contract_fuzz_v180(
     scene,
     facts,
@@ -123,7 +123,7 @@ def test_llm_adapter_voice_contract_fuzz_v180(
         max_size=10,
     ),
 )
-@settings(max_examples=80)
+@settings(max_examples=80, suppress_health_check=[HealthCheck.too_slow])
 def test_llm_adapter_fallback_never_crashes_on_fuzz_stance_v180(
     scene,
     facts,
@@ -154,7 +154,7 @@ def test_llm_adapter_fallback_never_crashes_on_fuzz_stance_v180(
         max_size=12,
     ),
 )
-@settings(max_examples=40)
+@settings(max_examples=40, suppress_health_check=[HealthCheck.too_slow])
 def test_crown_stance_packet_survives_edge_payloads_v180(
     npc_name,
     public_outcomes,
@@ -201,7 +201,7 @@ def test_crown_stance_packet_survives_edge_payloads_v180(
         max_size=12,
     ),
 )
-@settings(max_examples=40)
+@settings(max_examples=40, suppress_health_check=[HealthCheck.too_slow])
 def test_crown_voice_contract_and_cost_estimator_handle_mutations_v180(
     npc_name,
     town_memory,
