@@ -77,10 +77,23 @@ $('socialAction').onclick=async()=>{
   setTimeout(()=>{$('merchantTrust').textContent=`trust ${trust(d.merchant.trust)}`;mini($('merchantBar'),d.merchant.trust)},180);
   setTimeout(()=>{$('guardTrust').textContent=`trust ${trust(d.guard.trust)}`;mini($('guardBar'),d.guard.trust);$('guardNode').querySelector('.avatar').classList.add('hostile')},550);
   setTimeout(()=>{$('elderTrust').textContent=`trust ${trust(d.elder.trust)}`;mini($('elderBar'),d.elder.trust)},820);
-  setTimeout(()=>{$('socialCaption').textContent=`Social heat ${Number(d.heat).toFixed(3)} • pressure ${pretty(d.pressure)}`;$('socialProof').classList.remove('hidden');$('socialNext').classList.remove('hidden')},1200);
+  setTimeout(()=>{$('socialCaption').textContent=`Social heat ${Number(d.heat).toFixed(3)} • pressure ${pretty(d.pressure)}`;$('socialProof').classList.remove('hidden');$('socialAuditPanel').classList.remove('hidden');$('socialNext').classList.remove('hidden')},1200);
   btn.textContent='EVENT PROPAGATED'; toast('The event moved beyond its target.');
  }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('socialCaption').textContent=e.message}
 };
+$('socialDeterminism').onclick=async()=>{
+ const btn=$('socialDeterminism'); btn.disabled=true; btn.textContent='RUNNING PROPAGATION TWICE…';
+ try{
+  const d=await request('social_determinism'), result=$('socialDeterminismResult');
+  $('socialHashA').textContent=d.hash_a; $('socialHashB').textContent=d.hash_b;
+  $('socialDetVerdict').textContent=d.match?'MATCH — PROPAGATION REPRODUCED':'MISMATCH';
+  $('socialDetDetail').textContent=`guard ${trust(d.guard_trust)} @ 1.00 • elder ${trust(d.elder_trust)} @ 0.25 • ${d.bytes} canonical JSON bytes`;
+  result.classList.remove('hidden','fail'); if(!d.match)result.classList.add('fail');
+  btn.textContent=d.match?'PROPAGATION VERIFIED':'MISMATCH DETECTED';
+  toast(d.match?'Same event. Same weighted propagation.':'Propagation replay failed.');
+ }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('socialCaption').textContent=e.message}
+};
+
 $('socialNext').onclick=()=>screen('belief');
 
 function renderBelief(b,statusText){ $('beliefStatus').textContent=statusText; $('cause').textContent=pretty(b.cause.candidate).toUpperCase(); $('quantity').textContent=pretty(b.quantity.candidate).toUpperCase(); confidence($('causeConf'),$('causeText'),b.cause.confidence); confidence($('quantityConf'),$('quantityText'),b.quantity.confidence); }
@@ -94,7 +107,21 @@ $('hear').onclick=async()=>{
  }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('beliefCaption').textContent=e.message}
 };
 $('inspect').onclick=()=>{
- if(!epistemicData)return; const btn=$('inspect'); btn.disabled=true; btn.textContent='EVIDENCE APPLIED'; $('ledger').classList.add('active'); $('beliefCard').classList.remove('flash'); void $('beliefCard').offsetWidth; $('beliefCard').classList.add('flash'); renderBelief(epistemicData.revised,'REVISED'); $('beliefCaption').textContent=`Belief ${epistemicData.initial.id} → ${epistemicData.revised.id}. Objective fact unchanged.`; $('beliefProof').classList.remove('hidden'); $('finish').classList.remove('hidden'); toast('Evidence revised belief, not reality.');
+ if(!epistemicData)return; const btn=$('inspect'); btn.disabled=true; btn.textContent='EVIDENCE APPLIED'; $('ledger').classList.add('active'); $('beliefCard').classList.remove('flash'); void $('beliefCard').offsetWidth; $('beliefCard').classList.add('flash'); renderBelief(epistemicData.revised,'REVISED'); $('beliefCaption').textContent=`Belief ${epistemicData.initial.id} → ${epistemicData.revised.id}. Objective fact unchanged.`; $('beliefProof').classList.remove('hidden'); $('beliefAuditPanel').classList.remove('hidden'); $('finish').classList.remove('hidden'); toast('Evidence revised belief, not reality.');
 };
+
+$('beliefDeterminism').onclick=async()=>{
+ const btn=$('beliefDeterminism'); btn.disabled=true; btn.textContent='RUNNING REVISION TWICE…';
+ try{
+  const d=await request('epistemic_determinism'), result=$('beliefDeterminismResult');
+  $('beliefHashA').textContent=d.hash_a; $('beliefHashB').textContent=d.hash_b;
+  $('beliefDetVerdict').textContent=d.match&&d.fact_preserved&&d.revision_linked?'MATCH — REVISION REPRODUCED':'CHECK FAILED';
+  $('beliefDetDetail').textContent=`fact ${d.fact_id}: quantity ${d.fact_quantity} preserved • belief ${d.initial_id} → ${d.revised_id} • snapshot restore ${d.snapshot_round_trip?'PASS':'FAIL'}`;
+  result.classList.remove('hidden','fail'); if(!(d.match&&d.fact_preserved&&d.revision_linked&&d.snapshot_round_trip))result.classList.add('fail');
+  btn.textContent=d.match&&d.fact_preserved?'REVISION VERIFIED':'CHECK FAILED';
+  toast(d.match&&d.fact_preserved?'Same evidence path. Same revision.':'Epistemic replay failed.');
+ }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('beliefCaption').textContent=e.message}
+};
+
 $('finish').onclick=()=>screen('final'); $('restart').onclick=()=>location.reload();
 boot();

@@ -67,6 +67,25 @@ def ghost_social_demo():
         "world_effects": packet["world_effects"],
     }, allow_nan=False)
 
+def ghost_social_determinism_demo():
+    def run_once():
+        return json.dumps(
+            json.loads(ghost_social_demo()),
+            sort_keys=True, separators=(",", ":"), allow_nan=False
+        )
+
+    output_a = run_once()
+    output_b = run_once()
+    parsed = json.loads(output_a)
+    return json.dumps({
+        "match": output_a == output_b,
+        "hash_a": hashlib.sha256(output_a.encode("utf-8")).hexdigest(),
+        "hash_b": hashlib.sha256(output_b.encode("utf-8")).hexdigest(),
+        "bytes": len(output_a.encode("utf-8")),
+        "guard_trust": float(parsed["guard"]["trust"]),
+        "elder_trust": float(parsed["elder"]["trust"]),
+    }, allow_nan=False)
+
 def _belief(b):
     cause=b["dimensions"]["cause"]
     quantity=b["dimensions"]["quantity"]
@@ -92,11 +111,39 @@ def ghost_epistemic_demo():
         "checks": r["checks"],
     }, allow_nan=False)
 
+def ghost_epistemic_determinism_demo():
+    def run_once():
+        payload = json.loads(ghost_epistemic_demo())
+        return json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+    output_a = run_once()
+    output_b = run_once()
+    parsed = json.loads(output_a)
+    checks = parsed["checks"]
+    fact = parsed["fact"]
+    initial = parsed["initial"]
+    revised = parsed["revised"]
+    return json.dumps({
+        "match": output_a == output_b,
+        "hash_a": hashlib.sha256(output_a.encode("utf-8")).hexdigest(),
+        "hash_b": hashlib.sha256(output_b.encode("utf-8")).hexdigest(),
+        "bytes": len(output_a.encode("utf-8")),
+        "fact_id": fact["id"],
+        "fact_quantity": fact["quantity"],
+        "fact_preserved": fact["id"] == "millcross_food_001" and fact["quantity"] == 6,
+        "initial_id": initial["id"],
+        "revised_id": revised["id"],
+        "revision_linked": revised["previous_belief_id"] == initial["id"],
+        "snapshot_round_trip": bool(checks["snapshot_round_trip_matches"]),
+    }, allow_nan=False)
+
 def ghost_preflight():
     a=json.loads(ghost_relationship_demo())
     d=json.loads(ghost_determinism_demo())
     b=json.loads(ghost_social_demo())
+    sd=json.loads(ghost_social_determinism_demo())
     c=json.loads(ghost_epistemic_demo())
+    ed=json.loads(ghost_epistemic_determinism_demo())
     assert a["short"]["after"]["state"] == "hostile"
     assert d["match"] is True
     assert d["hash_a"] == d["hash_b"]
@@ -104,9 +151,15 @@ def ghost_preflight():
     assert b["merchant"]["trust"] < 0.0
     assert b["guard"]["trust"] < 0.0
     assert b["elder"]["trust"] < 0.0
+    assert sd["match"] is True
+    assert sd["hash_a"] == sd["hash_b"]
     assert c["checks"]["ledger_revised_player_belief"] is True
     assert c["initial"]["id"] != c["revised"]["id"]
-    return json.dumps({"relationship":True,"determinism":True,"social":True,"epistemic":True})
+    assert ed["match"] is True
+    assert ed["fact_preserved"] is True
+    assert ed["revision_linked"] is True
+    assert ed["snapshot_round_trip"] is True
+    return json.dumps({"relationship":True,"determinism":True,"social":True,"social_determinism":True,"epistemic":True,"epistemic_determinism":True})
 `;
 
 async function boot(){
@@ -127,7 +180,7 @@ readyPromise=boot().catch(err=>{self.postMessage({kind:'fatal',error:err?.stack|
 
 async function execute(type){
   await readyPromise;
-  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',social:'ghost_social_demo()',epistemic:'ghost_epistemic_demo()'}[type];
+  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',social:'ghost_social_demo()',social_determinism:'ghost_social_determinism_demo()',epistemic:'ghost_epistemic_demo()',epistemic_determinism:'ghost_epistemic_determinism_demo()'}[type];
   if(!code)throw new Error(`Unknown request: ${type}`);
   return JSON.parse(await pyodide.runPythonAsync(code));
 }

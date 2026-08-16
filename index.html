@@ -80,6 +80,22 @@
   </div>
   <div class="center"><button id="socialAction" class="danger">BETRAY THE MERCHANT</button><p id="socialCaption" class="muted">The observers have not been directly targeted.</p></div>
   <div id="socialProof" class="proof hidden"><b>↯</b><div><strong>The event moved beyond its target.</strong><p>Ghost applied bounded, differently weighted secondary relationship effects to both observers.</p></div></div>
+  <div id="socialAuditPanel" class="audit hidden">
+    <div class="auditHead"><span>PROPAGATION CHECK</span><strong>One direct event. Two observer weights. Reproduce it exactly.</strong></div>
+    <p>Ghost creates two fresh <code>GhostAPI</code> instances, sends the same betrayal through the same observer weights, canonicalizes the direct and propagated state packets, then compares both runs.</p>
+    <button id="socialDeterminism" class="secondary small">RUN PROPAGATION TWICE</button>
+    <div id="socialDeterminismResult" class="detResult hidden">
+      <div><span>OUTPUT A</span><code id="socialHashA">—</code></div>
+      <div><span>OUTPUT B</span><code id="socialHashB">—</code></div>
+      <strong id="socialDetVerdict">WAITING</strong>
+      <small id="socialDetDetail">—</small>
+    </div>
+    <div class="sourceLinks">
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.1/ghost-engine/ghost/api.py" target="_blank" rel="noreferrer">Social API ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.1/ghost-engine/ghost/relationships.py" target="_blank" rel="noreferrer">Relationship core ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/tree/v1.9.1/ghost-engine/tests" target="_blank" rel="noreferrer">Tests ↗</a>
+    </div>
+  </div>
   <div class="center"><button id="socialNext" class="primary small hidden">See belief revision →</button></div>
 </section>
 
@@ -100,6 +116,22 @@
   <div class="actions"><button id="hear" class="primary small">HEAR THE REPORT</button><button id="inspect" class="secondary small hidden">INSPECT THE LEDGER</button></div>
   <p id="beliefCaption" class="muted centerText">Receiving a report does not make it objective truth.</p>
   <div id="beliefProof" class="proof hidden"><b>≠</b><div><strong>The fact stayed fixed. The belief record changed.</strong><p>The earlier belief remains in history and the revision points backward through provenance.</p></div></div>
+  <div id="beliefAuditPanel" class="audit hidden">
+    <div class="auditHead"><span>EPISTEMIC REPLAY CHECK</span><strong>Same fact. Same report. Same evidence. Reproduce the revision.</strong></div>
+    <p>Ghost runs the packaged v1.9.1 epistemic smoke path twice, compares canonical outputs, and verifies that the final objective fact is still the same fact while the player belief has a linked revision.</p>
+    <button id="beliefDeterminism" class="secondary small">RUN REVISION TWICE</button>
+    <div id="beliefDeterminismResult" class="detResult hidden">
+      <div><span>OUTPUT A</span><code id="beliefHashA">—</code></div>
+      <div><span>OUTPUT B</span><code id="beliefHashB">—</code></div>
+      <strong id="beliefDetVerdict">WAITING</strong>
+      <small id="beliefDetDetail">—</small>
+    </div>
+    <div class="sourceLinks">
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.1/ghost-engine/ghost/epistemic.py" target="_blank" rel="noreferrer">Epistemic source ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.1/ghost-engine/ghost/examples/epistemic_api_smoke_demo.py" target="_blank" rel="noreferrer">Smoke demo ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/tree/v1.9.1/ghost-engine/tests" target="_blank" rel="noreferrer">Tests ↗</a>
+    </div>
+  </div>
   <div class="center"><button id="finish" class="primary small hidden">Show what just ran →</button></div>
 </section>
 
