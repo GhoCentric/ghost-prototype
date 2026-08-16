@@ -4,7 +4,7 @@ let pyodide=null, readyPromise=null;
 const postStatus=(message,detail='')=>self.postMessage({kind:'status',message,detail});
 
 const PY=String.raw`
-import io, json
+import io, json, hashlib
 from contextlib import redirect_stdout
 from ghost import GhostAPI
 from ghost.examples.epistemic_api_smoke_demo import run_demo as _epistemic_run_demo
@@ -30,6 +30,27 @@ def ghost_relationship_demo():
         after = g.get_relationship("player", "guard")
         return {"before":_rel(before), "after":_rel(after)}
     return json.dumps({"short":run(2), "long":run(20)}, allow_nan=False)
+
+def ghost_determinism_demo():
+    def run_once():
+        g = GhostAPI()
+        for _ in range(2):
+            g.apply_event("player", "guard", {"type":"help", "intensity":1.0})
+        event_packet = g.apply_event("player", "guard", {"type":"betrayal", "intensity":1.0})
+        relationship = g.get_relationship("player", "guard")
+        payload = {"event_packet":event_packet, "relationship":relationship}
+        return json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+    output_a = run_once()
+    output_b = run_once()
+    hash_a = hashlib.sha256(output_a.encode("utf-8")).hexdigest()
+    hash_b = hashlib.sha256(output_b.encode("utf-8")).hexdigest()
+    return json.dumps({
+        "match": output_a == output_b,
+        "hash_a": hash_a,
+        "hash_b": hash_b,
+        "bytes": len(output_a.encode("utf-8")),
+    }, allow_nan=False)
 
 def ghost_social_demo():
     g = GhostAPI()
@@ -73,16 +94,19 @@ def ghost_epistemic_demo():
 
 def ghost_preflight():
     a=json.loads(ghost_relationship_demo())
+    d=json.loads(ghost_determinism_demo())
     b=json.loads(ghost_social_demo())
     c=json.loads(ghost_epistemic_demo())
     assert a["short"]["after"]["state"] == "hostile"
+    assert d["match"] is True
+    assert d["hash_a"] == d["hash_b"]
     assert a["long"]["after"]["state"] in ("friendly","neutral","hostile")
     assert b["merchant"]["trust"] < 0.0
     assert b["guard"]["trust"] < 0.0
     assert b["elder"]["trust"] < 0.0
     assert c["checks"]["ledger_revised_player_belief"] is True
     assert c["initial"]["id"] != c["revised"]["id"]
-    return json.dumps({"relationship":True,"social":True,"epistemic":True})
+    return json.dumps({"relationship":True,"determinism":True,"social":True,"epistemic":True})
 `;
 
 async function boot(){
@@ -94,7 +118,7 @@ async function boot(){
   postStatus('Installing Ghost v1.9.1…','Fetching the released pure-Python wheel from PyPI');
   await micropip.install('ghocentric-ghost-engine==1.9.1');
   micropip.destroy();
-  postStatus('Validating engine paths…','Relationship history • social propagation • epistemic revision');
+  postStatus('Validating engine paths…','Relationship history • determinism • social propagation • epistemic revision');
   await pyodide.runPythonAsync(PY);
   JSON.parse(await pyodide.runPythonAsync('ghost_preflight()'));
   self.postMessage({kind:'ready'});
@@ -103,7 +127,7 @@ readyPromise=boot().catch(err=>{self.postMessage({kind:'fatal',error:err?.stack|
 
 async function execute(type){
   await readyPromise;
-  const code={relationship:'ghost_relationship_demo()',social:'ghost_social_demo()',epistemic:'ghost_epistemic_demo()'}[type];
+  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',social:'ghost_social_demo()',epistemic:'ghost_epistemic_demo()'}[type];
   if(!code)throw new Error(`Unknown request: ${type}`);
   return JSON.parse(await pyodide.runPythonAsync(code));
 }

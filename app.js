@@ -25,7 +25,7 @@ function boot(){
  if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js',{type:'module'});
  worker.onmessage=(e)=>{ const m=e.data;
    if(m.kind==='status'){status('loading',m.message,m.detail||'');return}
-   if(m.kind==='ready'){ready=true;status('ready','Ghost v1.9.1 running','Validated: relationship history • social propagation • epistemic revision');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Millcross';return}
+   if(m.kind==='ready'){ready=true;status('ready','Ghost v1.9.1 running','Validated: relationship history • determinism • social propagation • epistemic revision');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Millcross';return}
    if(m.kind==='fatal'){status('error','Ghost failed to load',m.error||'Unknown error');$('retry').classList.remove('hidden');return}
    if(m.id&&pending.has(m.id)){const p=pending.get(m.id);pending.delete(m.id);m.ok?p.resolve(m.result):p.reject(new Error(m.error||'Ghost request failed'));}
  };
@@ -50,9 +50,24 @@ $('betray').onclick=async()=>{
     $(`${prefix}Tag`).classList.add(hostile?'hostile':'friendly');
   }
   $('historyCaption').textContent=`Ghost returned ${d.short.after.state} for A and ${d.long.after.state} for B.`;
-  $('historyProof').classList.remove('hidden'); $('historyNext').classList.remove('hidden'); btn.textContent='SAME EVENT RESOLVED'; toast('Same event. Different accumulated state.');
+  $('historyProof').classList.remove('hidden'); $('determinismPanel').classList.remove('hidden'); $('historyNext').classList.remove('hidden'); btn.textContent='SAME EVENT RESOLVED'; toast('Same event. Different accumulated state.');
  }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('historyCaption').textContent=e.message}
 };
+
+
+$('determinism').onclick=async()=>{
+ const btn=$('determinism'); btn.disabled=true; btn.textContent='RUNNING TWICE…';
+ try{
+  const d=await request('determinism'), result=$('determinismResult');
+  $('hashA').textContent=d.hash_a; $('hashB').textContent=d.hash_b;
+  $('detVerdict').textContent=d.match?'MATCH — IDENTICAL CANONICAL JSON':'MISMATCH';
+  $('detDetail').textContent=`${d.bytes} canonical JSON bytes compared directly • SHA-256 shown above`;
+  result.classList.remove('hidden','fail'); if(!d.match)result.classList.add('fail');
+  btn.textContent=d.match?'DETERMINISM VERIFIED':'MISMATCH DETECTED';
+  toast(d.match?'Same input. Same output.':'Determinism check failed.');
+ }catch(e){btn.disabled=false;btn.textContent='TRY AGAIN';$('historyCaption').textContent=e.message}
+};
+
 $('historyNext').onclick=()=>screen('social');
 
 $('socialAction').onclick=async()=>{
