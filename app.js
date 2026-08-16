@@ -22,7 +22,7 @@ function confidence(barEl,textEl,v){ const n=Math.max(0,Math.min(1,Number(v))); 
 function boot(){
  ready=false; $('start').disabled=true; $('start').querySelector('span').textContent='Loading Ghost…'; $('retry').classList.add('hidden');
  status('loading','Booting Ghost…','Pyodide → Python → ghocentric-ghost-engine==1.9.1');
- if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js',{type:'module'});
+ if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js?v=audit-hotfix-1',{type:'module'});
  worker.onmessage=(e)=>{ const m=e.data;
    if(m.kind==='status'){status('loading',m.message,m.detail||'');return}
    if(m.kind==='ready'){ready=true;status('ready','Ghost v1.9.1 running','Validated: relationship history • determinism • social propagation • epistemic revision');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Millcross';return}
