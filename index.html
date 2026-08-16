@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b10">
+<title>Ghost Engine — Watch the World Remember</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="noise"></div>
+<header>
+  <div class="brand"><b>G</b><span><strong>GHOST ENGINE</strong><small>v1.9.1</small></span></div>
+  <div id="runtime" class="runtime loading"><i></i><span>Booting Ghost…</span></div>
+</header>
+<main>
+<section id="hero" class="screen active hero">
+  <div class="copy">
+    <p class="eyebrow">PLAYABLE STATE-ENGINE PROOF</p>
+    <h1>Make one choice.<br><em>Watch the world remember.</em></h1>
+    <p class="lede">The released Python package runs inside your browser. No LLM decides the outcomes below.</p>
+    <div class="chips"><span>REAL PYPI PACKAGE</span><span>NO SERVER</span><span>NO LLM</span></div>
+    <button id="start" class="primary" disabled><span>Loading Ghost…</span><b>→</b></button>
+    <button id="retry" class="text hidden">Retry loading</button>
+    <p id="loadDetail" class="mono muted">Pyodide → Python → ghocentric-ghost-engine==1.9.1</p>
+  </div>
+  <div class="visual" aria-hidden="true">
+    <div class="moon"></div><div class="castle"><i></i><i></i><i></i></div><div class="awning"></div>
+    <div class="avatar guard heroGuard"><span class="head"></span><span class="body"></span><span class="shield"></span></div>
+    <div class="rings"><i></i><i></i><i></i></div>
+    <span class="float f1">trust +0.82</span><span class="float f2">history 20</span><span class="float f3">belief ≠ fact</span>
+  </div>
+</section>
+
+<section id="history" class="screen">
+  <div class="heading"><p class="eyebrow">PROOF 01 / 03</p><h2>Same event.<br><em>Different history.</em></h2><p>Both guards receive the exact same betrayal event. Only their accumulated history is different.</p></div>
+  <div class="timeline">
+    <article id="shortCard" class="card">
+      <div class="cardtop"><span>TIMELINE A</span><b>2 prior helps</b></div>
+      <div class="stage"><div id="shortGuard" class="avatar guard"><span class="head"></span><span class="body"></span><span class="shield"></span></div><span id="shortTag" class="tag">WAITING</span></div>
+      <div class="metric"><span>TRUST</span><b id="shortTrust">—</b></div><div class="track split"><i></i><span id="shortBar"></span></div>
+      <div class="row"><span>STATE</span><b id="shortState">—</b></div><div class="row"><span>MATURITY</span><b id="shortMaturity">—</b></div><div class="row"><span>PRESSURE</span><b id="shortPressure">—</b></div>
+    </article>
+    <div class="event"><small>SAME EVENT</small><b>BETRAYAL</b><span>↓</span></div>
+    <article id="longCard" class="card">
+      <div class="cardtop"><span>TIMELINE B</span><b>20 prior helps</b></div>
+      <div class="stage"><div id="longGuard" class="avatar guard"><span class="head"></span><span class="body"></span><span class="shield"></span></div><span id="longTag" class="tag">WAITING</span></div>
+      <div class="metric"><span>TRUST</span><b id="longTrust">—</b></div><div class="track split"><i></i><span id="longBar"></span></div>
+      <div class="row"><span>STATE</span><b id="longState">—</b></div><div class="row"><span>MATURITY</span><b id="longMaturity">—</b></div><div class="row"><span>PRESSURE</span><b id="longPressure">—</b></div>
+    </article>
+  </div>
+  <div class="center"><button id="betray" class="danger">BETRAY BOTH GUARDS</button><p id="historyCaption" class="muted">Ghost has not resolved the event yet.</p></div>
+  <div id="historyProof" class="proof hidden"><b>✓</b><div><strong>Same event. Two different returned states.</strong><p>No second betrayal reaction was authored. The host UI is only visualizing Ghost's state packet.</p></div></div>
+  <div class="center"><button id="historyNext" class="primary small hidden">See social propagation →</button></div>
+</section>
+
+<section id="social" class="screen">
+  <div class="heading"><p class="eyebrow">PROOF 02 / 03</p><h2>One event.<br><em>More than one relationship.</em></h2><p>The merchant is the target. The guard and elder are observers with different weights.</p></div>
+  <div id="market" class="market">
+    <div class="skyline"></div><div class="ripple r1"></div><div class="ripple r2"></div>
+    <div id="guardNode" class="node left"><div class="avatar guard"><span class="head"></span><span class="body"></span><span class="shield"></span></div><strong>GUARD</strong><small>observer 1.00</small><div class="mini"><span id="guardBar"></span></div><b id="guardTrust">trust —</b></div>
+    <div class="node target"><div class="stall"><i></i></div><div class="avatar merchant"><span class="head"></span><span class="body"></span></div><strong>MERCHANT</strong><small>direct target</small><div class="mini"><span id="merchantBar"></span></div><b id="merchantTrust">trust —</b></div>
+    <div id="elderNode" class="node right"><div class="avatar elder"><span class="head"></span><span class="body"></span><span class="staff"></span></div><strong>ELDER</strong><small>observer 0.25</small><div class="mini"><span id="elderBar"></span></div><b id="elderTrust">trust —</b></div>
+  </div>
+  <div class="center"><button id="socialAction" class="danger">BETRAY THE MERCHANT</button><p id="socialCaption" class="muted">The observers have not been directly targeted.</p></div>
+  <div id="socialProof" class="proof hidden"><b>↯</b><div><strong>The event moved beyond its target.</strong><p>Ghost applied bounded, differently weighted secondary relationship effects to both observers.</p></div></div>
+  <div class="center"><button id="socialNext" class="primary small hidden">See belief revision →</button></div>
+</section>
+
+<section id="belief" class="screen">
+  <div class="heading"><p class="eyebrow">PROOF 03 / 03</p><h2>A claim is not<br><em>the world.</em></h2><p>Objective fact, spoken report, evidence, and actor belief remain separate.</p></div>
+  <div class="epistemic">
+    <article class="truth"><div class="lock"><span>WORLD FACT</span><b>LOCKED</b></div><div class="crates"><i></i><i></i><i></i><i></i><i></i><i></i></div><strong id="factText">6 food units were confiscated.</strong><p>Changing a belief does not rewrite this record.</p></article>
+    <div class="beliefLane">
+      <div class="speaker"><div class="avatar villager"><span class="head"></span><span class="body"></span></div><div id="speech" class="speech">“…”</div></div>
+      <span class="down">↓</span>
+      <article id="beliefCard" class="beliefCard"><div class="beliefHead"><span>PLAYER BELIEF</span><b id="beliefStatus">UNFORMED</b></div>
+        <div class="dimension"><div><span>CAUSE</span><b id="cause">—</b></div><div class="conf"><span id="causeConf"></span></div><small id="causeText">confidence —</small></div>
+        <div class="dimension"><div><span>QUANTITY</span><b id="quantity">—</b></div><div class="conf"><span id="quantityConf"></span></div><small id="quantityText">confidence —</small></div>
+      </article>
+      <div id="ledger" class="ledger"><b>≡</b><span><strong>MERCHANT LEDGER</strong><small>new evidence</small></span></div>
+    </div>
+  </div>
+  <div class="actions"><button id="hear" class="primary small">HEAR THE REPORT</button><button id="inspect" class="secondary small hidden">INSPECT THE LEDGER</button></div>
+  <p id="beliefCaption" class="muted centerText">Receiving a report does not make it objective truth.</p>
+  <div id="beliefProof" class="proof hidden"><b>≠</b><div><strong>The fact stayed fixed. The belief record changed.</strong><p>The earlier belief remains in history and the revision points backward through provenance.</p></div></div>
+  <div class="center"><button id="finish" class="primary small hidden">Show what just ran →</button></div>
+</section>
+
+<section id="final" class="screen final">
+  <p class="eyebrow">THAT WAS THE ACTUAL ENGINE</p><h2>Not a mock.<br><em>Not an LLM response.</em></h2>
+  <div class="pipe"><div>event / observation / evidence</div><span>↓</span><div class="hot">GHOST<small>persistent deterministic state</small></div><span>↓</span><div>host game / app / optional LLM</div></div>
+  <div class="finalgrid"><article><span>01</span><strong>History persisted</strong><p>The same betrayal landed differently because the relationship histories were different.</p></article><article><span>02</span><strong>Consequences propagated</strong><p>Observers changed without the player directly targeting them.</p></article><article><span>03</span><strong>Belief stayed separate</strong><p>New evidence revised a belief without rewriting objective state.</p></article></div>
+  <div class="proof runtimeProof"><i></i><div><strong>ghocentric-ghost-engine 1.9.1</strong><p>running locally in this browser through Pyodide</p></div></div>
+  <div class="links"><a class="primary small" href="https://pypi.org/project/ghocentric-ghost-engine/1.9.1/" target="_blank" rel="noreferrer">View on PyPI ↗</a><a class="secondary small" href="https://github.com/GhoCentric/ghost-prototype" target="_blank" rel="noreferrer">View source ↗</a><button id="restart" class="text">Replay demo</button></div>
+  <footer><strong>Ghost is a state engine.</strong><span>Graphics, animation, dialogue, and final behavior belong to the host application.</span></footer>
+</section>
+</main>
+<div id="toast" class="toast"></div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
