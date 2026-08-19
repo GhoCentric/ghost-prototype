@@ -21,10 +21,10 @@ JSON-safe packets that a game, simulation, dialogue layer, or optional LLM can u
 
 ```text
 Package:    ghocentric-ghost-engine
-Version:    1.9.2
+Version:    1.10.0
 Python:     3.9+
 Runtime dependencies: none
-Validation: 1,763 passed, 1 skipped
+Validation: 2,390 passed, 1 skipped
 ```
 
 The actively maintained package is this `ghost-engine/` directory.
@@ -74,6 +74,9 @@ Ghost currently provides deterministic systems for:
   and deterministic spotlight hysteresis;
 - maturity, volatility, pressure, transitions, and diagnostics;
 - social propagation and bounded world effects;
+- persistent NPC-specific action interpretation;
+- persistent attention / flow with deterministic breakthrough;
+- a read-only salience bridge across persistent emotion and interpretation state;
 - temperament interpretation;
 - threat-response policy;
 - objective facts, observations, reports, beliefs, evidence, provenance, and
@@ -106,7 +109,7 @@ Ghost returns copied state, diagnostics, or a bounded policy packet
 the host game applies that result to its own mechanics and presentation
 ```
 
-In v1.9.2, Ghost can return selected or locked decisions inside specific bounded
+In v1.10.0, Ghost can return selected or locked decisions inside specific bounded
 systems, such as threat-response labels and combat-control packets. It does not
 automatically discover an arbitrary game's NPC abilities or execute engine-specific
 functions.
@@ -178,7 +181,7 @@ volatile
 
 ## Multi-Emotion State
 
-Ghost v1.9.2 keeps relationship state and emotional state as separate persistent
+Ghost keeps relationship state and emotional state as separate persistent
 layers.
 
 The default emotional channels are independently bounded in `0..1`:
@@ -280,6 +283,78 @@ Run the focused demos:
 python -m ghost.examples.emotional_state_demo
 python -m ghost.examples.emotional_spotlight_hysteresis_demo
 ```
+
+## Interpretation, Attention, and Flow
+
+Ghost v1.10.0 adds persistent NPC-specific interpretation and persistent
+attention / flow without giving either layer authority to invent world facts
+or choose final NPC actions.
+
+An objective action can carry the same observable features to two agents
+while their configured histories, sensitivities, rules, and thresholds
+produce different persistent meanings:
+
+```python
+ghost.register_interpretation_agent(
+    "sera",
+    rules={
+        "action:report_evidence": {
+            "betrayal": 1.0,
+        },
+    },
+)
+
+packet = ghost.evaluate_action_meaning(
+    "sera",
+    "report_evidence",
+    source="player",
+)
+```
+
+Public interpretation operations:
+
+```text
+register_interpretation_agent
+configure_interpretation_rule
+interpretation_state
+evaluate_action_meaning
+```
+
+Interpretation state is persistent and deterministic. The host supplies the
+objective action and observable features; Ghost applies configured
+agent-specific meaning rules. It does not infer hidden facts, generate
+dialogue, or select the final behavior.
+
+Attention / flow is a separate persistent layer:
+
+```text
+register_attention_agent
+attention_state
+advance_attention
+persistent_salience
+advance_attention_from_state
+```
+
+`persistent_salience(...)` is a read-only bridge over persistent emotional
+and interpretation state. `advance_attention_from_state(...)` may compress
+what reaches the foreground while flow is active, but the underlying source
+state is not rewritten. Strong novelty, threat, contradiction, or
+interpretation pressure can break through that compression.
+
+This gives Ghost an explicit separation between:
+
+```text
+persistent source state
+        ≠
+currently attended / foreground state
+```
+
+Interpretation snapshot sub-schema: `1.0`.
+
+Attention snapshot sub-schema: `1.0`.
+
+The top-level Ghost snapshot schema remains `1.0`, and emotion snapshot
+sub-schema `1.1` remains unchanged.
 
 ## Social Propagation
 
@@ -634,7 +709,7 @@ published in [`COVERAGE.md`](COVERAGE.md).
 Current synchronized repository validation:
 
 ```text
-1,763 passed
+2,390 passed
 1 skipped
 ```
 
@@ -646,6 +721,9 @@ ghost/
     engine.py
     relationships.py
     emotions.py
+    interpretation.py
+    attention.py
+    salience_bridge.py
     epistemic.py
     threat_response.py
     combat.py
@@ -686,7 +764,7 @@ Ghost is built around:
 
 ## Current Limits
 
-Ghost v1.9.2 is still an alpha package.
+Ghost v1.10.0 is still an alpha package.
 
 Current limitations include:
 
@@ -713,11 +791,12 @@ update persistent state
 Only after that contract is stable should Unreal and Godot adapters expose thin
 engine-facing components around the same Ghost authority.
 
-Multi-emotion state is now a public v1.9.2 layer. Relationship state remains
-separate from emotional state, and Ghost exposes emotional pressure without
-turning it directly into an engine-specific action. The next architectural goal
-remains the engine-neutral registered-agent action runtime above these existing
-state layers.
+Multi-emotion state, NPC-specific interpretation, and persistent attention / flow
+are public state layers in v1.10.0. Relationship and emotional state remain
+separate, interpretation maps objective actions into configured agent-specific
+meaning, and attention may compress foreground access without erasing persistent
+source state. The next architectural goal remains the engine-neutral registered-
+agent action runtime above these existing state layers.
 ## Development Note
 
 Ghost was designed by Shane Heckathorn and built through an AI-assisted,

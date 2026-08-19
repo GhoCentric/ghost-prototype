@@ -1,0 +1,44 @@
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 41%]
+........................................................................ [ 51%]
+........................................................................ [ 61%]
+........................................................................ [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 92%]
+....................................................                     [100%]
+=============================== warnings summary ===============================
+../../../usr/lib/python3.13/site-packages/coverage/core.py:107
+  /data/data/com.termux/files/usr/lib/python3.13/site-packages/coverage/core.py:107: CoverageWarning: Couldn't import C tracer: No module named 'coverage.tracer' (no-ctracer); see https://coverage.readthedocs.io/en/7.15.2/messages.html#warning-no-ctracer
+    warn(f"Couldn't import C tracer: {IMPORT_ERROR}", slug="no-ctracer", once=True)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+______________ coverage: platform android, python 3.13.13-final-0 ______________
+
+Name                                                                                Stmts   Miss Branch BrPart    Cover   Missing
+---------------------------------------------------------------------------------------------------------------------------------
+ghost/examples/ghost_revolution/__init__.py                                             2      0      0      0  100.00%
+ghost/examples/ghost_revolution/__main__.py                                             3      0      2      0  100.00%
+ghost/examples/ghost_revolution/benchmarks/__init__.py                                  0      0      0      0  100.00%
+ghost/examples/ghost_revolution/benchmarks/epistemic_decision_benchmark.py            176      0     36      0  100.00%
+ghost/examples/ghost_revolution/benchmarks/epistemic_fair_fork_benchmark.py           196      0     46      0  100.00%
+ghost/examples/ghost_revolution/benchmarks/epistemic_scenario_matrix_benchmark.py     206      0     54      0  100.00%
+ghost/examples/ghost_revolution/config.py                                              40      0      4      0  100.00%
+ghost/examples/ghost_revolution/demo.py                                              2417      0    974      0  100.00%
+ghost/examples/ghost_revolution/dev_shortcuts.py                                      404      0    112      0  100.00%
+ghost/examples/ghost_revolution/guard.py                                              198      0    106      0  100.00%
+ghost/examples/ghost_revolution/live_llm_dev.py                                        52      0      8      0  100.00%
+ghost/examples/ghost_revolution/llm_bridge.py                                         593      0    226      0  100.00%
+ghost/examples/ghost_revolution/opponent_ai.py                                        647      0    270      0  100.00%
+ghost/examples/ghost_revolution/presentation.py                                      1445      0    636      0  100.00%
+ghost/examples/ghost_revolution/raid.py                                               233      0     72      0  100.00%
+ghost/examples/ghost_revolution/scripted_playthroughs.py                               54      0     10      0  100.00%
+ghost/examples/ghost_revolution/social.py                                             142      0     30      0  100.00%
+ghost/examples/ghost_revolution/symmetric_combat.py                                   311      0    122      0  100.00%
+ghost/examples/ghost_revolution/town_memory.py                                         82      0     36      0  100.00%
+---------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                                7201      0   2744      0  100.00%
+Coverage JSON written to file /data/data/com.termux/files/home/ghost-prototype/ghost-engine/docs/coverage/v1.10.0/revolution.json
+700 passed, 1 warning in 83.69s (0:01:23)

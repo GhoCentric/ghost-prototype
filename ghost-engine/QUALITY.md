@@ -9,10 +9,10 @@ tracing so one lane does not distort another.
 python -m pytest -q
 ```
 
-Current v1.9.2 checkpoint:
+Current v1.10.0 checkpoint:
 
 ```text
-1763 passed, 1 skipped
+2390 passed, 1 skipped
 ```
 
 The skipped test is intentionally gated. Normal validation does not require an
@@ -34,7 +34,7 @@ python -m pytest -q -m "not performance" \
   --cov-config=coverage.core.ini \
   --cov-branch \
   --cov-report=term-missing \
-  --cov-report=json:docs/coverage/v1.9.2/core.json
+  --cov-report=json:docs/coverage/v1.10.0/core.json
 ```
 
 ## Complete Ghost Revolution Package Coverage
@@ -45,7 +45,7 @@ python -m pytest -q tests/ghost_revolution \
   --cov-config=coverage.revolution.ini \
   --cov-branch \
   --cov-report=term-missing \
-  --cov-report=json:docs/coverage/v1.9.2/revolution.json
+  --cov-report=json:docs/coverage/v1.10.0/revolution.json
 ```
 
 ## Order Coordination Coverage
@@ -56,13 +56,13 @@ python -m pytest -q \
   --cov=ghost.examples.order_coordination --cov=ghost.examples.order_coordination_benchmark --cov=ghost.examples.order_coordination_demo --cov=ghost.examples.order_coordination_live_benchmark --cov=ghost.examples.order_coordination_report_replay \
   --cov-branch \
   --cov-report=term-missing \
-  --cov-report=json:docs/coverage/v1.9.2/order_coordination.json
+  --cov-report=json:docs/coverage/v1.10.0/order_coordination.json
 ```
 
-All three maintained v1.9.2 lanes are required to remain at **100% executable
+All three maintained v1.10.0 lanes are required to remain at **100% executable
 statements and 100% branch outcomes**.
 
 ## Published Evidence
 
-Current evidence lives under `docs/coverage/v1.9.2/`. Older versioned evidence
+Current evidence lives under `docs/coverage/v1.10.0/`. Older versioned evidence
 directories are retained as historical release records.

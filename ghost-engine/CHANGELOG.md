@@ -5,6 +5,34 @@ All notable changes to `ghocentric-ghost-engine` are documented here.
 Package release numbers and snapshot schema versions are separate. A package update
 does not automatically require a save-schema change.
 
+## v1.10.0
+### NPC-specific interpretation + persistent attention / flow
+- Added persistent deterministic NPC-specific action interpretation so the same
+  objective action can carry different configured meaning for different agents.
+- Added per-agent interpretation rules, sensitivities, baselines, activation /
+  release thresholds, history, provenance, and snapshot restoration.
+- Added persistent deterministic attention / flow with configurable pressure,
+  foreground compression, hysteresis, and strong-signal breakthrough.
+- Added a read-only persistent salience bridge over emotional and interpretation
+  state. Attention receives copied salience and cannot rewrite either source.
+- Added `persistent_salience(...)` and `advance_attention_from_state(...)` to the
+  public GhostAPI integration surface.
+- Hardened failed-step atomicity, copy isolation, 128-agent isolation, long-run
+  combined stress, snapshot forks, and deterministic replay across the v1.10
+  cognitive layers.
+- Kept Ghost's authority boundary unchanged: the host supplies objective actions
+  and observable features; Ghost does not invent facts, generate dialogue, or
+  choose the final NPC action.
+- Package producer version advances to `1.10.0`.
+- Top-level snapshot schema remains `1.0`.
+- Emotion snapshot sub-schema remains `1.1`.
+- Interpretation snapshot sub-schema is `1.0`.
+- Attention snapshot sub-schema is `1.0`.
+- Runtime dependencies remain zero.
+- Current full suite: `2390 passed, 1 skipped`.
+- Refreshed all maintained coverage lanes at 100% statements and branches.
+
+
 ## v1.9.2
 
 ### Multi-emotion state + deterministic spotlight hysteresis

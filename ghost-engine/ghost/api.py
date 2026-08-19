@@ -1122,7 +1122,7 @@ class GhostAPI:
         }
 
     # -----------------------------
-    # NPC-SPECIFIC ACTION INTERPRETATION (v1.10.0 DEVELOPMENT)
+    # NPC-SPECIFIC ACTION INTERPRETATION v1.10.0
     # -----------------------------
     def register_interpretation_agent(
         self,
@@ -1191,7 +1191,7 @@ class GhostAPI:
         )
 
     # -----------------------------
-    # PERSISTENT ATTENTION / FLOW (v1.10.0 DEVELOPMENT)
+    # PERSISTENT ATTENTION / FLOW v1.10.0
     # -----------------------------
     def register_attention_agent(
         self,
@@ -1240,7 +1240,7 @@ class GhostAPI:
         )
 
     # -----------------------------
-    # READ-ONLY PERSISTENT SALIENCE BRIDGE (v1.10.0 DEVELOPMENT)
+    # READ-ONLY PERSISTENT SALIENCE BRIDGE v1.10.0
     # -----------------------------
     def persistent_salience(
         self,

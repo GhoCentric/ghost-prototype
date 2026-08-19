@@ -47,10 +47,10 @@ def _pyproject() -> dict:
 
 
 def test_v190_package_and_runtime_versions():
-    assert _pyproject()["project"]["version"] == "1.9.2"
-    assert ghost.__version__ == "1.9.2"
-    assert GHOST_PACKAGE_VERSION == "1.9.2"
-    assert GHOST_VERSION == "1.9.2"
+    assert _pyproject()["project"]["version"] == "1.10.0"
+    assert ghost.__version__ == "1.10.0"
+    assert GHOST_PACKAGE_VERSION == "1.10.0"
+    assert GHOST_VERSION == "1.10.0"
 
 
 def test_v190_snapshot_schema_intentionally_remains_v1():
@@ -59,9 +59,9 @@ def test_v190_snapshot_schema_intentionally_remains_v1():
     api = GhostAPI()
     snapshot = api.snapshot()
 
-    assert snapshot["ghost_version"] == "1.9.2"
+    assert snapshot["ghost_version"] == "1.10.0"
     assert snapshot["schema_version"] == "1.0"
-    assert snapshot["engine"]["ghost_version"] == "1.9.2"
+    assert snapshot["engine"]["ghost_version"] == "1.10.0"
     assert snapshot["engine"]["schema_version"] == "1.0"
 
 
@@ -75,9 +75,9 @@ def test_v190_v180_producer_snapshot_remains_restoreable():
     restored = GhostAPI.from_snapshot(snapshot)
     current = restored.snapshot()
 
-    assert current["ghost_version"] == "1.9.2"
+    assert current["ghost_version"] == "1.10.0"
     assert current["schema_version"] == "1.0"
-    assert current["engine"]["ghost_version"] == "1.9.2"
+    assert current["engine"]["ghost_version"] == "1.10.0"
     assert current["engine"]["schema_version"] == "1.0"
 
 
@@ -118,8 +118,8 @@ def test_v190_order_coordination_console_wrapper_returns_none(
 def test_v190_readme_lists_version_validation_and_new_cli_commands():
     text = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "Version:    1.9.2" in text
-    assert "Validation: 1,763 passed, 1 skipped" in text
+    assert "Version:    1.10.0" in text
+    assert "Validation: 2,390 passed, 1 skipped" in text
 
     for command in (
         "ghost-epistemic-demo",
