@@ -5,26 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090b10">
 <title>Ghost Engine — Watch the World Remember</title>
-<link rel="stylesheet" href="./styles.css">
+<link rel="icon" type="image/png" href="./assets/ghost-favicon.png">
+<link rel="stylesheet" href="./styles.css?v=final-cleanup-1100-1">
 </head>
-<body>
+<body class="brand-v1100-ghost">
 <div class="noise"></div>
 <header>
-  <div class="brand"><b>G</b><span><strong>GHOST ENGINE</strong><small>v1.9.2</small></span></div>
+  <div class="brand ghostBrand"><span class="brandIconWrap"><img class="brandIcon" src="./assets/ghost-brand-compact.png" alt="Ghost Engine logo" width="34" height="34" style="width:34px;height:34px;object-fit:contain;display:block;pointer-events:none"></span><span class="brandText"><strong>GHOST ENGINE</strong><small>v1.10.0 DEV PREVIEW</small></span></div>
   <div id="runtime" class="runtime loading"><i></i><span>Booting Ghost…</span></div>
 </header>
 <main>
 <section id="hero" class="screen active hero">
   <div class="copy">
-    <p class="eyebrow">PLAYABLE STATE-ENGINE PROOF</p>
-    <h1>Make one choice.<br><em>Watch the world remember.</em></h1>
-    <p class="lede">The released Python package runs inside your browser. This demo makes <strong>0 LLM calls at runtime</strong>; Ghost computes the state changes below.</p>
-    <div class="chips"><span>REAL PYPI PACKAGE</span><span>0 LLM CALLS AT RUNTIME</span><span>DETERMINISTIC</span><span>MULTI-EMOTION STATE</span></div>
+    <p class="eyebrow">GhoCentric&#39;s visual state-engine proof</p>
+    <h1>Go GhoCentric.<br><em>Enter Ghost&#39;s inner world.</em></h1>
+    <p class="lede">Watch how the world remembers. The released v1.9.2 package boots inside your browser, then four exact runtime modules from the reviewed v1.10-dev checkpoint are overlaid and SHA-256 verified before import. This demo makes <strong>0 LLM calls at runtime</strong>.</p>
+    <div class="chips"><span>v1.10 DEV CHECKPOINT</span><span>0 LLM CALLS AT RUNTIME</span><span>DETERMINISTIC</span><span>INTERPRETATION + ATTENTION</span></div>
     <button id="start" class="primary" disabled><span>Loading Ghost…</span><b>→</b></button>
     <button id="retry" class="text hidden">Retry loading</button>
-    <p id="loadDetail" class="mono muted">Pyodide → Python → ghocentric-ghost-engine==1.9.2</p>
+    <p id="loadDetail" class="mono muted">Pyodide → released 1.9.2 base → verified v1.10-dev overlay @ 123ebde6</p>
   </div>
   <div class="visual" aria-hidden="true">
+    <!-- V1100_GHOST_BRANDING_PATCH: hero art is now CSS-driven via .visual:before -->
     <div class="moon"></div><div class="castle"><i></i><i></i><i></i></div><div class="awning"></div>
     <div class="avatar guard heroGuard"><span class="head"></span><span class="body"></span><span class="shield"></span></div>
     <div class="rings"><i></i><i></i><i></i></div>
@@ -33,7 +35,7 @@
 </section>
 
 <section id="history" class="screen">
-  <div class="heading"><p class="eyebrow">PROOF 01 / 03</p><h2>Same event.<br><em>Different history.</em></h2><p>Both guards receive the exact same betrayal event. Only their accumulated history is different.</p></div>
+  <div class="heading"><p class="eyebrow">PROOF 01 / 04</p><h2>Same event.<br><em>Different history.</em></h2><p>Both guards receive the exact same betrayal event. Only their accumulated history is different.</p></div>
   <div class="timeline">
     <article id="shortCard" class="card">
       <div class="cardtop"><span>TIMELINE A</span><b>2 prior helps</b></div>
@@ -55,11 +57,16 @@
     <div class="auditHead"><span>DETERMINISM CHECK</span><strong>Same fresh setup. Same ordered inputs. Run it twice.</strong></div>
     <p>Ghost creates two independent <code>GhostAPI</code> instances, applies the identical event sequence to each, canonicalizes the returned state as JSON, then compares the two outputs directly.</p>
     <button id="determinism" class="secondary small">RUN SAME INPUT TWICE</button>
-    <div id="determinismResult" class="detResult hidden">
-      <div><span>OUTPUT A</span><code id="hashA">—</code></div>
-      <div><span>OUTPUT B</span><code id="hashB">—</code></div>
+    <div id="determinismResult" class="detResult conciseDet hidden">
       <strong id="detVerdict">WAITING</strong>
       <small id="detDetail">—</small>
+      <details class="legacyHashTrace">
+        <summary>Inspect exact SHA-256 outputs</summary>
+        <div class="legacyHashGrid">
+          <div><span>OUTPUT A</span><code id="hashA">—</code></div>
+          <div><span>OUTPUT B</span><code id="hashB">—</code></div>
+        </div>
+      </details>
     </div>
     <div class="sourceLinks">
       <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.2/ghost-engine/ghost/api.py" target="_blank" rel="noreferrer">GhostAPI source ↗</a>
@@ -119,7 +126,7 @@
 </section>
 
 <section id="social" class="screen">
-  <div class="heading"><p class="eyebrow">PROOF 02 / 03</p><h2>One event.<br><em>More than one relationship.</em></h2><p>The merchant is the target. The guard and elder are observers with different weights.</p></div>
+  <div class="heading"><p class="eyebrow">PROOF 02 / 04</p><h2>One event.<br><em>More than one relationship.</em></h2><p>The merchant is the target. The guard and elder are observers with different weights.</p></div>
   <div id="market" class="market">
     <div class="skyline"></div><div class="ripple r1"></div><div class="ripple r2"></div>
     <div id="guardNode" class="node left"><div class="avatar guard"><span class="head"></span><span class="body"></span><span class="shield"></span></div><strong>GUARD</strong><small>observer 1.00</small><div class="mini"><span id="guardBar"></span></div><b id="guardTrust">trust —</b></div>
@@ -137,11 +144,16 @@
       <div><span>OBSERVER</span><strong>ELDER</strong><b>0.25</b><small>observer weight</small></div>
     </div>
     <button id="socialDeterminism" class="secondary small">RUN PROPAGATION TWICE</button>
-    <div id="socialDeterminismResult" class="detResult hidden">
-      <div><span>OUTPUT A</span><code id="socialHashA">—</code></div>
-      <div><span>OUTPUT B</span><code id="socialHashB">—</code></div>
+    <div id="socialDeterminismResult" class="detResult conciseDet hidden">
       <strong id="socialDetVerdict">WAITING</strong>
       <small id="socialDetDetail">—</small>
+      <details class="legacyHashTrace">
+        <summary>Inspect exact SHA-256 outputs</summary>
+        <div class="legacyHashGrid">
+          <div><span>OUTPUT A</span><code id="socialHashA">—</code></div>
+          <div><span>OUTPUT B</span><code id="socialHashB">—</code></div>
+        </div>
+      </details>
     </div>
     <div class="sourceLinks">
       <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.2/ghost-engine/ghost/api.py" target="_blank" rel="noreferrer">Social API ↗</a>
@@ -153,7 +165,7 @@
 </section>
 
 <section id="belief" class="screen">
-  <div class="heading"><p class="eyebrow">PROOF 03 / 03</p><h2>A claim is not<br><em>the world.</em></h2><p>Objective fact, spoken report, evidence, and actor belief remain separate.</p></div>
+  <div class="heading"><p class="eyebrow">PROOF 03 / 04</p><h2>A claim is not<br><em>the world.</em></h2><p>Objective fact, spoken report, evidence, and actor belief remain separate.</p></div>
   <div class="epistemic">
     <article class="truth"><div class="lock"><span>WORLD FACT</span><b>LOCKED</b></div><div class="crates"><i></i><i></i><i></i><i></i><i></i><i></i></div><strong id="factText">6 food units were confiscated.</strong><p>Changing a belief does not rewrite this record.</p></article>
     <div class="beliefLane">
@@ -173,11 +185,16 @@
     <div class="auditHead"><span>EPISTEMIC REPLAY CHECK</span><strong>Same fact. Same report. Same evidence. Reproduce the revision.</strong></div>
     <p>Ghost runs the packaged v1.9.2 epistemic smoke path twice, compares canonical outputs, and verifies that the final objective fact is still the same fact while the player belief has a linked revision.</p>
     <button id="beliefDeterminism" class="secondary small">RUN REVISION TWICE</button>
-    <div id="beliefDeterminismResult" class="detResult hidden">
-      <div><span>OUTPUT A</span><code id="beliefHashA">—</code></div>
-      <div><span>OUTPUT B</span><code id="beliefHashB">—</code></div>
+    <div id="beliefDeterminismResult" class="detResult conciseDet hidden">
       <strong id="beliefDetVerdict">WAITING</strong>
       <small id="beliefDetDetail">—</small>
+      <details class="legacyHashTrace">
+        <summary>Inspect exact SHA-256 outputs</summary>
+        <div class="legacyHashGrid">
+          <div><span>OUTPUT A</span><code id="beliefHashA">—</code></div>
+          <div><span>OUTPUT B</span><code id="beliefHashB">—</code></div>
+        </div>
+      </details>
     </div>
     <div class="sourceLinks">
       <a href="https://github.com/GhoCentric/ghost-prototype/blob/v1.9.2/ghost-engine/ghost/epistemic.py" target="_blank" rel="noreferrer">Epistemic source ↗</a>
@@ -185,20 +202,146 @@
       <a href="https://github.com/GhoCentric/ghost-prototype/tree/v1.9.2/ghost-engine/tests" target="_blank" rel="noreferrer">Tests ↗</a>
     </div>
   </div>
-  <div class="center"><button id="finish" class="primary small hidden">Show what just ran →</button></div>
+  <div class="center"><button id="finish" class="primary small hidden">See v1.10 cognition →</button></div>
+</section>
+
+
+<section id="cognition" class="screen cognitionClarity">
+  <div class="heading cognitionHeading">
+    <p class="eyebrow">PROOF 04 / 04 · v1.10 DEVELOPMENT</p>
+    <h2>One action. Two meanings.<br><em>Then attention moves.</em></h2>
+    <p>Ghost keeps the objective event separate from what each NPC thinks it means. Then it shows something different: a stored meaning can remain intact even while attention pushes most of it out of the foreground.</p>
+  </div>
+
+  <div class="objectiveStrip clarityObjective">
+    <span>SAME OBJECTIVE ACTION</span>
+    <strong>Player reports confidential evidence to the guards.</strong>
+    <code>report_evidence_to_guards · confidential_evidence_shared=1.0 · authority_involved=1.0</code>
+  </div>
+
+  <div class="meaningGrid clarityMeaningGrid">
+    <article id="seraMeaningCard" class="meaningCard">
+      <div class="meaningTop"><span>SERA</span><b>PRIVATE LOYALTY</b></div>
+      <div class="meaningMetric"><span>SEES BETRAYAL</span><strong id="seraBetrayal">—</strong></div>
+      <div class="meaningTrack betrayal"><i id="seraBetrayalBar"></i></div>
+      <div class="meaningMetric"><span>SEES COOPERATION</span><strong id="seraCooperation">—</strong></div>
+      <div class="meaningTrack cooperation"><i id="seraCooperationBar"></i></div>
+      <small id="seraMeaningLabel">waiting for Ghost</small>
+    </article>
+
+    <div class="sameActionMark"><span>SAME</span><b>ACTION</b><i>≠</i><small>same meaning</small></div>
+
+    <article id="rowanMeaningCard" class="meaningCard">
+      <div class="meaningTop"><span>ROWAN</span><b>CIVIC DUTY</b></div>
+      <div class="meaningMetric"><span>SEES BETRAYAL</span><strong id="rowanBetrayal">—</strong></div>
+      <div class="meaningTrack betrayal"><i id="rowanBetrayalBar"></i></div>
+      <div class="meaningMetric"><span>SEES COOPERATION</span><strong id="rowanCooperation">—</strong></div>
+      <div class="meaningTrack cooperation"><i id="rowanCooperationBar"></i></div>
+      <small id="rowanMeaningLabel">waiting for Ghost</small>
+    </article>
+  </div>
+
+  <div class="center"><button id="cognitiveAction" class="danger">LET GHOST INTERPRET IT</button><p id="cognitiveCaption" class="muted">The action is objective. Meaning is NPC-specific.</p></div>
+
+  <div id="meaningProof" class="proof hidden clarityProof"><b>≠</b><div><strong>Same action. Different persistent meaning.</strong><p>Sera and Rowan use different persistent interpretation rules. No LLM decides what the event means, and Ghost still does not choose either NPC's final behavior.</p></div></div>
+
+  <section id="flowPanel" class="flowPanel clarityFlow hidden">
+    <div class="flowLead clarityFlowLead">
+      <div><span>STEP 2 · ATTENTION</span><strong>Sera becomes deeply focused on a task.</strong></div>
+      <p>Her betrayal interpretation does not disappear. Deep focus makes less of that stored interpretation available to her immediate foreground.</p>
+    </div>
+    <button id="flowAction" class="secondary small clarityAction">LET SERA FOCUS</button>
+
+    <div id="flowReadout" class="flowReadout clarityFlowReadout hidden">
+      <div class="flowGauge clarityGauge">
+        <span>TASK FOCUS</span><strong id="flowState">waiting</strong>
+        <div><i id="flowPressureBar"></i></div>
+        <small id="flowPressure">engine pressure —</small>
+      </div>
+
+      <div class="humanSalienceCompare">
+        <article class="stateCard storedState">
+          <span>WHAT REMAINS STORED</span>
+          <strong id="underlyingBetrayal">—</strong>
+          <p>The betrayal interpretation remains stored.</p>
+          <small id="underlyingExact">source —</small>
+        </article>
+        <div class="focusArrow"><span>TASK FOCUS</span><b>↓</b><small>narrows foreground access</small></div>
+        <article class="stateCard foregroundState">
+          <span>WHAT REACHES THE FOREGROUND</span>
+          <strong id="attendedBetrayal">—</strong>
+          <p>Only part of the stored interpretation is immediately accessible.</p>
+          <small id="attentionGain">gain —</small>
+        </article>
+      </div>
+
+      <div class="sourceInvariant clarityInvariant"><span>NOTHING WAS ERASED</span><strong id="sourceInvariant">—</strong></div>
+
+      <details class="engineTrace" id="flowTrace">
+        <summary>Inspect engine trace</summary>
+        <p>Each box below is one deterministic attention update. The second number is the internal flow-pressure value. These values are evidence, not the explanation.</p>
+        <div id="flowSteps" class="flowSteps"></div>
+      </details>
+    </div>
+
+    <button id="breakthroughAction" class="danger small hidden clarityBreakthroughAction">INTRODUCE A STRONG THREAT</button>
+    <div id="breakthroughReadout" class="breakthroughReadout clarityBreakthrough hidden">
+      <span>THREAT BREAKS THROUGH</span>
+      <strong id="breakthroughVerdict">—</strong>
+      <p id="breakthroughDetail">—</p>
+      <div class="breakthroughCompare">
+        <div><span>STORED</span><b id="breakthroughStored">—</b></div>
+        <i>=</i>
+        <div><span>FOREGROUND</span><b id="breakthroughForeground">—</b></div>
+      </div>
+      <small id="breakthroughExact">engine values —</small>
+    </div>
+  </section>
+
+  <div id="cognitiveAuditPanel" class="audit clarityAudit hidden">
+    <div class="auditHead"><span>REPLAY CHECK</span><strong>Want proof this wasn't scripted?</strong></div>
+    <p>Run the same configured agents and ordered inputs twice. Ghost compares the complete result, including the stored source state, breakthrough, and snapshot restoration.</p>
+    <button id="cognitiveDeterminism" class="secondary small">RUN THE FULL CHAIN TWICE</button>
+    <div id="cognitiveDeterminismResult" class="clarityReplay hidden">
+      <strong id="cognitiveDetVerdict">WAITING</strong>
+      <div class="replayChecks">
+        <span id="replayMatch">Same ordered inputs → same output</span>
+        <span id="replayImmutable">Stored source stayed unchanged</span>
+        <span id="replaySnapshot">Snapshot restored identically</span>
+        <span id="replayBreakthrough">Threat breakthrough reproduced</span>
+      </div>
+      <small id="cognitiveDetDetail">—</small>
+      <details class="engineTrace hashTrace">
+        <summary>Inspect exact SHA-256 outputs</summary>
+        <div class="hashGrid">
+          <div><span>OUTPUT A</span><code id="cognitiveHashA">—</code></div>
+          <div><span>OUTPUT B</span><code id="cognitiveHashB">—</code></div>
+        </div>
+      </details>
+    </div>
+    <div class="sourceLinks">
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350/ghost-engine/ghost/interpretation.py" target="_blank" rel="noreferrer">Interpretation source ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350/ghost-engine/ghost/attention.py" target="_blank" rel="noreferrer">Attention source ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/blob/123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350/ghost-engine/ghost/salience_bridge.py" target="_blank" rel="noreferrer">Salience bridge ↗</a>
+      <a href="https://github.com/GhoCentric/ghost-prototype/tree/123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350/ghost-engine/tests" target="_blank" rel="noreferrer">Checkpoint tests ↗</a>
+    </div>
+  </div>
+  <div class="center"><button id="cognitionFinish" class="primary small hidden">Show the full engine stack →</button></div>
 </section>
 
 <section id="final" class="screen final">
-  <p class="eyebrow">THAT WAS THE ACTUAL ENGINE</p><h2>Real package.<br><em>Deterministic runtime.</em></h2>
-  <div class="pipe"><div>event / observation / evidence</div><span>↓</span><div class="hot">GHOST<small>persistent deterministic state</small></div><span>↓</span><div>host game / app / optional LLM</div></div>
-  <div class="finalgrid"><article><span>01</span><strong>History persisted</strong><p>The same betrayal landed differently because the relationship histories were different.</p></article><article><span>02</span><strong>Consequences propagated</strong><p>Observers changed without the player directly targeting them.</p></article><article><span>03</span><strong>Belief stayed separate</strong><p>New evidence revised a belief without rewriting objective state.</p></article></div>
+  <p class="eyebrow">v1.10 DEVELOPMENT PREVIEW</p><h2>Persistent meaning.<br><em>Moving attention.</em></h2>
+  <div class="pipe"><div>event / observation / evidence</div><span>↓</span><div class="hot">GHOST<small>relationship · emotion · interpretation · belief · attention</small></div><span>↓</span><div>host game / app / optional LLM</div></div>
+  <div class="finalgrid"><article><span>01</span><strong>History persisted</strong><p>The same betrayal landed differently because the relationship histories were different.</p></article><article><span>02</span><strong>Consequences propagated</strong><p>Observers changed without the player directly targeting them.</p></article><article><span>03</span><strong>Belief stayed separate</strong><p>New evidence revised a belief without rewriting objective state.</p></article><article><span>04</span><strong>Attention moved, state stayed</strong><p>NPC-specific meaning remained persistent while flow compressed access and threat restored it.</p></article></div>
   <div class="emotionFinal"><span>v1.9.2 LAYERED STATE</span><strong>Friendly can still be angry. Hostile can still be afraid.</strong><p>Relationship history and emotional pressure are separate persistent state layers. Ghost exposes both; the host still owns the action.</p></div>
-  <div class="proof runtimeProof"><i></i><div><strong>ghocentric-ghost-engine 1.9.2</strong><p>running locally in this browser through Pyodide • 0 LLM calls at runtime</p></div></div>
-  <div class="links"><a class="primary small" href="https://pypi.org/project/ghocentric-ghost-engine/1.9.2/" target="_blank" rel="noreferrer">View on PyPI ↗</a><a class="secondary small" href="https://github.com/GhoCentric/ghost-prototype/tree/v1.9.2/ghost-engine/ghost" target="_blank" rel="noreferrer">Inspect core source ↗</a><a class="secondary small" href="https://github.com/GhoCentric/ghost-prototype" target="_blank" rel="noreferrer">Repository ↗</a><button id="restart" class="text">Replay demo</button></div>
-  <footer><strong>Ghost is a state engine.</strong><span>Graphics, animation, dialogue, and final behavior belong to the host application.</span><span>“0 LLM calls at runtime” describes this browser demo's execution. The repository separately discloses the AI-assisted development workflow.</span></footer>
+  <div class="cognitiveFinal"><span>v1.10 DEV CHECKPOINT</span><strong>The state did not disappear when attention moved away from it.</strong><p>The browser boots released v1.9.2, then SHA-256 verifies and overlays the four runtime modules from immutable checkpoint <code>123ebde6</code>. The public PyPI release remains 1.9.2 until v1.10 release gates are complete.</p></div>
+  <div class="proof runtimeProof"><i></i><div><strong>Ghost v1.10-dev checkpoint 123ebde6</strong><p>released v1.9.2 base + verified development overlay • 0 LLM calls at runtime</p></div></div>
+  <div class="links"><a class="primary small" href="https://pypi.org/project/ghocentric-ghost-engine/1.9.2/" target="_blank" rel="noreferrer">Released PyPI v1.9.2 ↗</a><a class="secondary small" href="https://github.com/GhoCentric/ghost-prototype/tree/123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350/ghost-engine/ghost" target="_blank" rel="noreferrer">Inspect v1.10 checkpoint ↗</a><a class="secondary small" href="https://github.com/GhoCentric/ghost-prototype" target="_blank" rel="noreferrer">Repository ↗</a><button id="restart" class="text">Replay demo</button></div>
+  <footer><strong>Ghost is a state engine.</strong><span>This is a v1.10 development preview, not a claim that v1.10 is already released on PyPI. Graphics, animation, dialogue, and final behavior belong to the host application.</span><span>“0 LLM calls at runtime” describes this browser demo's execution. The repository separately discloses the AI-assisted development workflow.</span></footer>
 </section>
+<!-- V1100_GHOCENTRIC_COPY_REFRESH_V2 -->
 </main>
 <div id="toast" class="toast"></div>
-<script type="module" src="./app.js?v=emotion-192-1"></script>
+<script type="module" src="./app.js?v=final-cleanup-1100-1"></script>
 </body>
 </html>

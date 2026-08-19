@@ -3,6 +3,29 @@ import { loadPyodide } from 'https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodi
 let pyodide=null, readyPromise=null;
 const postStatus=(message,detail='')=>self.postMessage({kind:'status',message,detail});
 
+const DEV_COMMIT='123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350';
+const DEV_FILES={
+  'api.py':'80d983e7a841485825cdb388c2c5ed526572328d78c73e2e2565c57b8464c7e7',
+  'attention.py':'4643ca9d1480268b55fcfff40ef5c31ffa219cb6519b60c14661923323eaf4ef',
+  'interpretation.py':'a52307556f81be9309a89f84be9dcbb9938af5d8a2bc5ddd283c7764955050ad',
+  'salience_bridge.py':'e4f9f42ef759440acbb28b72621be6d51df4253f7f9ff33d4e8b71dd1320d9b1',
+};
+async function sha256Hex(bytes){const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function overlayV110(){
+  const sitePath=String(pyodide.runPython("import site; site.getsitepackages()[0]"));
+  for(const [name,expected] of Object.entries(DEV_FILES)){
+    const url=`https://raw.githubusercontent.com/GhoCentric/ghost-prototype/${DEV_COMMIT}/ghost-engine/ghost/${name}`;
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)throw new Error(`v1.10 source fetch failed for ${name}: HTTP ${response.status}`);
+    const buffer=await response.arrayBuffer();
+    const actual=await sha256Hex(buffer);
+    if(actual!==expected)throw new Error(`v1.10 source hash mismatch for ${name}: ${actual}`);
+    pyodide.FS.writeFile(`${sitePath}/ghost/${name}`,new Uint8Array(buffer));
+  }
+  return sitePath;
+}
+
+
 const PY=String.raw`
 import io, json, hashlib
 import ghost
@@ -239,11 +262,187 @@ def ghost_epistemic_determinism_demo():
         "snapshot_round_trip": bool(checks["snapshot_round_trip_matches"]),
     }, allow_nan=False)
 
+
+def _configure_v110_cognition(g):
+    g.register_emotional_agent(
+        "sera",
+        initial={"anger": 0.62, "fear": 0.28},
+    )
+    g.register_interpretation_agent(
+        "sera",
+        baseline={"betrayal": 0.10, "cooperation": 0.05},
+        thresholds={
+            "betrayal": {"enter": 0.60, "exit": 0.40},
+            "cooperation": 0.70,
+        },
+        rules={
+            "action:report_evidence_to_guards": {
+                "betrayal": 0.15,
+                "cooperation": 0.05,
+            },
+            "confidential_evidence_shared": {"betrayal": 0.70},
+            "authority_involved": {"betrayal": 0.10},
+        },
+    )
+    g.register_interpretation_agent(
+        "rowan",
+        baseline={"betrayal": 0.02, "cooperation": 0.12},
+        thresholds={"betrayal": 0.75, "cooperation": 0.55},
+        rules={
+            "action:report_evidence_to_guards": {"cooperation": 0.65},
+            "confidential_evidence_shared": {"betrayal": 0.05},
+            "authority_involved": {"cooperation": 0.10},
+        },
+    )
+    g.register_attention_agent("sera")
+
+
+def _focus_signals(focus, repetition, stability, novelty=0.0, threat=0.0):
+    return {
+        "task_focus": focus,
+        "repetition": repetition,
+        "stability": stability,
+        "novelty": novelty,
+        "threat": threat,
+        "contradiction": 0.0,
+        "interpretation_impulse": 0.0,
+    }
+
+
+def _meaning_view(packet):
+    state = packet["state"]
+    return {
+        "betrayal": float(state["levels"].get("betrayal", 0.0)),
+        "cooperation": float(state["levels"].get("cooperation", 0.0)),
+        "active": list(packet["active_interpretations"]),
+        "strongest": packet["strongest_interpretation"],
+        "strongest_level": float(packet["strongest_level"] or 0.0),
+    }
+
+
+def _cognitive_once():
+    g = GhostAPI()
+    _configure_v110_cognition(g)
+    features = {
+        "confidential_evidence_shared": 1.0,
+        "authority_involved": 1.0,
+    }
+    sera = g.evaluate_action_meaning(
+        "sera",
+        "report_evidence_to_guards",
+        features,
+        source="player",
+        provenance={"evidence_id": "millcross-ledger"},
+    )
+    rowan = g.evaluate_action_meaning(
+        "rowan",
+        "report_evidence_to_guards",
+        features,
+        source="player",
+        provenance={"evidence_id": "millcross-ledger"},
+    )
+
+    source_before = {
+        "emotion": g.emotional_state("sera"),
+        "interpretation": g.interpretation_state("sera"),
+    }
+    bridge = g.persistent_salience("sera")
+    trajectory = [
+        _focus_signals(0.88, 0.55, 0.82, novelty=0.12),
+        _focus_signals(0.94, 0.72, 0.88, novelty=0.06),
+        _focus_signals(0.97, 0.86, 0.91, novelty=0.03),
+        _focus_signals(1.00, 0.94, 0.95),
+        _focus_signals(1.00, 1.00, 0.97),
+        _focus_signals(1.00, 1.00, 1.00),
+        _focus_signals(1.00, 1.00, 1.00),
+        _focus_signals(1.00, 1.00, 1.00),
+    ]
+    steps = []
+    last = None
+    for signals in trajectory:
+        last = g.advance_attention_from_state(
+            "sera",
+            signals=signals,
+            provenance={"browser_demo": "task_focus"},
+        )["attention"]
+        steps.append({
+            "pressure": float(last["flow_pressure_after"]),
+            "active": bool(last["flow_active_after"]),
+            "gain": float(last["attention_gain"]),
+        })
+
+    breakthrough = g.advance_attention_from_state(
+        "sera",
+        signals=_focus_signals(1.0, 1.0, 1.0, threat=1.0),
+        provenance={"browser_demo": "strong_threat"},
+    )["attention"]
+    source_after = {
+        "emotion": g.emotional_state("sera"),
+        "interpretation": g.interpretation_state("sera"),
+    }
+    snapshot = g.snapshot()
+    restored = GhostAPI.from_snapshot(snapshot)
+    key = "interpretation:betrayal"
+    return {
+        "checkpoint": "123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350",
+        "objective": {
+            "action": "report_evidence_to_guards",
+            "features": features,
+        },
+        "sera": _meaning_view(sera),
+        "rowan": _meaning_view(rowan),
+        "bridge": {
+            "dimensions": len(bridge["salience"]),
+            "sources": bridge["sources"],
+        },
+        "flow_steps": steps,
+        "flow": {
+            "pressure": float(last["flow_pressure_after"]),
+            "active": bool(last["flow_active_after"]),
+            "gain": float(last["attention_gain"]),
+            "underlying_betrayal": float(last["underlying_salience"][key]),
+            "attended_betrayal": float(last["attended_salience"][key]),
+        },
+        "breakthrough": {
+            "breakthrough": bool(breakthrough["breakthrough"]),
+            "resurfaced": bool(breakthrough["resurfaced"]),
+            "gain": float(breakthrough["attention_gain"]),
+            "attended_betrayal": float(breakthrough["attended_salience"][key]),
+        },
+        "source_immutable": source_before == source_after,
+        "snapshot_match": restored.snapshot() == snapshot,
+    }
+
+
+def ghost_cognitive_demo():
+    return json.dumps(_cognitive_once(), allow_nan=False)
+
+
+def ghost_cognitive_determinism_demo():
+    output_a = json.dumps(
+        _cognitive_once(), sort_keys=True, separators=(",", ":"), allow_nan=False
+    )
+    output_b = json.dumps(
+        _cognitive_once(), sort_keys=True, separators=(",", ":"), allow_nan=False
+    )
+    parsed = json.loads(output_a)
+    return json.dumps({
+        "match": output_a == output_b,
+        "hash_a": hashlib.sha256(output_a.encode("utf-8")).hexdigest(),
+        "hash_b": hashlib.sha256(output_b.encode("utf-8")).hexdigest(),
+        "bytes": len(output_a.encode("utf-8")),
+        "source_immutable": bool(parsed["source_immutable"]),
+        "snapshot_match": bool(parsed["snapshot_match"]),
+        "breakthrough": bool(parsed["breakthrough"]["breakthrough"]),
+    }, allow_nan=False)
+
+
 def ghost_preflight():
     a=json.loads(ghost_relationship_demo())
     d=json.loads(ghost_determinism_demo())
     b=json.loads(ghost_social_demo())
     c=json.loads(ghost_epistemic_demo())
+    v110=json.loads(ghost_cognitive_demo())
     assert a["short"]["after"]["state"] == "hostile"
     assert d["match"] is True
     assert d["hash_a"] == d["hash_b"]
@@ -255,7 +454,17 @@ def ghost_preflight():
     assert c["initial"]["id"] != c["revised"]["id"]
     assert ghost.__version__ == "1.9.2"
     assert hasattr(GhostAPI, "apply_layered_event")
-    return json.dumps({"version":"1.9.2","relationship":True,"determinism":True,"social":True,"epistemic":True,"multi_emotion_api":True})
+    assert hasattr(GhostAPI, "evaluate_action_meaning")
+    assert hasattr(GhostAPI, "advance_attention_from_state")
+    assert v110["sera"]["betrayal"] > 0.90
+    assert v110["rowan"]["cooperation"] > 0.70
+    assert v110["flow"]["active"] is True
+    assert v110["flow"]["gain"] < 1.0
+    assert v110["source_immutable"] is True
+    assert v110["breakthrough"]["breakthrough"] is True
+    assert v110["breakthrough"]["gain"] == 1.0
+    assert v110["snapshot_match"] is True
+    return json.dumps({"base_version":"1.9.2","checkpoint":"123ebde6","relationship":True,"determinism":True,"social":True,"epistemic":True,"multi_emotion_api":True,"interpretation":True,"attention":True,"salience_bridge":True})
 `;
 
 async function boot(){
@@ -264,10 +473,12 @@ async function boot(){
   postStatus('Loading package installer…','Preparing micropip');
   await pyodide.loadPackage('micropip');
   const micropip=pyodide.pyimport('micropip');
-  postStatus('Installing Ghost v1.9.2…','Fetching the released pure-Python wheel from PyPI');
+  postStatus('Installing released Ghost v1.9.2…','Fetching the pure-Python wheel from PyPI');
   await micropip.install('ghocentric-ghost-engine==1.9.2');
   micropip.destroy();
-  postStatus('Validating engine paths…','Relationship history • multi-emotion state • determinism • social propagation • epistemic revision');
+  postStatus('Applying v1.10 development checkpoint…','Fetching 4 immutable runtime modules @ 123ebde6 and verifying SHA-256');
+  await overlayV110();
+  postStatus('Validating v1.10 cognitive paths…','Interpretation • persistent salience • attention/flow • breakthrough • replay');
   await pyodide.runPythonAsync(PY);
   JSON.parse(await pyodide.runPythonAsync('ghost_preflight()'));
   self.postMessage({kind:'ready'});
@@ -276,7 +487,7 @@ readyPromise=boot().catch(err=>{self.postMessage({kind:'fatal',error:err?.stack|
 
 async function execute(type){
   await readyPromise;
-  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',emotion:'ghost_emotion_demo()',social:'ghost_social_demo()',social_determinism:'ghost_social_determinism_demo()',epistemic:'ghost_epistemic_demo()',epistemic_determinism:'ghost_epistemic_determinism_demo()'}[type];
+  const code={relationship:'ghost_relationship_demo()',determinism:'ghost_determinism_demo()',emotion:'ghost_emotion_demo()',social:'ghost_social_demo()',social_determinism:'ghost_social_determinism_demo()',epistemic:'ghost_epistemic_demo()',epistemic_determinism:'ghost_epistemic_determinism_demo()',cognitive:'ghost_cognitive_demo()',cognitive_determinism:'ghost_cognitive_determinism_demo()'}[type];
   if(!code)throw new Error(`Unknown request: ${type}`);
   return JSON.parse(await pyodide.runPythonAsync(code));
 }
