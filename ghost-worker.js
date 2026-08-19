@@ -3,29 +3,6 @@ import { loadPyodide } from 'https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodi
 let pyodide=null, readyPromise=null;
 const postStatus=(message,detail='')=>self.postMessage({kind:'status',message,detail});
 
-const DEV_COMMIT='123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350';
-const DEV_FILES={
-  'api.py':'80d983e7a841485825cdb388c2c5ed526572328d78c73e2e2565c57b8464c7e7',
-  'attention.py':'4643ca9d1480268b55fcfff40ef5c31ffa219cb6519b60c14661923323eaf4ef',
-  'interpretation.py':'a52307556f81be9309a89f84be9dcbb9938af5d8a2bc5ddd283c7764955050ad',
-  'salience_bridge.py':'e4f9f42ef759440acbb28b72621be6d51df4253f7f9ff33d4e8b71dd1320d9b1',
-};
-async function sha256Hex(bytes){const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-async function overlayV110(){
-  const sitePath=String(pyodide.runPython("import site; site.getsitepackages()[0]"));
-  for(const [name,expected] of Object.entries(DEV_FILES)){
-    const url=`https://raw.githubusercontent.com/GhoCentric/ghost-prototype/${DEV_COMMIT}/ghost-engine/ghost/${name}`;
-    const response=await fetch(url,{cache:'no-store'});
-    if(!response.ok)throw new Error(`v1.10 source fetch failed for ${name}: HTTP ${response.status}`);
-    const buffer=await response.arrayBuffer();
-    const actual=await sha256Hex(buffer);
-    if(actual!==expected)throw new Error(`v1.10 source hash mismatch for ${name}: ${actual}`);
-    pyodide.FS.writeFile(`${sitePath}/ghost/${name}`,new Uint8Array(buffer));
-  }
-  return sitePath;
-}
-
-
 const PY=String.raw`
 import io, json, hashlib
 import ghost
@@ -384,7 +361,7 @@ def _cognitive_once():
     restored = GhostAPI.from_snapshot(snapshot)
     key = "interpretation:betrayal"
     return {
-        "checkpoint": "123ebde6b085e4f3d8f44cde8f2c49bf4c3ed350",
+        "release_commit": "067bc8cd5003f5345ea15dfe94ae513462c295b7",
         "objective": {
             "action": "report_evidence_to_guards",
             "features": features,
@@ -452,7 +429,7 @@ def ghost_preflight():
     assert b["elder"]["trust"] < 0.0
     assert c["checks"]["ledger_revised_player_belief"] is True
     assert c["initial"]["id"] != c["revised"]["id"]
-    assert ghost.__version__ == "1.9.2"
+    assert ghost.__version__ == "1.10.0"
     assert hasattr(GhostAPI, "apply_layered_event")
     assert hasattr(GhostAPI, "evaluate_action_meaning")
     assert hasattr(GhostAPI, "advance_attention_from_state")
@@ -464,7 +441,7 @@ def ghost_preflight():
     assert v110["breakthrough"]["breakthrough"] is True
     assert v110["breakthrough"]["gain"] == 1.0
     assert v110["snapshot_match"] is True
-    return json.dumps({"base_version":"1.9.2","checkpoint":"123ebde6","relationship":True,"determinism":True,"social":True,"epistemic":True,"multi_emotion_api":True,"interpretation":True,"attention":True,"salience_bridge":True})
+    return json.dumps({"package_version":"1.10.0","release_commit":"067bc8cd","relationship":True,"determinism":True,"social":True,"epistemic":True,"multi_emotion_api":True,"interpretation":True,"attention":True,"salience_bridge":True})
 `;
 
 async function boot(){
@@ -473,12 +450,10 @@ async function boot(){
   postStatus('Loading package installer…','Preparing micropip');
   await pyodide.loadPackage('micropip');
   const micropip=pyodide.pyimport('micropip');
-  postStatus('Installing released Ghost v1.9.2…','Fetching the pure-Python wheel from PyPI');
-  await micropip.install('ghocentric-ghost-engine==1.9.2');
+  postStatus('Installing released Ghost v1.10.0…','Fetching the pure-Python wheel from PyPI');
+  await micropip.install('ghocentric-ghost-engine==1.10.0');
   micropip.destroy();
-  postStatus('Applying v1.10 development checkpoint…','Fetching 4 immutable runtime modules @ 123ebde6 and verifying SHA-256');
-  await overlayV110();
-  postStatus('Validating v1.10 cognitive paths…','Interpretation • persistent salience • attention/flow • breakthrough • replay');
+  postStatus('Validating released v1.10.0 cognitive paths…','Interpretation • persistent salience • attention/flow • breakthrough • replay');
   await pyodide.runPythonAsync(PY);
   JSON.parse(await pyodide.runPythonAsync('ghost_preflight()'));
   self.postMessage({kind:'ready'});

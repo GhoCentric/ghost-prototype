@@ -40,11 +40,11 @@ function renderEmotion(prefix,obj){
 
 function boot(){
  ready=false; $('start').disabled=true; $('start').querySelector('span').textContent='Loading Ghost…'; $('retry').classList.add('hidden');
- status('loading','Booting Ghost…','Pyodide → released 1.9.2 base → verified v1.10-dev overlay @ 123ebde6');
- if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js?v=cognition-1100-1',{type:'module'});
+ status('loading','Booting Ghost…','Pyodide → Python → ghocentric-ghost-engine==1.10.0');
+ if(worker) worker.terminate(); worker=new Worker('./ghost-worker.js?v=release-1100-1',{type:'module'});
  worker.onmessage=(e)=>{ const m=e.data;
    if(m.kind==='status'){status('loading',m.message,m.detail||'');return}
-   if(m.kind==='ready'){ready=true;status('ready','v1.10 checkpoint ready','Validated: v1.9.2 base • exact v1.10 overlay • interpretation • salience bridge • attention/flow');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Ghost State';return}
+   if(m.kind==='ready'){ready=true;status('ready','v1.10.0 release ready','Validated: PyPI 1.10.0 • interpretation • salience bridge • attention/flow');$('start').disabled=false;$('start').querySelector('span').textContent='Enter Ghost State';return}
    if(m.kind==='fatal'){status('error','Ghost failed to load',m.error||'Unknown error');$('retry').classList.remove('hidden');return}
    if(m.id&&pending.has(m.id)){const p=pending.get(m.id);pending.delete(m.id);m.ok?p.resolve(m.result):p.reject(new Error(m.error||'Ghost request failed'));}
  };
