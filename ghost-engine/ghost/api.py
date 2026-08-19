@@ -70,6 +70,9 @@ from .policies import (
 from .world import WorldRuntime
 from .epistemic import EpistemicRuntime
 from .emotions import EmotionRuntime
+from .interpretation import InterpretationRuntime
+from .attention import AttentionRuntime
+from .salience_bridge import build_salience_bridge
 from .objectives import (
     build_combat_objective_packet,
 )
@@ -111,6 +114,8 @@ _GHOST_API_SNAPSHOT_REQUIRED_KEYS = {
 _GHOST_API_SNAPSHOT_OPTIONAL_KEYS = {
     "emotions",
     "epistemic",
+    "interpretations",
+    "attention",
     "event_map",
     "ghost_version",
     "transitions",
@@ -278,6 +283,8 @@ class GhostAPI:
             world=WorldRuntime(),
             epistemic=EpistemicRuntime(),
             emotions=EmotionRuntime(),
+            interpretations=InterpretationRuntime(),
+            attention=AttentionRuntime(),
         )
 
     def _bind_runtime(
@@ -288,6 +295,8 @@ class GhostAPI:
         world: WorldRuntime,
         epistemic: EpistemicRuntime,
         emotions: EmotionRuntime,
+        interpretations: InterpretationRuntime,
+        attention: AttentionRuntime,
     ) -> None:
         """
         Attach already-constructed or already-restored runtime parts.
@@ -300,6 +309,8 @@ class GhostAPI:
         self.world = world
         self.epistemic = epistemic
         self.emotions = emotions
+        self.interpretations = interpretations
+        self.attention = attention
 
         # Patch 7 retires the inert pre-v1.8 transition cache. Remove it
         # when rebinding an object created by older code in the same
@@ -325,7 +336,8 @@ class GhostAPI:
         Restore a complete GhostAPI runtime from a validated snapshot.
 
         Older supported packets may omit ghost_version, event_map,
-        transitions, epistemic, or emotions. Unknown packet fields are rejected.
+        transitions, epistemic, emotions, interpretations, or attention. Unknown packet
+        fields are rejected.
         Restoration bypasses __init__ and preserves the construction /
         restoration split established by the prior patch.
         """
@@ -471,6 +483,30 @@ class GhostAPI:
         else:
             emotions_snapshot = None
 
+        if "interpretations" in snapshot:
+            interpretations_snapshot = snapshot["interpretations"]
+            if not isinstance(
+                interpretations_snapshot,
+                dict,
+            ):
+                raise ValueError(
+                    "snapshot interpretations must be a dict"
+                )
+        else:
+            interpretations_snapshot = None
+
+        if "attention" in snapshot:
+            attention_snapshot = snapshot["attention"]
+            if not isinstance(
+                attention_snapshot,
+                dict,
+            ):
+                raise ValueError(
+                    "snapshot attention must be a dict"
+                )
+        else:
+            attention_snapshot = None
+
         api = cls.__new__(
             cls
         )
@@ -509,6 +545,24 @@ class GhostAPI:
                 if emotions_snapshot is not None
                 else EmotionRuntime()
             ),
+            interpretations=(
+                InterpretationRuntime.from_snapshot(
+                    deepcopy(
+                        interpretations_snapshot
+                    )
+                )
+                if interpretations_snapshot is not None
+                else InterpretationRuntime()
+            ),
+            attention=(
+                AttentionRuntime.from_snapshot(
+                    deepcopy(
+                        attention_snapshot
+                    )
+                )
+                if attention_snapshot is not None
+                else AttentionRuntime()
+            ),
         )
 
         return api
@@ -527,6 +581,8 @@ class GhostAPI:
             world=restored.world,
             epistemic=restored.epistemic,
             emotions=restored.emotions,
+            interpretations=restored.interpretations,
+            attention=restored.attention,
         )
 
         return self.snapshot()
@@ -1063,6 +1119,201 @@ class GhostAPI:
                     "spotlight_switch_margin"
                 ),
             },
+        }
+
+    # -----------------------------
+    # NPC-SPECIFIC ACTION INTERPRETATION (v1.10.0 DEVELOPMENT)
+    # -----------------------------
+    def register_interpretation_agent(
+        self,
+        agent: str,
+        initial: dict | None = None,
+        baseline: dict | None = None,
+        thresholds: dict | None = None,
+        sensitivities: dict | None = None,
+        rules: dict | None = None,
+    ) -> dict:
+        """Register persistent NPC-specific meaning pressures and rules."""
+        return self.interpretations.register_agent(
+            agent=agent,
+            initial=initial,
+            baseline=baseline,
+            thresholds=thresholds,
+            sensitivities=sensitivities,
+            rules=rules,
+        )
+
+    def configure_interpretation_rule(
+        self,
+        agent: str,
+        feature: str,
+        pressures: dict,
+    ) -> dict:
+        """Configure one objective-feature -> interpretation-pressure rule."""
+        return self.interpretations.configure_rule(
+            agent=agent,
+            feature=feature,
+            pressures=pressures,
+        )
+
+    def interpretation_state(
+        self,
+        agent: str,
+    ) -> dict | None:
+        """Return copied interpretation levels, thresholds, rules, and history."""
+        return self.interpretations.get_state(agent)
+
+    def evaluate_action_meaning(
+        self,
+        agent: str,
+        action: str,
+        features: dict | None = None,
+        intensity: float = 1.0,
+        context_modifiers: dict | None = None,
+        source: str | None = None,
+        provenance: dict | None = None,
+    ) -> dict:
+        """
+        Apply one objective action to one NPC's configured interpretation state.
+
+        The action remains objective. Ghost only applies caller-configured
+        meaning rules and persistent per-agent thresholds; it does not invent
+        facts, infer an unobserved action, choose behavior, or generate dialogue.
+        """
+        return self.interpretations.evaluate_action(
+            agent=agent,
+            action=action,
+            features=features,
+            intensity=intensity,
+            context_modifiers=context_modifiers,
+            source=source,
+            provenance=provenance,
+        )
+
+    # -----------------------------
+    # PERSISTENT ATTENTION / FLOW (v1.10.0 DEVELOPMENT)
+    # -----------------------------
+    def register_attention_agent(
+        self,
+        agent: str,
+        initial_flow_pressure: float | None = None,
+        flow_active: bool | None = None,
+        config: dict | None = None,
+    ) -> dict:
+        """Register persistent per-agent attention / flow state."""
+        return self.attention.register_agent(
+            agent=agent,
+            initial_flow_pressure=initial_flow_pressure,
+            flow_active=flow_active,
+            config=config,
+        )
+
+    def attention_state(
+        self,
+        agent: str,
+    ) -> dict | None:
+        """Return copied attention pressure, flow state, config, and history."""
+        return self.attention.get_state(agent)
+
+    def advance_attention(
+        self,
+        agent: str,
+        signals: dict | None = None,
+        salience: dict | None = None,
+        source: str | None = None,
+        provenance: dict | None = None,
+    ) -> dict:
+        """
+        Advance one NPC's deterministic attention / flow state.
+
+        ``salience`` is treated as an external persistent-state view. Ghost returns
+        an attended copy and never rewrites the caller's underlying emotion or
+        interpretation values. Strong novelty, threat, contradiction, or
+        interpretation impulses can break through flow immediately.
+        """
+        return self.attention.step(
+            agent=agent,
+            signals=signals,
+            salience=salience,
+            source=source,
+            provenance=provenance,
+        )
+
+    # -----------------------------
+    # READ-ONLY PERSISTENT SALIENCE BRIDGE (v1.10.0 DEVELOPMENT)
+    # -----------------------------
+    def persistent_salience(
+        self,
+        agent: str,
+        include_emotions: bool = True,
+        include_interpretations: bool = True,
+    ) -> dict:
+        """Return a copied salience view of persistent Ghost state.
+
+        The bridge reads emotional and interpretation state without granting
+        attention write authority over either source. Source dimensions are
+        namespaced so overlapping channel names cannot collide.
+        """
+        emotion_state = (
+            self.emotional_state(agent)
+            if include_emotions
+            else None
+        )
+        interpretation_state = (
+            self.interpretation_state(agent)
+            if include_interpretations
+            else None
+        )
+        return build_salience_bridge(
+            agent,
+            emotion_state=emotion_state,
+            interpretation_state=interpretation_state,
+            include_emotions=include_emotions,
+            include_interpretations=include_interpretations,
+        )
+
+    def advance_attention_from_state(
+        self,
+        agent: str,
+        signals: dict | None = None,
+        include_emotions: bool = True,
+        include_interpretations: bool = True,
+        provenance: dict | None = None,
+    ) -> dict:
+        """Advance attention from one coherent copied persistent-state view.
+
+        Source state is read first, then the resulting salience copy is handed
+        to ``AttentionRuntime``. The attention layer can transform visibility
+        but cannot mutate or rebuild the emotional/interpretation sources.
+        """
+        if provenance is not None and not isinstance(provenance, dict):
+            raise ValueError("provenance must be a dict or None")
+
+        bridge = self.persistent_salience(
+            agent,
+            include_emotions=include_emotions,
+            include_interpretations=include_interpretations,
+        )
+        bridge_provenance = {
+            "salience_bridge": {
+                "packet_version": bridge["packet_version"],
+                "sources": deepcopy(bridge["sources"]),
+            },
+        }
+        if provenance is not None:
+            bridge_provenance["caller"] = deepcopy(provenance)
+
+        attention = self.attention.step(
+            agent=agent,
+            signals=signals,
+            salience=bridge["salience"],
+            source="ghost:salience_bridge",
+            provenance=bridge_provenance,
+        )
+        return {
+            "agent": bridge["agent"],
+            "bridge": deepcopy(bridge),
+            "attention": deepcopy(attention),
         }
 
     # -----------------------------
@@ -1618,4 +1869,8 @@ class GhostAPI:
         }
         if self.emotions.has_state():
             packet["emotions"] = self.emotions.snapshot()
+        if self.interpretations.has_state():
+            packet["interpretations"] = self.interpretations.snapshot()
+        if self.attention.has_state():
+            packet["attention"] = self.attention.snapshot()
         return packet
