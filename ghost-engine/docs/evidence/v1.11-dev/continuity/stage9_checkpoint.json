@@ -1,0 +1,79 @@
+{
+  "checkpoint_version": 1,
+  "frozen_benchmark_modified": false,
+  "ghost_production_modified": false,
+  "report_sha256": "73a8f48e911a087dd409deb3336c659aae19fa782202c0a9ab7080ae0da6bbb5",
+  "selected_candidate": "ghost_compact_balanced",
+  "selected_compression_level": 6,
+  "selection": {
+    "aggregate_runtime_us": {
+      "ghost_compact_balanced": 3299469.881,
+      "ghost_compact_dense": 3568084.843,
+      "ghost_compact_fast": 3487424.8049999992
+    },
+    "eligible": [
+      "ghost_compact_fast",
+      "ghost_compact_balanced",
+      "ghost_compact_dense"
+    ],
+    "reason": "lowest aggregate measured runtime inside the storage-near-best envelope",
+    "runtime_tie_set": [
+      "ghost_compact_balanced"
+    ],
+    "selected": "ghost_compact_balanced",
+    "storage_near_best": [
+      "ghost_compact_fast",
+      "ghost_compact_balanced",
+      "ghost_compact_dense"
+    ]
+  },
+  "selection_rule": {
+    "behavior_losslessness_integrity_are_hard_eligibility_gates": true,
+    "primary_runtime_objective": "minimum aggregate measured cold lifecycle time across exact workloads",
+    "runtime_tie_ratio": 1.03,
+    "storage_near_best_ratio": 1.05,
+    "tie_breaker": "lowest compression level among candidates within 3% of best aggregate runtime",
+    "workloads": [
+      {
+        "agents": 1,
+        "name": "agent_scale_1_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 32,
+        "name": "agent_scale_32_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 100,
+        "name": "agent_scale_100_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 500,
+        "name": "agent_scale_500_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 32,
+        "name": "history_depth_32_medium",
+        "records_per_agent": 96
+      },
+      {
+        "agents": 32,
+        "name": "history_depth_32_large",
+        "records_per_agent": 192
+      }
+    ]
+  },
+  "stage": "npc_continuity_stage9_candidate_selection",
+  "stage8_checkpoint_sha256": "6c0db754d6938f45fb1560d6b0e00fe432ee2a2a4a98609e741bff28e26e1d7a",
+  "stage8_report_sha256": "1e0eed31e1774bdce9e2b111153e4ed97e41c7e6fbeff140a6e837976c816805",
+  "stage9_source_hashes": {
+    "continuity_benchmark_v1110/run_stage9_candidate_selection.py": "d89833b338edf95b2437732cf098dc0d95142ac41b7ca42d72ae9d0210a462e2",
+    "tests/test_npc_continuity_stage9_quality_v1110.py": "572f64104dae44a955190db395a101bb4f794b0c54ec496cebfbd0cdeb87e435",
+    "tests/test_npc_continuity_stage9_runner_coverage_v1110.py": "f45e9fa6f2444b12beea50c6506831c26a1c54c6e9d4718f0ead8326d823cb4a",
+    "tests/test_npc_continuity_stage9_v1110.py": "1dffc17d94adbeba5366825ae90a3d6da1de1fda96b8f7a8472f10bd963e00e7"
+  },
+  "strict_verdict": "STAGE9_PRODUCTION_CANDIDATE_SELECTED_GHOST_COMPACT_BALANCED"
+}

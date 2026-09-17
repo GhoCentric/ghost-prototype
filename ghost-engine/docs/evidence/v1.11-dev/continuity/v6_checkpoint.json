@@ -1,0 +1,21 @@
+{
+  "checkpoint_version": 1,
+  "compression_level": 6,
+  "post_sha256": {
+    "ghost/api.py": "a5022ade72d602abd5761f33803f1c816655f3f3c2911437fe5b6289457db969",
+    "ghost/attention.py": "0d99520780711eef9e0e509e3f49648905f28eaa3002d88869dc3b0bbd5f0f23",
+    "ghost/continuity_history.py": "0d17d5b38ececf02d50498897aee33b1231a573666e96d42742d84851b04252b",
+    "ghost/continuity_optimization.py": "771e42a09ab83babd473dec7f3354a5b5e14ade50bca52bb16ac4df7528ef54e",
+    "ghost/episode_store.py": "b37d30e86a077dedaf36a2e13d826f88ddc17b1921d6365fc20fcf46d51e48d4",
+    "tests/test_continuity_optimization_production_v1110.py": "9c7c26cfc2ae4d9ffc8e264f076530319937529d5c8a462e87a0d0f2e607f6f3",
+    "tests/test_continuity_optimization_public_contract_v1110.py": "3d5afa6d48fe06de16fe2134f5a2651e6828558976080ee1b484cd85ccb08fbf",
+    "tests/test_continuity_optimization_quality_v1110.py": "ab2232cb5018637af503addef8744c79d9a6a1f8cfb1e640481d598d673e0e29",
+    "tests/test_continuity_optimization_value_v1110.py": "d81c63fcc54c16a02b3d78ab0e5cfb8042cb34af1407793c03f69789f8d721ea"
+  },
+  "report_sha256": "ab53d5311dba3fc9069e394e05b6c565ce2113708d3fc0666a4b152d836a176b",
+  "selected_candidate": "ghost_compact_balanced",
+  "stage": "optimized_continuity_production_patch1_v6",
+  "stage9_checkpoint_sha256": "ffedb27f6d27da83e892f530ce0e9e8913fa8b65c617f53fb34418ac3dee7453",
+  "stage9_report_sha256": "73a8f48e911a087dd409deb3336c659aae19fa782202c0a9ab7080ae0da6bbb5",
+  "strict_verdict": "OPTIMIZED_CONTINUITY_PRODUCTION_PATCH1_V6_PASS"
+}

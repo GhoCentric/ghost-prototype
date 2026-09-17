@@ -400,6 +400,25 @@ class AttentionRuntime:
             del state["history"][: len(state["history"]) - self.history_limit]
         return deepcopy(record)
 
+    def _advance_idle_time(self, agent: str, calls: int) -> dict | None:
+        """Advance no-signal attention time without allocating history records."""
+        if isinstance(calls, bool) or not isinstance(calls, int) or calls < 1:
+            raise ValueError("calls must be a positive integer")
+        agent = _token(agent, "agent")
+        state = self._agents.get(agent)
+        if state is None:
+            return None
+        config = state["config"]
+        pressure = state["flow_pressure"] * ((1.0 - config["release_rate"]) ** calls)
+        pressure = min(1.0, max(0.0, pressure))
+        state["flow_pressure"] = pressure
+        state["flow_active"] = _resolve_flow(
+            bool(state["flow_active"]),
+            pressure,
+            config,
+        )
+        return self.get_state(agent)
+
     def snapshot(self) -> dict:
         return {
             "schema_version": ATTENTION_SNAPSHOT_SCHEMA_VERSION,

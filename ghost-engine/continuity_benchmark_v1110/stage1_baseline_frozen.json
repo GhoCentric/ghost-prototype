@@ -1,0 +1,255 @@
+{
+  "baseline_result": {
+    "all_checks": {
+      "passes": 62,
+      "total": 62
+    },
+    "categories": {
+      "affect": {
+        "passes": 15,
+        "total": 15
+      },
+      "causal_integrity": {
+        "passes": 33,
+        "total": 33
+      },
+      "determinism": {
+        "passes": 4,
+        "total": 4
+      },
+      "identity": {
+        "passes": 26,
+        "total": 26
+      },
+      "isolation": {
+        "passes": 4,
+        "total": 4
+      },
+      "persistence": {
+        "passes": 13,
+        "total": 13
+      },
+      "recall": {
+        "passes": 39,
+        "total": 39
+      },
+      "relevance": {
+        "passes": 10,
+        "total": 10
+      },
+      "retention": {
+        "passes": 17,
+        "total": 17
+      },
+      "revision": {
+        "passes": 8,
+        "total": 8
+      },
+      "stability": {
+        "passes": 2,
+        "total": 2
+      }
+    },
+    "competence": {
+      "passes": 32,
+      "total": 32
+    },
+    "deterministic_digest": "60f51c928e03a01c444ef0ed99cd3c86e1259ff5e769a5b2a1116e048945b217",
+    "discriminators": {
+      "passes": 30,
+      "total": 30
+    },
+    "scenario_count": 16,
+    "scenarios": {
+      "capacity_no_silent_eviction": {
+        "checks": {
+          "archive_count_does_not_change": true,
+          "capacity_failure_is_explicit": true,
+          "existing_episode_survives": true,
+          "failed_event_does_not_partially_mutate_hot_state": true
+        },
+        "measures": {
+          "archive_count": 1
+        }
+      },
+      "causal_duplication_torture": {
+        "checks": {
+          "one_hundred_recalls_do_not_change_consequence": true,
+          "one_hundred_recalls_do_not_duplicate_episode": true,
+          "one_hundred_recalls_do_not_rewrite_meaning": true
+        },
+        "measures": {}
+      },
+      "exact_recall_without_replay": {
+        "checks": {
+          "consequence_unchanged": true,
+          "episode_affect_reexpresses": true,
+          "meaning_unchanged": true,
+          "target_becomes_current_again": true,
+          "target_relevance_rises": true
+        },
+        "measures": {
+          "relevance_gain": 0.6999999994854263
+        }
+      },
+      "large_ambiguity_safety": {
+        "checks": {
+          "ambiguous_recall_leaves_affect_unchanged": true,
+          "ambiguous_recall_leaves_meaning_unchanged": true,
+          "ambiguous_recall_leaves_relevance_unchanged": true,
+          "fifty_same_dimension_episodes_are_reported_ambiguous": true
+        },
+        "measures": {
+          "candidate_count": 50
+        }
+      },
+      "long_history_selective_old_recall": {
+        "checks": {
+          "all_history_remains_counted": true,
+          "old_episode_profile_is_exact": true,
+          "old_episode_still_exists": true,
+          "old_exact_recall_does_not_change_meaning": true,
+          "old_exact_recall_raises_only_target_dimension": true
+        },
+        "measures": {
+          "history_count": 201
+        }
+      },
+      "moving_on_without_erasure": {
+        "checks": {
+          "associated_affect_relaxes": true,
+          "meaning_persists": true,
+          "old_concern_not_foreground": true,
+          "relevance_releases": true
+        },
+        "measures": {
+          "fresh_relevance": 0.9,
+          "moved_relevance": 7.351052184033231e-10
+        }
+      },
+      "multi_agent_isolation": {
+        "checks": {
+          "other_agent_affect_unchanged": true,
+          "other_agent_consequence_unchanged": true,
+          "other_agent_meaning_unchanged": true,
+          "other_agent_relevance_unchanged": true
+        },
+        "measures": {}
+      },
+      "near_tie_hysteresis": {
+        "checks": {
+          "alternating_near_tie_does_not_flip": true,
+          "trace_is_deterministic": true
+        },
+        "measures": {
+          "flips": 0
+        }
+      },
+      "repeated_recall_load": {
+        "checks": {
+          "repeated_recall_increases_affect_load": true,
+          "repeated_recall_increases_relevance_load": true
+        },
+        "measures": {
+          "repeated": {
+            "affect": 15.57704510998607,
+            "relevance": 8.261125739225726
+          },
+          "single": {
+            "affect": 6.5232925962575194,
+            "relevance": 1.4583331109815574
+          }
+        }
+      },
+      "repeated_restart_stability": {
+        "checks": {
+          "archive_manifest_survives_twenty_restarts": true,
+          "episode_ids_survive_twenty_restarts": true,
+          "hot_state_survives_twenty_restarts": true,
+          "restart_cycles_do_not_duplicate_episodes": true
+        },
+        "measures": {
+          "restart_count": 20
+        }
+      },
+      "revision_then_old_recall": {
+        "checks": {
+          "old_episode_can_become_relevant_again": true,
+          "old_recall_does_not_rewind_consequence": true,
+          "old_recall_uses_historical_episode_affect": true,
+          "revised_meaning_stays_revised": true
+        },
+        "measures": {}
+      },
+      "revision_without_rewind": {
+        "checks": {
+          "affect_does_not_rewind_instantly": true,
+          "consequence_does_not_rewind": true,
+          "meaning_revises_down": true,
+          "old_episode_recall_does_not_restore_old_meaning": true
+        },
+        "measures": {
+          "meaning_after_revision": 0.050000000000000044
+        }
+      },
+      "same_dimension_episode_specific_affect": {
+        "checks": {
+          "meaning_is_unchanged_by_both_recalls": true,
+          "newer_exact_recall_prefers_newer_affect": true,
+          "older_and_newer_ids_remain_distinct": true,
+          "older_exact_recall_prefers_older_affect": true
+        },
+        "measures": {
+          "new_specificity": 0.8099958062394716,
+          "old_specificity": 0.8099736159597807
+        }
+      },
+      "same_dimension_identity_and_ambiguity": {
+        "checks": {
+          "ambiguous_dimension_recall_does_not_mutate_hot_state": true,
+          "dimension_lookup_is_ambiguous": true,
+          "episode_ids_are_distinct": true,
+          "exact_second_recall_uses_second_episode_affect": true
+        },
+        "measures": {
+          "candidate_count": 2
+        }
+      },
+      "snapshot_archive_pairing": {
+        "checks": {
+          "exact_recall_works_after_restart": true,
+          "hot_snapshot_excludes_episode_payloads": true,
+          "matching_archive_restores_exact_hot_state": true,
+          "snapshot_contains_archive_manifest": true,
+          "wrong_archive_is_rejected": true
+        },
+        "measures": {
+          "snapshot_bytes": 332
+        }
+      },
+      "stale_dominance_resistance": {
+        "checks": {
+          "exact_old_recall_can_restore_old_relevance": true,
+          "old_meaning_is_not_erased": true,
+          "old_relevance_becomes_small": true,
+          "recent_concern_can_displace_old_concern": true
+        },
+        "measures": {
+          "old_relevance_before_recall": 4.615094054612543e-16
+        }
+      }
+    }
+  },
+  "claims_not_established": [
+    "Ghost superiority",
+    "NPC believability superiority",
+    "developer productivity",
+    "market value",
+    "novelty or prior-art status",
+    "human psychological accuracy"
+  ],
+  "contract_digest": "73f5cc5573091cabfdae6372e074def395d5e573a5facb587b85c3c592342653",
+  "generated_before_ghost_adapter": true,
+  "next_stage_rule": "Stage 2 may add a Ghost adapter only. The contract, scenario runner, purpose-built baseline, and Stage-1 baseline result must remain hash-frozen.",
+  "stage": "npc_continuity_stage1_frozen_baseline_evidence"
+}

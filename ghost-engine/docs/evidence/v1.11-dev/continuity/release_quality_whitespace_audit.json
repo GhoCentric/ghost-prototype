@@ -1,0 +1,43 @@
+{
+  "exception_count": 7,
+  "exceptions": [
+    {
+      "kind": "new blank line at EOF",
+      "line": 292,
+      "path": "ghost-engine/continuity_benchmark_v1110/run_stage2_head_to_head.py"
+    },
+    {
+      "kind": "new blank line at EOF",
+      "line": 266,
+      "path": "ghost-engine/continuity_benchmark_v1110/run_stage7_optimization.py"
+    },
+    {
+      "kind": "new blank line at EOF",
+      "line": 736,
+      "path": "ghost-engine/ghost/motives.py"
+    },
+    {
+      "kind": "new blank line at EOF",
+      "line": 385,
+      "path": "ghost-engine/ghost/perception.py"
+    },
+    {
+      "kind": "new blank line at EOF",
+      "line": 186,
+      "path": "ghost-engine/tests/test_agent_api_v1110.py"
+    },
+    {
+      "kind": "new blank line at EOF",
+      "line": 553,
+      "path": "ghost-engine/tests/test_m3_continuity_production_engineering.py"
+    },
+    {
+      "kind": "new blank line at EOF",
+      "line": 362,
+      "path": "ghost-engine/tests/test_npc_continuity_stage7_coverage_complete_v1110.py"
+    }
+  ],
+  "policy": "Only the seven exact hash-locked pre-existing blank-at-EOF differences are accepted. Any other whitespace defect is fatal.",
+  "schema": "ghost.v1110.release_quality.whitespace_audit.v1",
+  "strict_pass": true
+}

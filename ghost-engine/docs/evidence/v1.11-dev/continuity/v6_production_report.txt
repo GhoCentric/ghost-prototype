@@ -1,0 +1,42 @@
+GHOST v1.11-dev OPTIMIZED CONTINUITY PRODUCTION PATCH 1 v6 — MEASUREMENT-HARDENED PASS
+selected_candidate=ghost_compact_balanced
+compression=zlib level 6
+stage6_behavior=25/26; 2/2 Ghost-only wins; foreground ablation PASS
+m3_semantics=preserved
+public_return_contract_matrix=PRESERVED
+new_modules_coverage=100% statements/branches
+modified_production_diff_coverage=100% statements/added-branches
+full_nonresearch_regression=PASS
+maintained_core_coverage=100% PASS
+resourcewarnings=ZERO in fatal-gated production lanes
+hot_snapshot_ratio=0.0963x
+total_persistence_bundle_ratio=0.9244x
+event_ratio=0.7550x
+dormant_tick_ratio=0.0163x
+active_tick_state_ratio=0.9465x
+recall_ratio=1.0690x
+event_paired_ratio_median=0.7790x
+dormant_tick_paired_ratio_median=0.0163x
+active_tick_state_paired_ratio_median=0.9415x
+recall_paired_ratio_median=1.0639x
+cost_timed_repetitions=15
+cost_gate=fresh runtimes + alternating order + ratio-of-medians AND paired-ratio-median
+continuity_tick_contract=deferred logical-time scheduling; materialized on relevant reads/events/snapshots
+public_api_methods_added=NO
+automatic_forgetting=NO
+silent_episode_eviction=NO
+version_bump=NO
+publish=NO
+git_push=NO
+public_docs_rewrite=NO
+
+POST SHA256
+a5022ade72d602abd5761f33803f1c816655f3f3c2911437fe5b6289457db969  ghost/api.py
+0d99520780711eef9e0e509e3f49648905f28eaa3002d88869dc3b0bbd5f0f23  ghost/attention.py
+0d17d5b38ececf02d50498897aee33b1231a573666e96d42742d84851b04252b  ghost/continuity_history.py
+771e42a09ab83babd473dec7f3354a5b5e14ade50bca52bb16ac4df7528ef54e  ghost/continuity_optimization.py
+b37d30e86a077dedaf36a2e13d826f88ddc17b1921d6365fc20fcf46d51e48d4  ghost/episode_store.py
+9c7c26cfc2ae4d9ffc8e264f076530319937529d5c8a462e87a0d0f2e607f6f3  tests/test_continuity_optimization_production_v1110.py
+3d5afa6d48fe06de16fe2134f5a2651e6828558976080ee1b484cd85ccb08fbf  tests/test_continuity_optimization_public_contract_v1110.py
+ab2232cb5018637af503addef8744c79d9a6a1f8cfb1e640481d598d673e0e29  tests/test_continuity_optimization_quality_v1110.py
+d81c63fcc54c16a02b3d78ab0e5cfb8042cb34af1407793c03f69789f8d721ea  tests/test_continuity_optimization_value_v1110.py

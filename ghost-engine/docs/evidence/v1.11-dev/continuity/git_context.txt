@@ -1,0 +1,6 @@
+git_top=/data/data/com.termux/files/home/ghost-prototype
+engine_rel=ghost-engine
+head=067bc8cd5003f5345ea15dfe94ae513462c295b7
+branch=v1.11-dev
+origin=https://github.com/GhoCentric/ghost-prototype.git
+origin_main=067bc8cd5003f5345ea15dfe94ae513462c295b7

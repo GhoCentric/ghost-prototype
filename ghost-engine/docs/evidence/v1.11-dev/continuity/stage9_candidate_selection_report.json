@@ -1,0 +1,460 @@
+{
+  "adapter_lifecycle": {
+    "ghost_compact_balanced": {
+      "projection_median_us": 16475.429,
+      "recall_avg_us": 2064.59475,
+      "restore_median_us": 3849.609,
+      "restore_observation_exact": true,
+      "save_median_us": 2853.75
+    },
+    "ghost_compact_dense": {
+      "projection_median_us": 16681.563,
+      "recall_avg_us": 2118.3137916666665,
+      "restore_median_us": 3858.828,
+      "restore_observation_exact": true,
+      "save_median_us": 3228.32
+    },
+    "ghost_compact_fast": {
+      "projection_median_us": 16583.477,
+      "recall_avg_us": 2085.1025416666666,
+      "restore_median_us": 3886.914,
+      "restore_observation_exact": true,
+      "save_median_us": 3347.539
+    }
+  },
+  "eligibility": {
+    "ghost_compact_balanced": {
+      "beats_current_total_persistent_at_stage8_workload": true,
+      "behavior_25_of_26": true,
+      "deterministic_cold_archive": true,
+      "lossless_full_history": true,
+      "restore_equivalence": true,
+      "stage6_value_preserved": true,
+      "tamper_integrity": true
+    },
+    "ghost_compact_dense": {
+      "beats_current_total_persistent_at_stage8_workload": true,
+      "behavior_25_of_26": true,
+      "deterministic_cold_archive": true,
+      "lossless_full_history": true,
+      "restore_equivalence": true,
+      "stage6_value_preserved": true,
+      "tamper_integrity": true
+    },
+    "ghost_compact_fast": {
+      "beats_current_total_persistent_at_stage8_workload": true,
+      "behavior_25_of_26": true,
+      "deterministic_cold_archive": true,
+      "lossless_full_history": true,
+      "restore_equivalence": true,
+      "stage6_value_preserved": true,
+      "tamper_integrity": true
+    }
+  },
+  "memory_probe": {
+    "ghost_compact_balanced": {
+      "python_current_bytes": 21731,
+      "python_peak_bytes": 324681
+    },
+    "ghost_compact_dense": {
+      "python_current_bytes": 21719,
+      "python_peak_bytes": 324669
+    },
+    "ghost_compact_fast": {
+      "python_current_bytes": 21715,
+      "python_peak_bytes": 324665
+    }
+  },
+  "selected_candidate": "ghost_compact_balanced",
+  "selected_compression_level": 6,
+  "selection": {
+    "aggregate_runtime_us": {
+      "ghost_compact_balanced": 3299469.881,
+      "ghost_compact_dense": 3568084.843,
+      "ghost_compact_fast": 3487424.8049999992
+    },
+    "eligible": [
+      "ghost_compact_fast",
+      "ghost_compact_balanced",
+      "ghost_compact_dense"
+    ],
+    "reason": "lowest aggregate measured runtime inside the storage-near-best envelope",
+    "runtime_tie_set": [
+      "ghost_compact_balanced"
+    ],
+    "selected": "ghost_compact_balanced",
+    "storage_near_best": [
+      "ghost_compact_fast",
+      "ghost_compact_balanced",
+      "ghost_compact_dense"
+    ]
+  },
+  "selection_rule": {
+    "behavior_losslessness_integrity_are_hard_eligibility_gates": true,
+    "primary_runtime_objective": "minimum aggregate measured cold lifecycle time across exact workloads",
+    "runtime_tie_ratio": 1.03,
+    "storage_near_best_ratio": 1.05,
+    "tie_breaker": "lowest compression level among candidates within 3% of best aggregate runtime",
+    "workloads": [
+      {
+        "agents": 1,
+        "name": "agent_scale_1_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 32,
+        "name": "agent_scale_32_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 100,
+        "name": "agent_scale_100_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 500,
+        "name": "agent_scale_500_short",
+        "records_per_agent": 24
+      },
+      {
+        "agents": 32,
+        "name": "history_depth_32_medium",
+        "records_per_agent": 96
+      },
+      {
+        "agents": 32,
+        "name": "history_depth_32_large",
+        "records_per_agent": 192
+      }
+    ]
+  },
+  "stage": "npc_continuity_stage9_candidate_selection",
+  "stage8_reference": {
+    "strict_verdict": "LOSSLESS_COLD_COMPACTION_PRESERVES_STAGE6_VALUE_AND_BEATS_CURRENT_GHOST_TOTAL_PERSISTENT_COST",
+    "variants": [
+      "ghost_compact_fast",
+      "ghost_compact_balanced",
+      "ghost_compact_dense"
+    ]
+  },
+  "storage_summary": {
+    "ghost_compact_balanced": {
+      "largest_agent_scale_bytes": 8679424,
+      "largest_agent_scale_vs_best": 1.0,
+      "stage8_total_vs_current_ghost": 0.8990792777711347
+    },
+    "ghost_compact_dense": {
+      "largest_agent_scale_bytes": 8679424,
+      "largest_agent_scale_vs_best": 1.0,
+      "stage8_total_vs_current_ghost": 0.899067320339591
+    },
+    "ghost_compact_fast": {
+      "largest_agent_scale_bytes": 8957952,
+      "largest_agent_scale_vs_best": 1.0320906087777253,
+      "stage8_total_vs_current_ghost": 0.8990633345290765
+    }
+  },
+  "strict_verdict": "STAGE9_PRODUCTION_CANDIDATE_SELECTED_GHOST_COMPACT_BALANCED",
+  "workloads": {
+    "agent_scale_100_short": {
+      "ghost_compact_balanced": {
+        "agents": 100,
+        "bytes": 1757184,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 753.438,
+        "full_read_total_us": 3092.93,
+        "full_records_read": 72,
+        "manifest_digest": "4578b5a7eab9e35a6b429faee9e4796eec42365857c9eb4f4361431ac0d0a530",
+        "manifest_records": 2400,
+        "manifest_us": 9470.665,
+        "projection_read_total_us": 743.008,
+        "projection_rows_read": 72,
+        "records": 2400,
+        "records_per_agent": 24,
+        "write_total_us": 360972.852
+      },
+      "ghost_compact_dense": {
+        "agents": 100,
+        "bytes": 1757184,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 770.313,
+        "full_read_total_us": 3168.828,
+        "full_records_read": 72,
+        "manifest_digest": "4578b5a7eab9e35a6b429faee9e4796eec42365857c9eb4f4361431ac0d0a530",
+        "manifest_records": 2400,
+        "manifest_us": 9469.297,
+        "projection_read_total_us": 736.523,
+        "projection_rows_read": 72,
+        "records": 2400,
+        "records_per_agent": 24,
+        "write_total_us": 225593.593
+      },
+      "ghost_compact_fast": {
+        "agents": 100,
+        "bytes": 1806336,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 1591.093,
+        "full_read_total_us": 2036.446,
+        "full_records_read": 72,
+        "manifest_digest": "4578b5a7eab9e35a6b429faee9e4796eec42365857c9eb4f4361431ac0d0a530",
+        "manifest_records": 2400,
+        "manifest_us": 10642.109,
+        "projection_read_total_us": 509.609,
+        "projection_rows_read": 72,
+        "records": 2400,
+        "records_per_agent": 24,
+        "write_total_us": 243940.86
+      }
+    },
+    "agent_scale_1_short": {
+      "ghost_compact_balanced": {
+        "agents": 1,
+        "bytes": 24576,
+        "exact_lookup_count": 3,
+        "exact_lookup_total_us": 470.195,
+        "full_read_total_us": 1677.343,
+        "full_records_read": 24,
+        "manifest_digest": "0f31dda518441add77abc473d88f6cc8a778e67939be7eed68056dbd50307872",
+        "manifest_records": 24,
+        "manifest_us": 206.992,
+        "projection_read_total_us": 446.406,
+        "projection_rows_read": 24,
+        "records": 24,
+        "records_per_agent": 24,
+        "write_total_us": 6800.664
+      },
+      "ghost_compact_dense": {
+        "agents": 1,
+        "bytes": 24576,
+        "exact_lookup_count": 3,
+        "exact_lookup_total_us": 482.5,
+        "full_read_total_us": 1431.953,
+        "full_records_read": 24,
+        "manifest_digest": "0f31dda518441add77abc473d88f6cc8a778e67939be7eed68056dbd50307872",
+        "manifest_records": 24,
+        "manifest_us": 226.368,
+        "projection_read_total_us": 421.015,
+        "projection_rows_read": 24,
+        "records": 24,
+        "records_per_agent": 24,
+        "write_total_us": 6292.969
+      },
+      "ghost_compact_fast": {
+        "agents": 1,
+        "bytes": 24576,
+        "exact_lookup_count": 3,
+        "exact_lookup_total_us": 400.86,
+        "full_read_total_us": 1342.422,
+        "full_records_read": 24,
+        "manifest_digest": "0f31dda518441add77abc473d88f6cc8a778e67939be7eed68056dbd50307872",
+        "manifest_records": 24,
+        "manifest_us": 169.141,
+        "projection_read_total_us": 381.406,
+        "projection_rows_read": 24,
+        "records": 24,
+        "records_per_agent": 24,
+        "write_total_us": 5065.0
+      }
+    },
+    "agent_scale_32_short": {
+      "ghost_compact_balanced": {
+        "agents": 32,
+        "bytes": 569344,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 771.836,
+        "full_read_total_us": 3154.883,
+        "full_records_read": 72,
+        "manifest_digest": "32871d9959beca7d4130efed7780ba0950229d52ccdfe0f612d26753098aea34",
+        "manifest_records": 768,
+        "manifest_us": 3263.164,
+        "projection_read_total_us": 762.734,
+        "projection_rows_read": 72,
+        "records": 768,
+        "records_per_agent": 24,
+        "write_total_us": 88125.625
+      },
+      "ghost_compact_dense": {
+        "agents": 32,
+        "bytes": 569344,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 747.774,
+        "full_read_total_us": 3117.305,
+        "full_records_read": 72,
+        "manifest_digest": "32871d9959beca7d4130efed7780ba0950229d52ccdfe0f612d26753098aea34",
+        "manifest_records": 768,
+        "manifest_us": 3007.852,
+        "projection_read_total_us": 774.102,
+        "projection_rows_read": 72,
+        "records": 768,
+        "records_per_agent": 24,
+        "write_total_us": 115512.343
+      },
+      "ghost_compact_fast": {
+        "agents": 32,
+        "bytes": 585728,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 744.61,
+        "full_read_total_us": 3043.281,
+        "full_records_read": 72,
+        "manifest_digest": "32871d9959beca7d4130efed7780ba0950229d52ccdfe0f612d26753098aea34",
+        "manifest_records": 768,
+        "manifest_us": 3233.476,
+        "projection_read_total_us": 833.984,
+        "projection_rows_read": 72,
+        "records": 768,
+        "records_per_agent": 24,
+        "write_total_us": 113803.554
+      }
+    },
+    "agent_scale_500_short": {
+      "ghost_compact_balanced": {
+        "agents": 500,
+        "bytes": 8679424,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 1020.469,
+        "full_read_total_us": 3076.523,
+        "full_records_read": 72,
+        "manifest_digest": "ff6b55159305d346a5626b6414e3a82644d58f826656f89cb6d9fdea47e05aeb",
+        "manifest_records": 12000,
+        "manifest_us": 53915.078,
+        "projection_read_total_us": 1045.859,
+        "projection_rows_read": 72,
+        "records": 12000,
+        "records_per_agent": 24,
+        "write_total_us": 1044796.953
+      },
+      "ghost_compact_dense": {
+        "agents": 500,
+        "bytes": 8679424,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 1155.0,
+        "full_read_total_us": 3217.343,
+        "full_records_read": 72,
+        "manifest_digest": "ff6b55159305d346a5626b6414e3a82644d58f826656f89cb6d9fdea47e05aeb",
+        "manifest_records": 12000,
+        "manifest_us": 54133.204,
+        "projection_read_total_us": 788.633,
+        "projection_rows_read": 72,
+        "records": 12000,
+        "records_per_agent": 24,
+        "write_total_us": 1887289.414
+      },
+      "ghost_compact_fast": {
+        "agents": 500,
+        "bytes": 8957952,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 623.008,
+        "full_read_total_us": 2057.461,
+        "full_records_read": 72,
+        "manifest_digest": "ff6b55159305d346a5626b6414e3a82644d58f826656f89cb6d9fdea47e05aeb",
+        "manifest_records": 12000,
+        "manifest_us": 40499.531,
+        "projection_read_total_us": 649.922,
+        "projection_rows_read": 72,
+        "records": 12000,
+        "records_per_agent": 24,
+        "write_total_us": 1367503.633
+      }
+    },
+    "history_depth_32_large": {
+      "ghost_compact_balanced": {
+        "agents": 32,
+        "bytes": 4337664,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 856.523,
+        "full_read_total_us": 21820.391,
+        "full_records_read": 576,
+        "manifest_digest": "36c59e491b216f95577cb5e01754cef3b6e3194dceec715a56f7b993cd177b05",
+        "manifest_records": 6144,
+        "manifest_us": 26872.304,
+        "projection_read_total_us": 4158.046,
+        "projection_rows_read": 576,
+        "records": 6144,
+        "records_per_agent": 192,
+        "write_total_us": 1057413.555
+      },
+      "ghost_compact_dense": {
+        "agents": 32,
+        "bytes": 4227072,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 572.343,
+        "full_read_total_us": 15021.758,
+        "full_records_read": 576,
+        "manifest_digest": "36c59e491b216f95577cb5e01754cef3b6e3194dceec715a56f7b993cd177b05",
+        "manifest_records": 6144,
+        "manifest_us": 23127.89,
+        "projection_read_total_us": 2922.032,
+        "projection_rows_read": 576,
+        "records": 6144,
+        "records_per_agent": 192,
+        "write_total_us": 607767.734
+      },
+      "ghost_compact_fast": {
+        "agents": 32,
+        "bytes": 4382720,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 914.57,
+        "full_read_total_us": 21917.461,
+        "full_records_read": 576,
+        "manifest_digest": "36c59e491b216f95577cb5e01754cef3b6e3194dceec715a56f7b993cd177b05",
+        "manifest_records": 6144,
+        "manifest_us": 26779.843,
+        "projection_read_total_us": 4176.485,
+        "projection_rows_read": 576,
+        "records": 6144,
+        "records_per_agent": 192,
+        "write_total_us": 1048153.906
+      }
+    },
+    "history_depth_32_medium": {
+      "ghost_compact_balanced": {
+        "agents": 32,
+        "bytes": 2138112,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 795.781,
+        "full_read_total_us": 11094.102,
+        "full_records_read": 288,
+        "manifest_digest": "df10ee7c84b5a51b6ee847a8424cafa34bb76c53d5c49c12f65f96b6df0b590b",
+        "manifest_records": 3072,
+        "manifest_us": 13197.812,
+        "projection_read_total_us": 2200.235,
+        "projection_rows_read": 288,
+        "records": 3072,
+        "records_per_agent": 96,
+        "write_total_us": 503764.453
+      },
+      "ghost_compact_dense": {
+        "agents": 32,
+        "bytes": 2142208,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 854.531,
+        "full_read_total_us": 11340.0,
+        "full_records_read": 288,
+        "manifest_digest": "df10ee7c84b5a51b6ee847a8424cafa34bb76c53d5c49c12f65f96b6df0b590b",
+        "manifest_records": 3072,
+        "manifest_us": 13173.984,
+        "projection_read_total_us": 2265.547,
+        "projection_rows_read": 288,
+        "records": 3072,
+        "records_per_agent": 96,
+        "write_total_us": 498094.453
+      },
+      "ghost_compact_fast": {
+        "agents": 32,
+        "bytes": 2215936,
+        "exact_lookup_count": 9,
+        "exact_lookup_total_us": 520.743,
+        "full_read_total_us": 7700.195,
+        "full_records_read": 288,
+        "manifest_digest": "df10ee7c84b5a51b6ee847a8424cafa34bb76c53d5c49c12f65f96b6df0b590b",
+        "manifest_records": 3072,
+        "manifest_us": 13386.484,
+        "projection_read_total_us": 1487.813,
+        "projection_rows_read": 288,
+        "records": 3072,
+        "records_per_agent": 96,
+        "write_total_us": 489455.508
+      }
+    }
+  }
+}

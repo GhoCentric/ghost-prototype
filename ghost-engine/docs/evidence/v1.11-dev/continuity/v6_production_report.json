@@ -1,0 +1,1001 @@
+{
+  "automatic_forgetting": false,
+  "cold_history_contract": "derived history stages in memory on hot paths and flushes atomically before persistent snapshot",
+  "compression": "zlib",
+  "compression_level": 6,
+  "configure_interpretation_rule_return_contract_preserved": true,
+  "continuity_tick_contract": "logical-time scheduling; relevant reads/events/snapshots materialize deferred state",
+  "cost_gate": {
+    "failed": [],
+    "limits": {
+      "active_tick_state_us": 1.1,
+      "dormant_tick_us": 0.1,
+      "event_us": 0.95,
+      "hot_snapshot_bytes": 0.15,
+      "recall_us": 1.75,
+      "total_bundle_bytes": 1.05
+    },
+    "order_diagnostics": {
+      "active_tick_state_us": {
+        "cand->pre": {
+          "cv": 0.24985087405209233,
+          "mad": 0.13972966625124383,
+          "max": 1.5469907767275732,
+          "mean": 1.0246250020728442,
+          "median": 1.0181055038383842,
+          "min": 0.7801118071824596,
+          "n": 7,
+          "p10": 0.8355053779048347,
+          "p90": 1.082392229955504,
+          "stdev": 0.25600345234352706
+        },
+        "pre->cand": {
+          "cv": 0.2008388804200344,
+          "mad": 0.11164681321059239,
+          "max": 1.3829626667761423,
+          "mean": 0.9704976725843132,
+          "median": 0.9203902750243897,
+          "min": 0.7631129682018974,
+          "n": 8,
+          "p10": 0.7977657213087995,
+          "p90": 1.0638480762213665,
+          "stdev": 0.19491366601208257
+        }
+      },
+      "dormant_tick_us": {
+        "cand->pre": {
+          "cv": 0.26815893789709744,
+          "mad": 0.0028768453798473474,
+          "max": 0.020319680811382874,
+          "mean": 0.013719256460990351,
+          "median": 0.013244790080701539,
+          "min": 0.009517292684422656,
+          "n": 8,
+          "p10": 0.009625261600876511,
+          "p90": 0.016344097213921095,
+          "stdev": 0.0036789412413170647
+        },
+        "pre->cand": {
+          "cv": 0.48899919649475293,
+          "mad": 0.0014462433443840593,
+          "max": 0.048846798127104935,
+          "mean": 0.023286316541800377,
+          "median": 0.019507764020291966,
+          "min": 0.01610358070393853,
+          "n": 7,
+          "p10": 0.017902093382494388,
+          "p90": 0.020954007364676026,
+          "stdev": 0.011386990078262858
+        }
+      },
+      "event_us": {
+        "cand->pre": {
+          "cv": 0.3756606318148414,
+          "mad": 0.1353261912788537,
+          "max": 1.6388114978080044,
+          "mean": 0.9485587906476978,
+          "median": 0.8723342922697588,
+          "min": 0.48667257813055215,
+          "n": 7,
+          "p10": 0.7774779641164878,
+          "p90": 1.0563187987011708,
+          "stdev": 0.356336194608236
+        },
+        "pre->cand": {
+          "cv": 0.1873399254148377,
+          "mad": 0.10005737485880678,
+          "max": 0.8672672114563392,
+          "mean": 0.6889039843386985,
+          "median": 0.7067935140398085,
+          "min": 0.4915799332699048,
+          "n": 8,
+          "p10": 0.5726100959281256,
+          "p90": 0.7936287958115184,
+          "stdev": 0.1290592210439963
+        }
+      },
+      "recall_us": {
+        "cand->pre": {
+          "cv": 0.191618599107639,
+          "mad": 0.08591007469485751,
+          "max": 1.525704154813316,
+          "mean": 1.0747261033389381,
+          "median": 1.0453907895411207,
+          "min": 0.8552383605110901,
+          "n": 8,
+          "p10": 0.9071129902955035,
+          "p90": 1.156219747518548,
+          "stdev": 0.20593751034621902
+        },
+        "pre->cand": {
+          "cv": 0.21798739083750857,
+          "mad": 0.11149241418507783,
+          "max": 1.6393689404209033,
+          "mean": 1.1257666310960701,
+          "median": 1.0689718406228825,
+          "min": 0.9290038013734332,
+          "n": 7,
+          "p10": 0.9574794264378047,
+          "p90": 1.2165418016608065,
+          "stdev": 0.24540293060456436
+        }
+      }
+    },
+    "paired_ratio_medians": {
+      "active_tick_state_us": 0.9415092979954589,
+      "dormant_tick_us": 0.016344097213921095,
+      "event_us": 0.7790447640701779,
+      "recall_us": 1.0639274624940334
+    },
+    "ratios": {
+      "active_tick_state_us": 0.9465253786619107,
+      "dormant_tick_us": 0.016314776027960137,
+      "event_us": 0.7549981905831078,
+      "hot_snapshot_bytes": 0.09633699633699634,
+      "recall_us": 1.0689718406228825,
+      "total_bundle_bytes": 0.924408014571949
+    },
+    "sampling": {
+      "alternating_order": true,
+      "authoritative_timed_gate": "ratio_of_medians AND paired_ratio_median",
+      "fresh_runtime_per_implementation_per_sample": true,
+      "pythonhashseed": "0",
+      "size_gate": "byte-stable repeated reconstructions + ratio_of_medians",
+      "size_repetitions": 3,
+      "timed_repetitions": 15
+    },
+    "schema": "ghost.v1110.optimized_continuity.production_patch1_v6.cost_gate",
+    "sizes": {
+      "archive_bytes": {
+        "optimized": [
+          86016,
+          86016,
+          86016
+        ],
+        "predecessor": [
+          24576,
+          24576,
+          24576
+        ]
+      },
+      "hot_snapshot_bytes": {
+        "optimized": [
+          7364,
+          7364,
+          7364
+        ],
+        "predecessor": [
+          76440,
+          76440,
+          76440
+        ],
+        "ratio_of_medians": 0.09633699633699634
+      },
+      "total_bundle_bytes": {
+        "optimized": [
+          93380,
+          93380,
+          93380
+        ],
+        "predecessor": [
+          101016,
+          101016,
+          101016
+        ],
+        "ratio_of_medians": 0.924408014571949
+      }
+    },
+    "strict_pass": true,
+    "timed": {
+      "active_tick_state_us": {
+        "optimized": {
+          "cv": 0.19335240667109693,
+          "mad": 114.69075000000021,
+          "max": 2216.5527500000003,
+          "mean": 1440.8771666666667,
+          "median": 1366.6569166666668,
+          "min": 1062.8515,
+          "n": 15,
+          "p10": 1173.9941666666666,
+          "p90": 1791.0221666666666,
+          "stdev": 278.59706789243126
+        },
+        "paired_ratio": {
+          "cv": 0.21971191165284695,
+          "mad": 0.1060039200906242,
+          "max": 1.5469907767275732,
+          "mean": 0.9957570930122943,
+          "median": 0.9415092979954589,
+          "min": 0.7631129682018974,
+          "n": 15,
+          "p10": 0.7801118071824596,
+          "p90": 1.3829626667761423,
+          "stdev": 0.21877969444761292
+        },
+        "predecessor": {
+          "cv": 0.08186812631802956,
+          "mad": 59.66791666666677,
+          "max": 1713.7923333333335,
+          "mean": 1457.8248722222222,
+          "median": 1443.8671666666667,
+          "min": 1284.6354166666667,
+          "n": 15,
+          "p10": 1295.0618333333334,
+          "p90": 1669.9349166666668,
+          "stdev": 119.34939078865419
+        },
+        "ratio_of_medians": 0.9465253786619107,
+        "samples": [
+          {
+            "candidate": 1613.5514166666665,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1713.7923333333335,
+            "ratio": 0.9415092979954589,
+            "sample": 1
+          },
+          {
+            "candidate": 1062.8515,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1362.4348333333335,
+            "ratio": 0.7801118071824596,
+            "sample": 2
+          },
+          {
+            "candidate": 1333.3886666666667,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1490.7324166666667,
+            "ratio": 0.8944520503875361,
+            "sample": 3
+          },
+          {
+            "candidate": 1298.74675,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1478.5775,
+            "ratio": 0.8783758375871403,
+            "sample": 4
+          },
+          {
+            "candidate": 1366.6569166666668,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1284.6354166666667,
+            "ratio": 1.0638480762213665,
+            "sample": 5
+          },
+          {
+            "candidate": 1251.9661666666666,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1498.45375,
+            "ratio": 0.8355053779048347,
+            "sample": 6
+          },
+          {
+            "candidate": 1413.3495833333334,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1384.19925,
+            "ratio": 1.0210593477299843,
+            "sample": 7
+          },
+          {
+            "candidate": 1555.6640833333333,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1437.2461666666668,
+            "ratio": 1.082392229955504,
+            "sample": 8
+          },
+          {
+            "candidate": 1315.5208333333333,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1462.8743333333332,
+            "ratio": 0.8992712520533206,
+            "sample": 9
+          },
+          {
+            "candidate": 1399.2024166666667,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1374.3196666666665,
+            "ratio": 1.0181055038383842,
+            "sample": 10
+          },
+          {
+            "candidate": 1791.0221666666666,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1295.0618333333334,
+            "ratio": 1.3829626667761423,
+            "sample": 11
+          },
+          {
+            "candidate": 2216.5527500000003,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1432.81575,
+            "ratio": 1.5469907767275732,
+            "sample": 12
+          },
+          {
+            "candidate": 1173.9941666666666,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1538.42775,
+            "ratio": 0.7631129682018974,
+            "sample": 13
+          },
+          {
+            "candidate": 1488.47325,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1443.8671666666667,
+            "ratio": 1.030893481314013,
+            "sample": 14
+          },
+          {
+            "candidate": 1332.2168333333334,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1669.9349166666668,
+            "ratio": 0.7977657213087995,
+            "sample": 15
+          }
+        ]
+      },
+      "dormant_tick_us": {
+        "optimized": {
+          "cv": 0.35647016104250007,
+          "mad": 4.925783333333335,
+          "max": 40.326816666666666,
+          "mean": 21.799175555555557,
+          "median": 21.40625,
+          "min": 9.767566666666665,
+          "n": 15,
+          "p10": 12.326833333333333,
+          "p90": 28.03711666666667,
+          "stdev": 7.77075562088262
+        },
+        "paired_ratio": {
+          "cv": 0.5121953596163097,
+          "mad": 0.003163666806370872,
+          "max": 0.048846798127104935,
+          "mean": 0.018183884498701695,
+          "median": 0.016344097213921095,
+          "min": 0.009517292684422656,
+          "n": 15,
+          "p10": 0.009625261600876511,
+          "p90": 0.020954007364676026,
+          "stdev": 0.009313701260033953
+        },
+        "predecessor": {
+          "cv": 0.14766253160456563,
+          "mad": 29.60286666666684,
+          "max": 1401.5735666666667,
+          "mean": 1240.9721355555555,
+          "median": 1312.0774666666666,
+          "min": 825.5774833333332,
+          "n": 15,
+          "p10": 845.0208333333334,
+          "p90": 1362.1295666666667,
+          "stdev": 183.24508718685752
+        },
+        "ratio_of_medians": 0.016314776027960137,
+        "samples": [
+          {
+            "candidate": 9.767566666666665,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 845.0208333333334,
+            "ratio": 0.011558965508739921,
+            "sample": 1
+          },
+          {
+            "candidate": 40.326816666666666,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 825.5774833333332,
+            "ratio": 0.048846798127104935,
+            "sample": 2
+          },
+          {
+            "candidate": 12.789716666666667,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1328.7656166666668,
+            "ratio": 0.009625261600876511,
+            "sample": 3
+          },
+          {
+            "candidate": 28.03711666666667,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1338.03125,
+            "ratio": 0.020954007364676026,
+            "sample": 4
+          },
+          {
+            "candidate": 26.352866666666667,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1296.9134166666665,
+            "ratio": 0.020319680811382874,
+            "sample": 5
+          },
+          {
+            "candidate": 26.173183333333334,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1341.6803333333335,
+            "ratio": 0.019507764020291966,
+            "sample": 6
+          },
+          {
+            "candidate": 21.40625,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1346.375,
+            "ratio": 0.015899173707176677,
+            "sample": 7
+          },
+          {
+            "candidate": 26.332033333333335,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1289.5885333333333,
+            "ratio": 0.02041894189712605,
+            "sample": 8
+          },
+          {
+            "candidate": 12.326833333333333,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1295.2037666666665,
+            "ratio": 0.009517292684422656,
+            "sample": 9
+          },
+          {
+            "candidate": 27.009766666666668,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1401.5735666666667,
+            "ratio": 0.019271030296970738,
+            "sample": 10
+          },
+          {
+            "candidate": 18.020833333333332,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1362.1295666666667,
+            "ratio": 0.013229896607730928,
+            "sample": 11
+          },
+          {
+            "candidate": 23.488933333333332,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1312.0774666666666,
+            "ratio": 0.017902093382494388,
+            "sample": 12
+          },
+          {
+            "candidate": 17.61001666666667,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1328.08725,
+            "ratio": 0.013259683553672148,
+            "sample": 13
+          },
+          {
+            "candidate": 20.3457,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 1263.4270833333333,
+            "ratio": 0.01610358070393853,
+            "sample": 14
+          },
+          {
+            "candidate": 17.0,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 1040.1308666666666,
+            "ratio": 0.016344097213921095,
+            "sample": 15
+          }
+        ]
+      },
+      "event_us": {
+        "optimized": {
+          "cv": 0.2861339530765459,
+          "mad": 2330.2732499999984,
+          "max": 17892.80275,
+          "mean": 11120.7819,
+          "median": 10718.379,
+          "min": 6188.92575,
+          "n": 15,
+          "p10": 7521.09375,
+          "p90": 14811.797,
+          "stdev": 3182.0332863491008
+        },
+        "paired_ratio": {
+          "cv": 0.35073429991142574,
+          "mad": 0.11400966345147423,
+          "max": 1.6388114978080044,
+          "mean": 0.8100762272828981,
+          "median": 0.7790447640701779,
+          "min": 0.48667257813055215,
+          "n": 15,
+          "p10": 0.4915799332699048,
+          "p90": 1.0563187987011708,
+          "stdev": 0.28412151845095623
+        },
+        "predecessor": {
+          "cv": 0.21517592061826332,
+          "mad": 2570.478500000001,
+          "max": 18784.3555,
+          "mean": 14194.0937,
+          "median": 14196.5625,
+          "min": 7962.2655,
+          "n": 15,
+          "p10": 10505.0,
+          "p90": 17756.77725,
+          "stdev": 3054.2271792393913
+        },
+        "ratio_of_medians": 0.7549981905831078,
+        "samples": [
+          {
+            "candidate": 12646.162,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 14581.62125,
+            "ratio": 0.8672672114563392,
+            "sample": 1
+          },
+          {
+            "candidate": 13777.959,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 17208.7695,
+            "ratio": 0.8006359199592976,
+            "sample": 2
+          },
+          {
+            "candidate": 10718.379,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 14318.81825,
+            "ratio": 0.7485519274609133,
+            "sample": 3
+          },
+          {
+            "candidate": 17892.80275,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 17756.77725,
+            "ratio": 1.0076604835486125,
+            "sample": 4
+          },
+          {
+            "candidate": 12492.25575,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 18784.3555,
+            "ratio": 0.6650351006187036,
+            "sample": 5
+          },
+          {
+            "candidate": 14811.797,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 14022.08975,
+            "ratio": 1.0563187987011708,
+            "sample": 6
+          },
+          {
+            "candidate": 8337.0705,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 10505.0,
+            "ratio": 0.7936287958115184,
+            "sample": 7
+          },
+          {
+            "candidate": 9088.6035,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 11689.8535,
+            "ratio": 0.7774779641164878,
+            "sample": 8
+          },
+          {
+            "candidate": 8425.85925,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 14196.5625,
+            "ratio": 0.5935140460939048,
+            "sample": 9
+          },
+          {
+            "candidate": 10110.4395,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 11590.0975,
+            "ratio": 0.8723342922697588,
+            "sample": 10
+          },
+          {
+            "candidate": 7521.09375,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 13134.75575,
+            "ratio": 0.5726100959281256,
+            "sample": 11
+          },
+          {
+            "candidate": 6188.92575,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 12716.81625,
+            "ratio": 0.48667257813055215,
+            "sample": 12
+          },
+          {
+            "candidate": 13062.2755,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 16767.041,
+            "ratio": 0.7790447640701779,
+            "sample": 13
+          },
+          {
+            "candidate": 13048.65225,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 7962.2655,
+            "ratio": 1.6388114978080044,
+            "sample": 14
+          },
+          {
+            "candidate": 8689.453,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 17676.582,
+            "ratio": 0.4915799332699048,
+            "sample": 15
+          }
+        ]
+      },
+      "recall_us": {
+        "optimized": {
+          "cv": 0.19468859570158378,
+          "mad": 422.8125,
+          "max": 7839.834,
+          "mean": 5064.6074,
+          "median": 4928.70125,
+          "min": 4031.94325,
+          "n": 15,
+          "p10": 4217.31425,
+          "p90": 6597.3145,
+          "stdev": 986.0213024858494
+        },
+        "paired_ratio": {
+          "cv": 0.19883125385011824,
+          "mad": 0.0922922850245147,
+          "max": 1.6393689404209033,
+          "mean": 1.0985450162922663,
+          "median": 1.0639274624940334,
+          "min": 0.8552383605110901,
+          "n": 15,
+          "p10": 0.9071129902955035,
+          "p90": 1.525704154813316,
+          "stdev": 0.21842508300018987
+        },
+        "predecessor": {
+          "cv": 0.06174985018589853,
+          "mad": 171.53349999999955,
+          "max": 4995.752,
+          "mean": 4623.15885,
+          "median": 4610.69325,
+          "min": 4095.84,
+          "n": 15,
+          "p10": 4169.9415,
+          "p90": 4970.42975,
+          "stdev": 285.4793663731109
+        },
+        "ratio_of_medians": 1.0689718406228825,
+        "samples": [
+          {
+            "candidate": 4950.23425,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4652.793,
+            "ratio": 1.0639274624940334,
+            "sample": 1
+          },
+          {
+            "candidate": 4757.5975,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4968.877,
+            "ratio": 0.9574794264378047,
+            "sample": 2
+          },
+          {
+            "candidate": 5286.46475,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4572.19725,
+            "ratio": 1.156219747518548,
+            "sample": 3
+          },
+          {
+            "candidate": 4457.871,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4169.9415,
+            "ratio": 1.0690488103969804,
+            "sample": 4
+          },
+          {
+            "candidate": 4959.19925,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4598.867,
+            "ratio": 1.0783523963619734,
+            "sample": 5
+          },
+          {
+            "candidate": 5403.1445,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4441.3965,
+            "ratio": 1.2165418016608065,
+            "sample": 6
+          },
+          {
+            "candidate": 4505.88875,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4967.285,
+            "ratio": 0.9071129902955035,
+            "sample": 7
+          },
+          {
+            "candidate": 4217.31425,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4539.60925,
+            "ratio": 0.9290038013734332,
+            "sample": 8
+          },
+          {
+            "candidate": 4272.55875,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4995.752,
+            "ratio": 0.8552383605110901,
+            "sample": 9
+          },
+          {
+            "candidate": 4928.70125,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4610.69325,
+            "ratio": 1.0689718406228825,
+            "sample": 10
+          },
+          {
+            "candidate": 4031.94325,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4095.84,
+            "ratio": 0.984399598128833,
+            "sample": 11
+          },
+          {
+            "candidate": 7839.834,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4782.22675,
+            "ratio": 1.6393689404209033,
+            "sample": 12
+          },
+          {
+            "candidate": 6597.3145,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4324.11125,
+            "ratio": 1.525704154813316,
+            "sample": 13
+          },
+          {
+            "candidate": 4657.13875,
+            "order": [
+              "pre",
+              "cand"
+            ],
+            "pre": 4657.36325,
+            "ratio": 0.9999517967596794,
+            "sample": 14
+          },
+          {
+            "candidate": 5103.90625,
+            "order": [
+              "cand",
+              "pre"
+            ],
+            "pre": 4970.42975,
+            "ratio": 1.0268541165882084,
+            "sample": 15
+          }
+        ]
+      }
+    }
+  },
+  "cost_measurement_hardening": {
+    "alternating_order": true,
+    "fresh_runtime_per_implementation_per_sample": true,
+    "original_limits_preserved": true,
+    "size_gate_basis": "byte-stable repeated reconstructions + ratio_of_medians",
+    "size_repetitions": 3,
+    "timed_gate_basis": "ratio_of_medians AND paired_ratio_median",
+    "timed_repetitions": 15
+  },
+  "deferred_cold_history_compaction": true,
+  "foreground_ablation_preserved": true,
+  "full_nonresearch_regression": "PASS",
+  "git_push": false,
+  "hot_history_keep": 1,
+  "lazy_temporal_materialization": true,
+  "m3_semantics_preserved": true,
+  "maintained_core_coverage": "100% PASS",
+  "modified_diff_coverage": "100% statements/added-branches",
+  "new_module_coverage": "100% statements/branches",
+  "post_sha256": {
+    "ghost/api.py": "a5022ade72d602abd5761f33803f1c816655f3f3c2911437fe5b6289457db969",
+    "ghost/attention.py": "0d99520780711eef9e0e509e3f49648905f28eaa3002d88869dc3b0bbd5f0f23",
+    "ghost/continuity_history.py": "0d17d5b38ececf02d50498897aee33b1231a573666e96d42742d84851b04252b",
+    "ghost/continuity_optimization.py": "771e42a09ab83babd473dec7f3354a5b5e14ade50bca52bb16ac4df7528ef54e",
+    "ghost/episode_store.py": "b37d30e86a077dedaf36a2e13d826f88ddc17b1921d6365fc20fcf46d51e48d4",
+    "tests/test_continuity_optimization_production_v1110.py": "9c7c26cfc2ae4d9ffc8e264f076530319937529d5c8a462e87a0d0f2e607f6f3",
+    "tests/test_continuity_optimization_public_contract_v1110.py": "3d5afa6d48fe06de16fe2134f5a2651e6828558976080ee1b484cd85ccb08fbf",
+    "tests/test_continuity_optimization_quality_v1110.py": "ab2232cb5018637af503addef8744c79d9a6a1f8cfb1e640481d598d673e0e29",
+    "tests/test_continuity_optimization_value_v1110.py": "d81c63fcc54c16a02b3d78ab0e5cfb8042cb34af1407793c03f69789f8d721ea"
+  },
+  "public_api_methods_added": false,
+  "public_docs_rewrite": false,
+  "public_return_contract_matrix_preserved": true,
+  "publish": false,
+  "resourcewarnings": "ZERO in fatal-gated production lanes",
+  "selected_candidate": "ghost_compact_balanced",
+  "silent_episode_eviction": false,
+  "stage": "optimized_continuity_production_patch1_v6",
+  "stage6_behavior": "25/26 with both 2/2 Ghost-only wins preserved",
+  "stage9_checkpoint_sha256": "ffedb27f6d27da83e892f530ce0e9e8913fa8b65c617f53fb34418ac3dee7453",
+  "stage9_report_sha256": "73a8f48e911a087dd409deb3336c659aae19fa782202c0a9ab7080ae0da6bbb5",
+  "strict_flush_before_snapshot": true,
+  "strict_verdict": "OPTIMIZED_CONTINUITY_PRODUCTION_PATCH1_V6_PASS",
+  "version_bump": false,
+  "working_projection_budget": 3
+}

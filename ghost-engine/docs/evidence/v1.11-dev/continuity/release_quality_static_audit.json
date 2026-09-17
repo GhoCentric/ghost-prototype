@@ -1,0 +1,378 @@
+{
+  "failures": [],
+  "files": {
+    "__init__.py": {
+      "functions": 5,
+      "lines": 76,
+      "max_complexity": 2,
+      "max_function_lines": 10
+    },
+    "affordances.py": {
+      "functions": 18,
+      "lines": 364,
+      "max_complexity": 20,
+      "max_function_lines": 89
+    },
+    "agent.py": {
+      "functions": 63,
+      "lines": 639,
+      "max_complexity": 18,
+      "max_function_lines": 64
+    },
+    "agents.py": {
+      "functions": 4,
+      "lines": 53,
+      "max_complexity": 2,
+      "max_function_lines": 16
+    },
+    "api.py": {
+      "functions": 95,
+      "lines": 2557,
+      "max_complexity": 12,
+      "max_function_lines": 129
+    },
+    "attention.py": {
+      "functions": 23,
+      "lines": 724,
+      "max_complexity": 60,
+      "max_function_lines": 294
+    },
+    "combat.py": {
+      "functions": 5,
+      "lines": 296,
+      "max_complexity": 9,
+      "max_function_lines": 76
+    },
+    "continuity.py": {
+      "functions": 21,
+      "lines": 358,
+      "max_complexity": 15,
+      "max_function_lines": 51
+    },
+    "continuity_history.py": {
+      "functions": 20,
+      "lines": 312,
+      "max_complexity": 9,
+      "max_function_lines": 41
+    },
+    "continuity_optimization.py": {
+      "functions": 16,
+      "lines": 326,
+      "max_complexity": 10,
+      "max_function_lines": 46
+    },
+    "emotions.py": {
+      "functions": 28,
+      "lines": 816,
+      "max_complexity": 27,
+      "max_function_lines": 145
+    },
+    "engine.py": {
+      "functions": 18,
+      "lines": 1025,
+      "max_complexity": 31,
+      "max_function_lines": 276
+    },
+    "episode_store.py": {
+      "functions": 30,
+      "lines": 498,
+      "max_complexity": 8,
+      "max_function_lines": 47
+    },
+    "epistemic.py": {
+      "functions": 37,
+      "lines": 1946,
+      "max_complexity": 24,
+      "max_function_lines": 392
+    },
+    "events.py": {
+      "functions": 7,
+      "lines": 139,
+      "max_complexity": 2,
+      "max_function_lines": 11
+    },
+    "governance.py": {
+      "functions": 26,
+      "lines": 1669,
+      "max_complexity": 15,
+      "max_function_lines": 201
+    },
+    "ids.py": {
+      "functions": 2,
+      "lines": 50,
+      "max_complexity": 5,
+      "max_function_lines": 30
+    },
+    "input.py": {
+      "functions": 5,
+      "lines": 159,
+      "max_complexity": 8,
+      "max_function_lines": 54
+    },
+    "interpretation.py": {
+      "functions": 23,
+      "lines": 795,
+      "max_complexity": 52,
+      "max_function_lines": 300
+    },
+    "llm_adapter.py": {
+      "functions": 8,
+      "lines": 348,
+      "max_complexity": 15,
+      "max_function_lines": 92
+    },
+    "motives.py": {
+      "functions": 34,
+      "lines": 736,
+      "max_complexity": 15,
+      "max_function_lines": 64
+    },
+    "objectives.py": {
+      "functions": 8,
+      "lines": 366,
+      "max_complexity": 11,
+      "max_function_lines": 209
+    },
+    "perception.py": {
+      "functions": 18,
+      "lines": 385,
+      "max_complexity": 12,
+      "max_function_lines": 62
+    },
+    "policies.py": {
+      "functions": 9,
+      "lines": 338,
+      "max_complexity": 17,
+      "max_function_lines": 73
+    },
+    "relationships.py": {
+      "functions": 27,
+      "lines": 1822,
+      "max_complexity": 18,
+      "max_function_lines": 281
+    },
+    "salience_bridge.py": {
+      "functions": 13,
+      "lines": 245,
+      "max_complexity": 7,
+      "max_function_lines": 51
+    },
+    "scenario.py": {
+      "functions": 7,
+      "lines": 427,
+      "max_complexity": 25,
+      "max_function_lines": 301
+    },
+    "scenario_runtime.py": {
+      "functions": 14,
+      "lines": 578,
+      "max_complexity": 13,
+      "max_function_lines": 216
+    },
+    "step.py": {
+      "functions": 0,
+      "lines": 10,
+      "max_complexity": 0,
+      "max_function_lines": 0
+    },
+    "temperament.py": {
+      "functions": 9,
+      "lines": 511,
+      "max_complexity": 13,
+      "max_function_lines": 177
+    },
+    "threat_response.py": {
+      "functions": 7,
+      "lines": 283,
+      "max_complexity": 7,
+      "max_function_lines": 147
+    },
+    "validation.py": {
+      "functions": 4,
+      "lines": 63,
+      "max_complexity": 4,
+      "max_function_lines": 14
+    },
+    "world.py": {
+      "functions": 15,
+      "lines": 600,
+      "max_complexity": 17,
+      "max_function_lines": 225
+    }
+  },
+  "ghostagent_boundary": {
+    "agent_only_operations": [
+      "add_agent_capability",
+      "add_agent_goal",
+      "agent_affordance_history",
+      "agent_affordance_state",
+      "agent_capabilities",
+      "agent_goal",
+      "agent_goals",
+      "agent_motive_history",
+      "agent_motive_profiles",
+      "agent_motive_signals",
+      "agent_motive_state",
+      "agent_observation_history",
+      "agent_perception_state",
+      "agent_values",
+      "clear_agent_affordances",
+      "configure_agent_motive",
+      "evaluate_agent_motives",
+      "latest_agent_observation",
+      "remove_agent_capability",
+      "remove_agent_motive",
+      "set_agent_affordances",
+      "set_agent_goal_priority",
+      "set_agent_goal_progress",
+      "set_agent_value",
+      "submit_observation",
+      "transition_agent_goal"
+    ],
+    "leaked_on_ghostapi": []
+  },
+  "ghostapi": {
+    "added": [
+      "agent",
+      "agent_state",
+      "continuity_event",
+      "continuity_state",
+      "continuity_tick",
+      "recall_dimension",
+      "recall_episode",
+      "register_agent"
+    ],
+    "baseline_count": 59,
+    "local_count": 67,
+    "removed": []
+  },
+  "import_cycles": [],
+  "package_exports": {
+    "added": [],
+    "baseline": [
+      "GhostAPI",
+      "GhostEngine",
+      "init",
+      "reset",
+      "snapshot",
+      "state",
+      "step"
+    ],
+    "local": [
+      "GhostAPI",
+      "GhostEngine",
+      "init",
+      "reset",
+      "snapshot",
+      "state",
+      "step"
+    ],
+    "removed": []
+  },
+  "private_cross_runtime_accesses": [
+    {
+      "attribute": "_pending_calls",
+      "line": 609,
+      "runtime": "_continuity_optimization"
+    },
+    {
+      "attribute": "_pending_calls",
+      "line": 652,
+      "runtime": "_continuity_optimization"
+    },
+    {
+      "attribute": "_pending_steps",
+      "line": 608,
+      "runtime": "_continuity_optimization"
+    },
+    {
+      "attribute": "_pending_steps",
+      "line": 647,
+      "runtime": "_continuity_optimization"
+    },
+    {
+      "attribute": "_projection_active",
+      "line": 611,
+      "runtime": "_continuity_optimization"
+    },
+    {
+      "attribute": "_projection_active",
+      "line": 657,
+      "runtime": "_continuity_optimization"
+    },
+    {
+      "attribute": "_agents",
+      "line": 606,
+      "runtime": "attention"
+    },
+    {
+      "attribute": "_agents",
+      "line": 641,
+      "runtime": "attention"
+    },
+    {
+      "attribute": "_sequence",
+      "line": 605,
+      "runtime": "attention"
+    },
+    {
+      "attribute": "_sequence",
+      "line": 631,
+      "runtime": "attention"
+    },
+    {
+      "attribute": "_agents",
+      "line": 607,
+      "runtime": "continuity"
+    },
+    {
+      "attribute": "_agents",
+      "line": 644,
+      "runtime": "continuity"
+    },
+    {
+      "attribute": "_agents",
+      "line": 600,
+      "runtime": "emotions"
+    },
+    {
+      "attribute": "_agents",
+      "line": 633,
+      "runtime": "emotions"
+    },
+    {
+      "attribute": "_sequence",
+      "line": 599,
+      "runtime": "emotions"
+    },
+    {
+      "attribute": "_sequence",
+      "line": 629,
+      "runtime": "emotions"
+    },
+    {
+      "attribute": "_agents",
+      "line": 603,
+      "runtime": "interpretations"
+    },
+    {
+      "attribute": "_agents",
+      "line": 636,
+      "runtime": "interpretations"
+    },
+    {
+      "attribute": "_sequence",
+      "line": 601,
+      "runtime": "interpretations"
+    },
+    {
+      "attribute": "_sequence",
+      "line": 630,
+      "runtime": "interpretations"
+    }
+  ],
+  "schema": "ghost.v1110.release_quality_pass1_v3.static",
+  "warnings": [
+    "cross-runtime private access exists in GhostAPI; retained for explicit review rather than auto-refactoring"
+  ]
+}

@@ -1,0 +1,10 @@
+GHOST v1.11-dev RELEASE HYGIENE REFACTOR PASS 1 v2
+strict_verdict=V111_RELEASE_HYGIENE_PASS1_V2_PASS
+GhostAPI public surface=59 -> 67
+Released-baseline public removals=0
+v6 hot-path AST anchor=PRESERVED
+v6 continuity modules=EXACTLY UNCHANGED
+Static architecture gate=PASS
+Focused regression=PASS
+Full regression=PASS
+Core coverage=100% PASS
