@@ -1,4 +1,4 @@
-"""Ghost v1.11 development Phase 5 — capability / affordance contract demo."""
+"""Ghost v1.11 capability / affordance contract demo."""
 from __future__ import annotations
 
 import json
@@ -12,7 +12,7 @@ from ghost.motives import MOTIVE_SNAPSHOT_SCHEMA_VERSION
 
 
 def main() -> None:
-    print("GHOST v1.11 PHASE 5 — CAPABILITY / AFFORDANCE CONTRACT")
+    print("GHOST v1.11 — CAPABILITY / AFFORDANCE CONTRACT")
     print("=========================================================")
 
     api = GhostAPI()
@@ -87,16 +87,16 @@ def main() -> None:
     print("Affordance submission mutated motive pressure: NO")
     print("Affordance submission created observation / belief state: NO")
     print("Snapshot restore + deterministic continuation: PASS")
-    print("Action ranking / intent selection: NOT YET — Phase 6")
+    print("Action ranking / intent selection: NOT PERFORMED BY AFFORDANCE CONTRACT")
     print("Action execution: HOST OWNED")
     print("LLM calls: 0")
-    print("Package producer: 1.10.0 (UNCHANGED during v1.11 development)")
+    print("Package producer: 1.11.0")
     print(f"Top-level snapshot schema: {GHOST_SNAPSHOT_SCHEMA_VERSION} (UNCHANGED)")
     print(f"Agent snapshot sub-schema: {AGENT_SNAPSHOT_SCHEMA_VERSION} (UNCHANGED)")
     print(f"Perception snapshot sub-schema: {PERCEPTION_SNAPSHOT_SCHEMA_VERSION} (UNCHANGED)")
     print(f"Motive snapshot sub-schema: {MOTIVE_SNAPSHOT_SCHEMA_VERSION} (UNCHANGED)")
     print(f"Affordance snapshot sub-schema: {AFFORDANCE_SNAPSHOT_SCHEMA_VERSION}")
-    print("\nGHOST v1.11 PHASE 5: PASS")
+    print("\nGHOST v1.11 CAPABILITY / AFFORDANCE CONTRACT: PASS")
 
 
 if __name__ == "__main__":

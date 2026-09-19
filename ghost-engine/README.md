@@ -21,10 +21,10 @@ JSON-safe packets that a game, simulation, dialogue layer, or optional LLM can u
 
 ```text
 Package:    ghocentric-ghost-engine
-Version:    1.10.0
+Version:    1.11.0
 Python:     3.9+
 Runtime dependencies: none
-Validation: 2,390 passed, 1 skipped
+Validation: 2,745 passed, 1 skipped
 ```
 
 The actively maintained package is this `ghost-engine/` directory.
@@ -109,13 +109,74 @@ Ghost returns copied state, diagnostics, or a bounded policy packet
 the host game applies that result to its own mechanics and presentation
 ```
 
-In v1.10.0, Ghost can return selected or locked decisions inside specific bounded
-systems, such as threat-response labels and combat-control packets. It does not
-automatically discover an arbitrary game's NPC abilities or execute engine-specific
-functions.
+In v1.11.0, Ghost also provides a registered-agent state boundary. The host
+registers durable agent identity, capabilities, current affordances, observations,
+values, goals, and motive configuration; Ghost validates and preserves that state.
+The host still owns engine-specific execution, animation, pathfinding, and arbitrary
+action selection.
 
-A generic registered-agent capability runtime is a future layer, not a current
-public guarantee.
+
+## Registered Agent Runtime
+
+v1.11.0 adds a durable registered-agent layer without turning Ghost into an
+autonomous action executor. `GhostAPI.register_agent(...)` creates the identity and
+`GhostAPI.agent(...)` returns a bound `GhostAgent` handle.
+
+The bound handle owns the agent-specific integration surface for:
+
+```text
+values
+goals and goal transitions
+capabilities
+current affordances and affordance history
+observations and observation history
+motive profiles, signals, field evaluation, and history
+```
+
+```python
+from ghost import GhostAPI
+
+ghost = GhostAPI()
+ghost.register_agent(
+    "guard",
+    role="gate_guard",
+    capabilities=["warn", "call_backup"],
+)
+
+guard = ghost.agent("guard")
+guard.set_value("duty", 0.9)
+guard.add_goal("protect_gate", priority=0.9)
+guard.set_affordances([
+    {"id": "warn_player", "capability": "warn"},
+    {"id": "call_backup", "capability": "call_backup"},
+])
+
+print(guard.state())
+```
+
+Capabilities and affordances are host-supplied constraints. Ghost preserves and
+validates them; it does not discover engine abilities or execute the selected game
+action for the host.
+
+## Continuity Runtime
+
+v1.11.0 also adds deterministic continuity operations that join persistent emotion,
+interpretation, attention, causal episodes, and recall without replaying the source
+event.
+
+Public operations are:
+
+```text
+continuity_event
+recall_episode
+recall_dimension
+continuity_tick
+continuity_state
+```
+
+Continuity history uses lazy logical-time materialization, a sparse hot working set,
+and lossless deferred cold-history storage. These are implementation strategies for
+reducing persistence and tick cost; they do not change the host/authority boundary.
 
 ## Relationship State
 
@@ -706,10 +767,10 @@ Performance checks remain uninstrumented so coverage tracing does not distort
 throughput floors. Fresh human-readable and machine-readable results are
 published in [`COVERAGE.md`](COVERAGE.md).
 
-Current synchronized repository validation:
+Current synchronized release regression:
 
 ```text
-2,390 passed
+2,745 passed
 1 skipped
 ```
 
@@ -724,6 +785,13 @@ ghost/
     interpretation.py
     attention.py
     salience_bridge.py
+    agent.py
+    affordances.py
+    motives.py
+    perception.py
+    continuity.py
+    continuity_history.py
+    continuity_optimization.py
     epistemic.py
     threat_response.py
     combat.py
@@ -764,13 +832,13 @@ Ghost is built around:
 
 ## Current Limits
 
-Ghost v1.10.0 is still an alpha package.
+Ghost v1.11.0 is still an alpha package.
 
 Current limitations include:
 
 - Python is the authoritative implementation;
 - Unreal and Godot adapters do not exist yet;
-- generic agent registration and capability binding are not public yet;
+- registered agents do not autonomously discover or execute engine-specific actions;
 - host games still own engine-specific execution;
 - Ghost Revolution is a terminal reference demo rather than a finished commercial
   game;
@@ -778,25 +846,11 @@ Current limitations include:
 
 ## Roadmap Direction
 
-The next architectural goal is an engine-neutral agent action runtime:
-
-```text
-register agent and capabilities
-submit observation
-select one legal action
-report execution result
-update persistent state
-```
-
-Only after that contract is stable should Unreal and Godot adapters expose thin
-engine-facing components around the same Ghost authority.
-
-Multi-emotion state, NPC-specific interpretation, and persistent attention / flow
-are public state layers in v1.10.0. Relationship and emotional state remain
-separate, interpretation maps objective actions into configured agent-specific
-meaning, and attention may compress foreground access without erasing persistent
-source state. The next architectural goal remains the engine-neutral registered-
-agent action runtime above these existing state layers.
+The v1.11 registered-agent and continuity contracts are engine-neutral foundations.
+The next integration direction is to test thin Unreal/Godot-facing adapters and
+measure whether the added continuity state produces better long-horizon NPC
+consistency than simpler baselines. Host games remain responsible for concrete
+action execution and presentation.
 ## Development Note
 
 Ghost was designed by Shane Heckathorn and built through an AI-assisted,

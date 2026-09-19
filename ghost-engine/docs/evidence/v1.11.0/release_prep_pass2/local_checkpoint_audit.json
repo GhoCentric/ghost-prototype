@@ -1,0 +1,100 @@
+{
+  "known_checkpoint_names": [
+    ".ghost_npc_continuity_stage1_checkpoint.json",
+    ".ghost_npc_continuity_stage2_checkpoint.json",
+    ".ghost_npc_continuity_stage3_checkpoint.json",
+    ".ghost_npc_continuity_stage4_checkpoint.json",
+    ".ghost_npc_continuity_stage5_checkpoint.json",
+    ".ghost_npc_continuity_stage6_checkpoint.json",
+    ".ghost_npc_continuity_stage7_checkpoint.json",
+    ".ghost_npc_continuity_stage8_checkpoint.json",
+    ".ghost_npc_continuity_stage9_checkpoint.json",
+    ".ghost_npc_continuity_stage10_checkpoint.json",
+    ".ghost_v1110_optimized_continuity_production_patch1_v6_checkpoint.json",
+    ".ghost_v1110_release_hygiene_pass1_v2_checkpoint.json"
+  ],
+  "noncritical_untracked": [
+    "ghost-engine/.coverage"
+  ],
+  "policy": "exact-name local checkpoints remain untracked and are excluded from release-candidate staging; stage9/v6/hygiene must hash-match committed lineage evidence",
+  "present": [
+    {
+      "authoritative": false,
+      "bytes": 782,
+      "path": "ghost-engine/.ghost_npc_continuity_stage10_checkpoint.json",
+      "sha256": "42f4f1553b7ead8fe7797b3c81c7b6593bd72df94dab20e52c31f5e361e1b49a"
+    },
+    {
+      "authoritative": false,
+      "bytes": 1768,
+      "path": "ghost-engine/.ghost_npc_continuity_stage1_checkpoint.json",
+      "sha256": "4a2f5893dc25191264b5f92e9808806ada59c40395561bbdf3bb4bee6fcd1db6"
+    },
+    {
+      "authoritative": false,
+      "bytes": 2033,
+      "path": "ghost-engine/.ghost_npc_continuity_stage2_checkpoint.json",
+      "sha256": "8086569061e400d7f4bed6384d52c03d7ffa7e5ba23cd81bb45351aa3ef4e5a6"
+    },
+    {
+      "authoritative": false,
+      "bytes": 1078,
+      "path": "ghost-engine/.ghost_npc_continuity_stage3_checkpoint.json",
+      "sha256": "fee9566beca80baf6e4254aef1184238c72aec16d5a855e1c07b43d9fb5ea92b"
+    },
+    {
+      "authoritative": false,
+      "bytes": 4087,
+      "path": "ghost-engine/.ghost_npc_continuity_stage4_checkpoint.json",
+      "sha256": "dde850fcc67b797ab46f321ca21e134bf49adf26d0aa94451cdb91f2ceacbf6e"
+    },
+    {
+      "authoritative": false,
+      "bytes": 2122,
+      "path": "ghost-engine/.ghost_npc_continuity_stage5_checkpoint.json",
+      "sha256": "4ef6e1b173444ac317665ab66df0c19793c92f7f8aa7fb26699eccdd95d64960"
+    },
+    {
+      "authoritative": false,
+      "bytes": 1691,
+      "path": "ghost-engine/.ghost_npc_continuity_stage6_checkpoint.json",
+      "sha256": "4c75fbc16ccf4e29fb8159b412148187ee4efd8e6267ec056d95ad4d317d42b1"
+    },
+    {
+      "authoritative": false,
+      "bytes": 2980,
+      "path": "ghost-engine/.ghost_npc_continuity_stage7_checkpoint.json",
+      "sha256": "d9ae736585881d7e5cc6eea87cc5901f18d3aa0caa4dc8103b5db684bb854389"
+    },
+    {
+      "authoritative": false,
+      "bytes": 2270,
+      "path": "ghost-engine/.ghost_npc_continuity_stage8_checkpoint.json",
+      "sha256": "6c0db754d6938f45fb1560d6b0e00fe432ee2a2a4a98609e741bff28e26e1d7a"
+    },
+    {
+      "authoritative": true,
+      "bytes": 2844,
+      "committed_evidence": "docs/evidence/v1.11-dev/continuity/stage9_checkpoint.json",
+      "path": "ghost-engine/.ghost_npc_continuity_stage9_checkpoint.json",
+      "sha256": "ffedb27f6d27da83e892f530ce0e9e8913fa8b65c617f53fb34418ac3dee7453"
+    },
+    {
+      "authoritative": true,
+      "bytes": 1542,
+      "committed_evidence": "docs/evidence/v1.11-dev/continuity/v6_checkpoint.json",
+      "path": "ghost-engine/.ghost_v1110_optimized_continuity_production_patch1_v6_checkpoint.json",
+      "sha256": "23767f527d0e082deb0b9a7abb8cd855c35200cc885607d1910d68849fb2c193"
+    },
+    {
+      "authoritative": true,
+      "bytes": 1274,
+      "committed_evidence": "docs/evidence/v1.11-dev/continuity/hygiene_v2_checkpoint.json",
+      "path": "ghost-engine/.ghost_v1110_release_hygiene_pass1_v2_checkpoint.json",
+      "sha256": "8eb1b6ecbcbb59f12d2b94e2e590e4919bd01b142b35bdd0095661f478b344bb"
+    }
+  ],
+  "present_count": 12,
+  "schema": "ghost.v1110.release_prep.local_checkpoint_audit.v3",
+  "unexpected_untracked": []
+}

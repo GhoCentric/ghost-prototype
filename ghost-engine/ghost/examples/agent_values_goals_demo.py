@@ -29,7 +29,7 @@ def main() -> None:
         metadata={"faction": "millcross_watch"},
     )
 
-    print("GHOST v1.11 PHASE 3 — STATEFUL VALUES / GOAL LIFECYCLE")
+    print("GHOST v1.11 — STATEFUL VALUES / GOAL LIFECYCLE")
     print("=========================================================")
     print(json.dumps({"values": sera.values(), "goals": sera.goals()}, indent=2, sort_keys=True))
 
@@ -85,13 +85,13 @@ def main() -> None:
     print("Explicit goal lifecycle: inactive → active → blocked → active → satisfied")
     print("Progress 1.0 auto-completed the goal: NO — status transition remained explicit")
     print("Snapshot restore + transition history: PASS")
-    print("Motive derivation / intent selection: NOT YET — Phase 4+")
+    print("Action selection / execution: OUTSIDE VALUES / GOALS CONTRACT")
     print("LLM calls: 0")
-    print("Package producer: 1.10.0 (UNCHANGED during v1.11 development)")
+    print("Package producer: 1.11.0")
     print("Top-level snapshot schema: 1.0 (UNCHANGED)")
     print("Agent snapshot sub-schema: 1.1 (legacy 1.0 restore supported)")
     print("Perception snapshot sub-schema: 1.0 (UNCHANGED)")
-    print("\nGHOST v1.11 PHASE 3: PASS")
+    print("\nGHOST v1.11 VALUES / GOALS CONTRACT: PASS")
 
 
 if __name__ == "__main__":

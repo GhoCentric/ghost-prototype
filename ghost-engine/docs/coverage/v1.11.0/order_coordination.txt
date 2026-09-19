@@ -1,0 +1,23 @@
+........................................................................ [ 59%]
+..................................................                       [100%]
+=============================== warnings summary ===============================
+../../../usr/lib/python3.13/site-packages/coverage/core.py:107
+  /data/data/com.termux/files/usr/lib/python3.13/site-packages/coverage/core.py:107: CoverageWarning: Couldn't import C tracer: No module named 'coverage.tracer' (no-ctracer); see https://coverage.readthedocs.io/en/7.15.2/messages.html#warning-no-ctracer
+    warn(f"Couldn't import C tracer: {IMPORT_ERROR}", slug="no-ctracer", once=True)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+______________ coverage: platform android, python 3.13.13-final-0 ______________
+
+Name                                                  Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------------
+ghost/examples/order_coordination.py                    469      0    202      0   100%
+ghost/examples/order_coordination_benchmark.py          291      0     76      0   100%
+ghost/examples/order_coordination_demo.py                55      0      2      0   100%
+ghost/examples/order_coordination_live_benchmark.py     636      0    228      0   100%
+ghost/examples/order_coordination_report_replay.py      173      0     34      0   100%
+-------------------------------------------------------------------------------------------------
+TOTAL                                                  1624      0    542      0   100%
+Coverage JSON written to file /data/data/com.termux/files/home/ghost-prototype/ghost-engine/docs/coverage/v1.11.0/order_coordination.json
+Required test coverage of 100% reached. Total coverage: 100.00%
+122 passed, 1 warning in 23.83s

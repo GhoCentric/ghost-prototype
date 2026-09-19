@@ -269,10 +269,10 @@ def _exercise_v192_emotion_coverage_edges():
 
 def test_v192_package_version_contract_is_aligned():
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert ghost.__version__ == "1.10.0"
-    assert GHOST_PACKAGE_VERSION == "1.10.0"
-    assert GHOST_VERSION == "1.10.0"
-    assert 'version = "1.10.0"' in pyproject
+    assert ghost.__version__ == "1.11.0"
+    assert GHOST_PACKAGE_VERSION == "1.11.0"
+    assert GHOST_VERSION == "1.11.0"
+    assert 'version = "1.11.0"' in pyproject
 
 
 def test_v192_default_emotion_channel_contract_is_frozen():

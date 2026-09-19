@@ -1,0 +1,63 @@
+{
+  "artifacts": [
+    {
+      "file": "ghocentric_ghost_engine-1.11.0-py3-none-any.whl",
+      "sha256": "a784358f6a8f34862cf7b87ba6e89916c518d5a927e99f28701fead9c0c29ee0"
+    },
+    {
+      "file": "ghocentric_ghost_engine-1.11.0.tar.gz",
+      "sha256": "b6b7a07a495e9ad3f46a27dbe965e8630f54bdcf33b2db656e11d98a30c0a08d"
+    }
+  ],
+  "coverage": {
+    "core": {
+      "branches": 2828,
+      "covered_branches": 2828,
+      "covered_statements": 6801,
+      "files": 33,
+      "fully": 33,
+      "percent": 100.0,
+      "statements": 6801
+    },
+    "order_coordination": {
+      "branches": 542,
+      "covered_branches": 542,
+      "covered_statements": 1624,
+      "files": 5,
+      "fully": 5,
+      "percent": 100.0,
+      "statements": 1624
+    },
+    "revolution": {
+      "branches": 2744,
+      "covered_branches": 2744,
+      "covered_statements": 7201,
+      "files": 19,
+      "fully": 19,
+      "percent": 100.0,
+      "statements": 7201
+    }
+  },
+  "predecessor": "6756042dfa78475656d187c2519998ae0f14e099",
+  "public_parent": "067bc8cd5003f5345ea15dfe94ae513462c295b7",
+  "release_file_sha256": {
+    "CHANGELOG.md": "05034221dc8493212029974105230271627cfbbbd4c763e1351e6d7195739188",
+    "COVERAGE.md": "34245567ee0106baf266dc71c0e94d70e85d68651bb4c0fc17bdb195952e45e9",
+    "QUALITY.md": "37666f8923817228f3c9f256a2f58fd063465f67525c9fb7fd20e55a94c4ef03",
+    "README.md": "8fc4bc98e02c3d058011c44fcb05475b481c852e7138af0389e7304a195f57e3",
+    "RELEASE_NOTES_v1.11.0.md": "40e51410f37854a3e371449bd507bf093d4172e131e95e888139865d8a01ec2a",
+    "ghost/__init__.py": "67c9202f07d194206c3213b290da0bac8860d0f8c9f3e1c9a4ef40ec81483bc0",
+    "ghost/engine.py": "244dd41bcd7fb4870af8ab785f698b1076bdee8f61994d2a10598f339be66fa8",
+    "pyproject.toml": "cc330073f3a0541564e49c8cd92639aa0ffb7080b4a9506e8f0f1b32e052a8ce"
+  },
+  "release_regression": {
+    "deselected": 0,
+    "passed": 2745,
+    "skipped": 1,
+    "text": "2745 passed, 1 skipped in 112.55s (0:01:52)"
+  },
+  "runtime_dependencies": [],
+  "snapshot_schema": "1.0",
+  "strict_verdict": "V1110_RELEASE_PREP_PASS2_CANDIDATE",
+  "version": "1.11.0"
+}

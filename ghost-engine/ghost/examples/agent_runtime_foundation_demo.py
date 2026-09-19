@@ -18,7 +18,7 @@ def main() -> None:
         metadata={"faction": "millcross_watch"},
     )
 
-    print("GHOST v1.11 PHASE 1 — PERSISTENT AGENT RUNTIME FOUNDATION")
+    print("GHOST v1.11 — PERSISTENT AGENT RUNTIME FOUNDATION")
     print("===========================================================")
     print(json.dumps(sera.state(), indent=2, sort_keys=True))
 
@@ -31,12 +31,12 @@ def main() -> None:
     print("Identity continuity: PASS")
     print("Existing cognitive layers: readable through one agent handle")
     print("Observation contract: AVAILABLE — see Phase 2 observation demo")
-    print("Motive / intent / action selection: NOT YET — later v1.11 phases")
+    print("Action selection / execution: OUTSIDE AGENT FOUNDATION")
     print("LLM calls: 0")
-    print("Package producer: 1.10.0 (UNCHANGED during v1.11 development)")
+    print("Package producer: 1.11.0")
     print("Top-level snapshot schema: 1.0 (UNCHANGED)")
     print("Agent snapshot sub-schema: 1.1 (Phase 3 current; legacy 1.0 restore supported)")
-    print("\nGHOST v1.11 PHASE 1: PASS")
+    print("\nGHOST v1.11 AGENT RUNTIME FOUNDATION: PASS")
 
 
 if __name__ == "__main__":

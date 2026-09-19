@@ -31,7 +31,7 @@ def test_release_legacy_optional_restore_fallbacks_and_direct_attention_v1100():
     restored_snapshot = restored.snapshot()
 
     assert restored_snapshot["schema_version"] == "1.0"
-    assert restored_snapshot["ghost_version"] == "1.10.0"
+    assert restored_snapshot["ghost_version"] == "1.11.0"
     assert restored_snapshot["world"] == snapshot["world"]
     assert restored_snapshot["event_map"]
     # Epistemic state is always serialized by GhostAPI.snapshot(), even when
@@ -87,7 +87,7 @@ def test_release_legacy_optional_restore_fallbacks_and_direct_attention_v1100():
         signals={"task_focus": 0.5, "stability": 0.5},
         salience=salience,
         source="release-coverage-closure",
-        provenance={"gate": "v1.10.0"},
+        provenance={"gate": "v1.11.0"},
     )
 
     assert packet["agent"] == "sera"

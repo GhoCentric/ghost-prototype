@@ -1,0 +1,28 @@
+{
+  "latest": "1.10.0",
+  "public_wheel": {
+    "comment_text": null,
+    "core-metadata": {
+      "sha256": "f4518420c45bea809843e832ac95ff6e0aafa7e1f561d8585dd65575b61b77a7"
+    },
+    "digests": {
+      "blake2b_256": "ac326a6c5f0f845ebfb0100f60d397b17915883ebcc12801a7e8665772b1ddc3",
+      "md5": "f60e750d464587490130392d3a07b211",
+      "sha256": "9efa9f3d5b744e50fe0a7472e0f2a1dd8d7b1a7203f23bfd663709e6b495552e"
+    },
+    "downloads": -1,
+    "filename": "ghocentric_ghost_engine-1.10.0-py3-none-any.whl",
+    "has_sig": false,
+    "md5_digest": "f60e750d464587490130392d3a07b211",
+    "packagetype": "bdist_wheel",
+    "python_version": "py3",
+    "requires_python": ">=3.9",
+    "size": 313368,
+    "upload_time": "2026-08-19T17:56:17",
+    "upload_time_iso_8601": "2026-08-19T17:56:17.975733Z",
+    "url": "https://files.pythonhosted.org/packages/ac/32/6a6c5f0f845ebfb0100f60d397b17915883ebcc12801a7e8665772b1ddc3/ghocentric_ghost_engine-1.10.0-py3-none-any.whl",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "target_available": true
+}

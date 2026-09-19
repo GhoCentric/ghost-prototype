@@ -18,7 +18,7 @@ def main() -> None:
         metadata={"faction": "millcross_watch"},
     )
 
-    print("GHOST v1.11 PHASE 2 — ENGINE-NEUTRAL OBSERVATION CONTRACT")
+    print("GHOST v1.11 — ENGINE-NEUTRAL OBSERVATION CONTRACT")
     print("============================================================")
 
     direct = sera.observe(
@@ -69,13 +69,13 @@ def main() -> None:
     print("Per-agent sequence + bounded history: PASS")
     print("Snapshot restore + deterministic continuation: PASS")
     print("Existing epistemic observe() API preserved: PASS")
-    print("Motive / intent / action selection: NOT YET — later v1.11 phases")
+    print("Action selection / execution: NOT PERFORMED BY OBSERVATION RECORDING")
     print("LLM calls: 0")
-    print("Package producer: 1.10.0 (UNCHANGED during v1.11 development)")
+    print("Package producer: 1.11.0")
     print("Top-level snapshot schema: 1.0 (UNCHANGED)")
     print("Agent snapshot sub-schema: 1.1 (Phase 3 current; legacy 1.0 restore supported)")
     print("Perception snapshot sub-schema: 1.0")
-    print("\nGHOST v1.11 PHASE 2: PASS")
+    print("\nGHOST v1.11 OBSERVATION CONTRACT: PASS")
 
 
 if __name__ == "__main__":

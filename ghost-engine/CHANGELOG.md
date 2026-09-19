@@ -5,6 +5,33 @@ All notable changes to `ghocentric-ghost-engine` are documented here.
 Package release numbers and snapshot schema versions are separate. A package update
 does not automatically require a save-schema change.
 
+## v1.11.0
+### Registered agents + deterministic continuity + production hardening
+- Added durable registered-agent identity with a bound `GhostAgent` integration
+  handle for values, goals, capabilities, affordances, observations, motives,
+  and coherent copied agent state.
+- Kept engine-specific action execution outside Ghost. Capabilities and current
+  affordances remain explicit host-supplied constraints rather than discovered
+  abilities.
+- Added continuity events, causal episodes, explicit episode recall, dimension
+  recall, logical continuity ticking, and coherent continuity-state reads.
+- Added lossless continuity history optimization with lazy temporal
+  materialization, a sparse hot working set, and deferred compressed cold history.
+- Preserved deterministic snapshot/restore behavior and the top-level snapshot
+  schema at `1.0`; package producer metadata advances to `1.11.0`.
+- Hardened release architecture by reducing the public `GhostAPI` surface from the
+  initial v1.11 development shape of 93 methods to 67 while preserving all 59
+  methods in the v1.10 released baseline. Agent-specific operations remain on the
+  bound `GhostAgent` handle.
+- Production cost adjudication for the selected continuity implementation recorded
+  ratio-of-medians of `0.7550x` event cost, `0.0163x` dormant tick cost, `0.9465x`
+  active tick + state cost, `1.0690x` recall cost, `0.0963x` hot snapshot bytes,
+  and `0.9244x` total persistence bytes versus the frozen predecessor.
+- Runtime dependencies remain zero and Python support remains `>=3.9`.
+- Release regression: `2745 passed, 1 skipped`.
+- Reusable core release lane: `6801 / 6801` statements and `2828 / 2828`
+  branches covered (100% / 100%).
+
 ## v1.10.0
 ### NPC-specific interpretation + persistent attention / flow
 - Added persistent deterministic NPC-specific action interpretation so the same

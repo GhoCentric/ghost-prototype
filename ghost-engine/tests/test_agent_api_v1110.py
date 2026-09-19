@@ -154,8 +154,8 @@ def test_v111_phase_one_does_not_change_release_version_or_top_schema():
     api = GhostAPI()
     api.register_agent("sera")
     snapshot = api.snapshot()
-    assert ghost.__version__ == "1.10.0"
-    assert GHOST_PACKAGE_VERSION == "1.10.0"
+    assert ghost.__version__ == "1.11.0"
+    assert GHOST_PACKAGE_VERSION == "1.11.0"
     assert GHOST_SNAPSHOT_SCHEMA_VERSION == "1.0"
     assert snapshot["schema_version"] == "1.0"
 

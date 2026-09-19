@@ -1,40 +1,33 @@
 # Ghost Quality Lanes
 
-Ghost separates normal validation, performance checks, and branch-coverage
-tracing so one lane does not distort another.
+Ghost separates release regression, performance evidence, and branch-coverage tracing so one lane does not distort another.
 
-## Full Normal Suite
+## Full Release Regression
 
 ```bash
-python -m pytest -q
+python -m pytest -q -p no:cacheprovider \
+  --ignore-glob='tests/test_npc_continuity_stage*_v1110.py' \
+  --ignore=tests/test_m3_continuity_production_value.py \
+  --ignore=tests/test_continuity_optimization_value_v1110.py \
+  -W error::ResourceWarning
 ```
 
-Current v1.10.0 checkpoint:
+Current v1.11.0 release-candidate checkpoint:
 
 ```text
-2390 passed, 1 skipped
+2745 passed, 1 skipped
 ```
 
-The skipped test is intentionally gated. Normal validation does not require an
-API key or a real network call.
-
-## Performance Only
-
-```bash
-python -m pytest -q -m performance
-```
-
-Coverage instrumentation must not be used to judge performance floors.
+Frozen Stage-1–10 research/value evidence is retained separately from this release regression. The selected continuity production implementation carries its own measurement-hardened performance evidence under `docs/evidence/v1.11-dev/continuity/`.
 
 ## Reusable Core Coverage
 
 ```bash
 python -m pytest -q -m "not performance" \
-  --cov=ghost \
-  --cov-config=coverage.core.ini \
-  --cov-branch \
+  --ignore-glob='tests/test_npc_continuity_stage*_v1110.py' \
+  --cov=ghost --cov-config=coverage.core.ini --cov-branch \
   --cov-report=term-missing \
-  --cov-report=json:docs/coverage/v1.10.0/core.json
+  --cov-report=json:docs/coverage/v1.11.0/core.json
 ```
 
 ## Complete Ghost Revolution Package Coverage
@@ -42,27 +35,17 @@ python -m pytest -q -m "not performance" \
 ```bash
 python -m pytest -q tests/ghost_revolution \
   --cov=ghost.examples.ghost_revolution \
-  --cov-config=coverage.revolution.ini \
-  --cov-branch \
+  --cov-config=coverage.revolution.ini --cov-branch \
   --cov-report=term-missing \
-  --cov-report=json:docs/coverage/v1.10.0/revolution.json
+  --cov-report=json:docs/coverage/v1.11.0/revolution.json
 ```
 
 ## Order Coordination Coverage
 
-```bash
-python -m pytest -q \
-  tests/test_order_coordination_v180.py tests/test_order_coordination_benchmark_v180.py tests/test_order_coordination_live_benchmark_v180.py tests/test_order_coordination_report_replay_v180.py tests/test_order_coordination_coverage_closure_v180.py tests/test_order_coordination_snapshot_hardening_v180.py tests/test_release_packaging_cli_v190.py \
-  --cov=ghost.examples.order_coordination --cov=ghost.examples.order_coordination_benchmark --cov=ghost.examples.order_coordination_demo --cov=ghost.examples.order_coordination_live_benchmark --cov=ghost.examples.order_coordination_report_replay \
-  --cov-branch \
-  --cov-report=term-missing \
-  --cov-report=json:docs/coverage/v1.10.0/order_coordination.json
-```
+The maintained Order Coordination lane remains the explicit focused test set listed in Release Preparation Pass 2 and writes `docs/coverage/v1.11.0/order_coordination.json`.
 
-All three maintained v1.10.0 lanes are required to remain at **100% executable
-statements and 100% branch outcomes**.
+All three maintained v1.11.0 lanes are required to remain at **100% executable statements and 100% branch outcomes**.
 
 ## Published Evidence
 
-Current evidence lives under `docs/coverage/v1.10.0/`. Older versioned evidence
-directories are retained as historical release records.
+Current release-candidate coverage evidence lives under `docs/coverage/v1.11.0/`. Older versioned evidence directories remain historical records.

@@ -55,7 +55,7 @@ def main() -> None:
     restored_next = restored.agent("sera").evaluate_motives()
     original_next = sera.evaluate_motives()
 
-    print("GHOST v1.11 PHASE 4 — DETERMINISTIC MOTIVE FIELD")
+    print("GHOST v1.11 — DETERMINISTIC MOTIVE FIELD")
     print("====================================================")
     print(json.dumps({
         "before": {
@@ -74,14 +74,14 @@ def main() -> None:
     print("Missing configured signals become zero + audited: PASS")
     print("Raw observation is not silently treated as motive: PASS")
     print("Snapshot restore + deterministic continuation:", "PASS" if restored_next == original_next else "FAIL")
-    print("Action / intent selection: NOT YET — Phase 5+")
+    print("Action / intent selection: NOT PERFORMED BY MOTIVE FIELD")
     print("LLM calls: 0")
-    print("Package producer: 1.10.0 (UNCHANGED during v1.11 development)")
+    print("Package producer: 1.11.0")
     print("Top-level snapshot schema: 1.0 (UNCHANGED)")
     print("Agent snapshot sub-schema: 1.1 (UNCHANGED)")
     print("Perception snapshot sub-schema: 1.0 (UNCHANGED)")
     print("Motive snapshot sub-schema: 1.0")
-    print("\nGHOST v1.11 PHASE 4: PASS")
+    print("\nGHOST v1.11 MOTIVE FIELD: PASS")
 
 
 if __name__ == "__main__":
